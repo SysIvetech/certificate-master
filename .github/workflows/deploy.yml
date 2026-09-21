@@ -1,0 +1,291 @@
+name: Deploy
+
+# develop 브랜치 push → dev 서버 자동 배포
+# main    브랜치 push → prod 서버 배포 (수동 승인 필요)
+#
+# 주의: 프론트엔드(Next.js) 이미지는 NEXT_PUBLIC_* 값이 빌드 타임에
+# 클라이언트 번들에 하드코딩되므로 dev/prod 환경마다 별도로 빌드합니다.
+# (백엔드 이미지처럼 동일 아티팩트를 dev → prod로 승격할 수 없습니다)
+
+on:
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: '배포 환경 (수동 트리거 시)'
+        required: true
+        default: 'dev'
+        type: choice
+        options: [dev, prod]
+
+env:
+  REGISTRY: ghcr.io
+  # 이미지 이름: ghcr.io/<owner>/certificate-master-{backend|frontend}
+  IMAGE_NAME_PREFIX: ${{ github.repository_owner }}/certificate-master
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false # 배포는 큐잉 (취소 금지)
+
+jobs:
+  # ===========================================================================
+  # 환경 결정 (브랜치 또는 수동 입력 기준)
+  # ===========================================================================
+  determine-env:
+    name: Determine target environment
+    runs-on: ubuntu-latest
+    outputs:
+      target_env: ${{ steps.set.outputs.target_env }}
+      image_tag: ${{ steps.set.outputs.image_tag }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set target environment and image tag
+        id: set
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TARGET="${{ inputs.target_env }}"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            TARGET="dev"
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            TARGET="prod"
+          else
+            echo "지원하지 않는 브랜치: ${{ github.ref }}"
+            exit 1
+          fi
+
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          TAG="${TARGET}-${SHORT_SHA}"
+
+          echo "target_env=${TARGET}" >> $GITHUB_OUTPUT
+          echo "image_tag=${TAG}"     >> $GITHUB_OUTPUT
+          echo "::notice::Target=${TARGET}, Tag=${TAG}"
+
+  # ===========================================================================
+  # 백엔드 이미지 빌드 + GHCR 푸시 (환경 무관, 런타임에 env 주입)
+  # ===========================================================================
+  build-backend:
+    name: Build & Push (backend)
+    runs-on: ubuntu-latest
+    needs: determine-env
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}-backend
+          tags: |
+            type=raw,value=${{ needs.determine-env.outputs.image_tag }}
+            type=raw,value=${{ needs.determine-env.outputs.target_env }}-latest
+            type=sha,prefix={{branch}}-,format=short
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=cert-backend
+          cache-to: type=gha,scope=cert-backend,mode=max
+
+  # ===========================================================================
+  # 프론트엔드 이미지 빌드 + GHCR 푸시 (환경별 NEXT_PUBLIC_* build-args 주입)
+  # ===========================================================================
+  build-frontend:
+    name: Build & Push (frontend)
+    runs-on: ubuntu-latest
+    needs: determine-env
+    timeout-minutes: 30
+    environment: ${{ needs.determine-env.outputs.target_env }} # 환경별 NEXT_PUBLIC_* 시크릿 사용
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}-frontend
+          tags: |
+            type=raw,value=${{ needs.determine-env.outputs.image_tag }}
+            type=raw,value=${{ needs.determine-env.outputs.target_env }}-latest
+            type=sha,prefix={{branch}}-,format=short
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }}
+            NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=${{ secrets.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }}
+            NEXT_PUBLIC_NAVER_SITE_VERIFICATION=${{ secrets.NEXT_PUBLIC_NAVER_SITE_VERIFICATION }}
+            NEXT_PUBLIC_GA_MEASUREMENT_ID=${{ secrets.NEXT_PUBLIC_GA_MEASUREMENT_ID }}
+            NEXT_PUBLIC_GTM_ID=${{ secrets.NEXT_PUBLIC_GTM_ID }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=cert-frontend-${{ needs.determine-env.outputs.target_env }}
+          cache-to: type=gha,scope=cert-frontend-${{ needs.determine-env.outputs.target_env }},mode=max
+
+  # ===========================================================================
+  # dev 서버 배포 (자동)
+  # ===========================================================================
+  deploy-dev:
+    name: Deploy to dev01
+    runs-on: ubuntu-latest
+    needs: [determine-env, build-backend, build-frontend]
+    if: needs.determine-env.outputs.target_env == 'dev'
+    environment: dev
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Validate required secrets
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          missing=()
+          [[ -z "$SSH_HOST" ]]        && missing+=("SSH_HOST (Environment 'dev')")
+          [[ -z "$SSH_PORT" ]]        && missing+=("SSH_PORT (Repository secret)")
+          [[ -z "$SSH_USER" ]]        && missing+=("SSH_USER (Repository secret)")
+          [[ -z "$SSH_PRIVATE_KEY" ]] && missing+=("SSH_PRIVATE_KEY (Environment 'dev')")
+          [[ -z "$SSH_KNOWN_HOSTS" ]] && missing+=("SSH_KNOWN_HOSTS (Environment 'dev')")
+          if (( ${#missing[@]} > 0 )); then
+            echo "::error::필수 secrets 누락:"
+            for m in "${missing[@]}"; do echo "::error::  - $m"; done
+            echo "::error::Settings → Secrets and variables → Actions 에서 등록하세요."
+            exit 1
+          fi
+          echo "✅ 모든 필수 secrets 확인됨 (host=${SSH_HOST}, port=${SSH_PORT}, user=${SSH_USER})"
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Trigger remote deploy
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          IMAGE_TAG: ${{ needs.determine-env.outputs.image_tag }}
+        run: |
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "cd ~/certificate-master && ./deploy-pull.sh -e dev -s all -t ${IMAGE_TAG}"
+
+      - name: Post-deploy notification
+        if: always()
+        run: |
+          if [[ "${{ job.status }}" == "success" ]]; then
+            echo "::notice::✅ dev01 배포 성공 (tag=${{ needs.determine-env.outputs.image_tag }})"
+          else
+            echo "::error::❌ dev01 배포 실패. 서버에서 자동 롤백 시도됨."
+          fi
+
+  # ===========================================================================
+  # prod 서버 배포 (수동 승인 후)
+  # ===========================================================================
+  deploy-prod:
+    name: Deploy to prod01
+    runs-on: ubuntu-latest
+    needs: [determine-env, build-backend, build-frontend]
+    if: needs.determine-env.outputs.target_env == 'prod'
+    environment: prod # Required reviewers 보호 규칙 적용
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Validate required secrets
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          missing=()
+          [[ -z "$SSH_HOST" ]]        && missing+=("SSH_HOST (Environment 'prod')")
+          [[ -z "$SSH_PORT" ]]        && missing+=("SSH_PORT (Repository secret)")
+          [[ -z "$SSH_USER" ]]        && missing+=("SSH_USER (Repository secret)")
+          [[ -z "$SSH_PRIVATE_KEY" ]] && missing+=("SSH_PRIVATE_KEY (Environment 'prod')")
+          [[ -z "$SSH_KNOWN_HOSTS" ]] && missing+=("SSH_KNOWN_HOSTS (Environment 'prod')")
+          if (( ${#missing[@]} > 0 )); then
+            echo "::error::필수 secrets 누락:"
+            for m in "${missing[@]}"; do echo "::error::  - $m"; done
+            echo "::error::Settings → Secrets and variables → Actions 에서 등록하세요."
+            exit 1
+          fi
+          echo "✅ 모든 필수 secrets 확인됨 (host=${SSH_HOST}, port=${SSH_PORT}, user=${SSH_USER})"
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Trigger remote deploy
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          IMAGE_TAG: ${{ needs.determine-env.outputs.image_tag }}
+        run: |
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "cd ~/certificate-master && ./deploy-pull.sh -e prod -s all -t ${IMAGE_TAG}"
+
+      - name: Post-deploy notification
+        if: always()
+        run: |
+          if [[ "${{ job.status }}" == "success" ]]; then
+            echo "::notice::✅ prod01 배포 성공 (tag=${{ needs.determine-env.outputs.image_tag }})"
+          else
+            echo "::error::❌ prod01 배포 실패. 즉시 롤백/조사 필요."
+          fi

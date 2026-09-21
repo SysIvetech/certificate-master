@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.gitignore
+*.md
+.env
+.env.local
+.env.*.local
+tests
+playwright-report
+test-results
+coverage
+.eslintrc.json
+playwright.config.ts
