@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, Grid3X3, List, Loader2, AlertCircle, Sparkles, Award, BookOpen, TrendingUp, Database, Brain, RefreshCw } from 'lucide-react'
+import { Search, Grid3X3, List, Loader2, AlertCircle, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

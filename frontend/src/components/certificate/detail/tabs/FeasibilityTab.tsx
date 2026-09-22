@@ -1,7 +1,6 @@
 'use client'
 
 import {
-  Target,
   MessageSquare,
   Star,
   Lightbulb,

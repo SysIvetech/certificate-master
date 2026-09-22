@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button'
 import { ExamScheduleCard } from '../ExamScheduleCard'
 import {
   type Certificate,
-  type ExamSubject,
   hasExamInfo,
   hasExamScheduleDetail,
   hasOfficialSources,
