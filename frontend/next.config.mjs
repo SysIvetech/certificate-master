@@ -47,9 +47,20 @@ const nextConfig = {
     ];
   },
 
-  // API 프록시 설정 (Docker 환경용)
+  // API 프록시 설정 (브라우저 → /api/* → Next.js 서버 → 백엔드)
+  //
+  // 주의: rewrites() 결과는 `next build` 시점에 .next/routes-manifest.json 에 고정됩니다.
+  // 따라서 NEXT_PUBLIC_API_URL 은 컨테이너 실행 시점이 아니라 "빌드 시점"에 있어야 합니다.
+  // 값이 비어 있으면 /api/:path* -> /api/:path* 로 자기 자신을 가리켜 모든 API가 404가
+  // 되므로(2026-09 dev-cert 장애), 빌드를 실패시켜 잘못된 이미지가 배포되지 않게 합니다.
   async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL;
+    const backendUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '');
+    if (!/^https?:\/\/[^/]+/.test(backendUrl)) {
+      throw new Error(
+        `NEXT_PUBLIC_API_URL 이 비어 있거나 올바른 URL이 아닙니다: "${process.env.NEXT_PUBLIC_API_URL ?? ''}". ` +
+          '빌드 시점에 백엔드 주소(예: http://localhost:8000)를 지정하세요.'
+      );
+    }
     return [
       {
         source: '/api/:path*',

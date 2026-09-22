@@ -118,6 +118,8 @@ jobs:
     timeout-minutes: 30
     # 환경별 NEXT_PUBLIC_* 값 사용. 인증은 Environment variable 로 제어:
     #   NEXT_PUBLIC_AUTH_ENABLED (기본 false), NEXT_PUBLIC_AUTH_API_URL (기본 dev/prod auth 주소)
+    # NEXT_PUBLIC_API_URL 은 /api/* rewrite 대상(백엔드)으로 빌드 시점에 고정됨.
+    #   frontend/backend 컨테이너가 같은 서버의 host 네트워크를 쓰므로 기본값 http://localhost:8000
     environment: ${{ needs.determine-env.outputs.target_env }}
     permissions:
       contents: read
@@ -155,7 +157,7 @@ jobs:
           build-args: |
             NEXT_PUBLIC_AUTH_ENABLED=${{ vars.NEXT_PUBLIC_AUTH_ENABLED || 'false' }}
             NEXT_PUBLIC_AUTH_API_URL=${{ vars.NEXT_PUBLIC_AUTH_API_URL || (needs.determine-env.outputs.target_env == 'prod' && 'https://auth.ivetech.co.kr' || 'https://dev-auth.ivetech.co.kr') }}
-            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:8000' }}
             NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }}
             NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=${{ secrets.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }}
             NEXT_PUBLIC_NAVER_SITE_VERIFICATION=${{ secrets.NEXT_PUBLIC_NAVER_SITE_VERIFICATION }}

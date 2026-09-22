@@ -7,9 +7,12 @@
 # 승격할 수 없음). GitHub Actions에서 환경별 build-args로
 # 주입합니다 (.github/workflows/deploy.yml 참고).
 #
-# INTERNAL_API_URL 등 서버 전용 값은 next.config.mjs의
-# rewrites()/서버 컴포넌트에서 런타임에 읽으므로 컨테이너
-# 실행 시 docker-compose environment로 주입하면 됩니다.
+# NEXT_PUBLIC_API_URL 은 next.config.mjs rewrites()(/api/* → 백엔드)의
+# 대상 주소로, 역시 빌드 시점에 .next/routes-manifest.json 에 고정됩니다.
+# 비어 있으면 빌드가 실패합니다 (컨테이너 실행 시 주입해도 반영되지 않음).
+#
+# INTERNAL_API_URL 은 서버 컴포넌트(lib/api/server.ts)가 요청 시점에 읽으므로
+# 컨테이너 실행 시 docker-compose environment로 주입하면 됩니다.
 # ============================================================
 
 FROM node:20-alpine AS base
