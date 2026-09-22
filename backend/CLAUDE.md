@@ -11,7 +11,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Layer | Stack |
 |-------|-------|
 | Framework | FastAPI (Python 3.11+) |
-| Database | MariaDB (SQLAlchemy), Supabase Auth |
+| Database | MariaDB (SQLAlchemy) |
+| Auth | ivetech 통합 인증 서비스(auth-service) JWT 검증 (`AUTH_ENABLED`로 on/off) |
 | Vector Store | ChromaDB |
 | AI/LLM | OpenAI API (GPT-5-nano, text-embedding-3-small) |
 | Search | SearXNG (메타 검색 엔진) |
@@ -119,9 +120,11 @@ API Endpoint → Service → Protocol → 구현체 (SearXNG/OpenAI/ChromaDB)
 - 500 에러가 CORS 에러로 표시될 수 있음
 - 실제 원인 확인: 서버 로그 확인
 
-### Supabase `.single()` 주의
-- 데이터 없을 때 예외 발생 (PGRST116)
-- 항상 try-except로 처리하거나 `.execute()` 사용
+### 인증 (ivetech auth-service)
+- 로그인/회원가입/토큰 발급은 auth-service(`dev-auth.ivetech.co.kr`)가 담당, 이 백엔드는 access token 검증만 수행
+- `AUTH_ENABLED=false`(기본값)면 `CurrentUser`가 항상 MockUser
+- `AUTH_ENABLED=true`면 `JWT_SECRET`(auth-service의 `jwt.secret`과 동일한 Base64 값) 필수
+- 로그아웃 블랙리스트(Redis)는 확인하지 않으므로, 로그아웃한 토큰도 만료(기본 30분)까지 유효
 
 ### SearXNG 연결 실패
 ```bash

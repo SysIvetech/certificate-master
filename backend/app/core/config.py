@@ -7,6 +7,7 @@ using environment variables with type validation.
 from functools import lru_cache
 from typing import Optional
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,10 +15,8 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables.
 
     Attributes:
-        SUPABASE_URL: Supabase project URL.
-        SUPABASE_ANON_KEY: Supabase anonymous key for client-side access.
-        SUPABASE_SERVICE_ROLE_KEY: Supabase service role key for server-side access.
-        SUPABASE_DB_URL: PostgreSQL connection URL.
+        AUTH_ENABLED: 인증 사용 여부. False면 모든 요청을 MockUser로 처리 (제한 공개 기간).
+        JWT_SECRET: ivetech auth-service와 동일한 Base64 인코딩 JWT 시크릿.
         REDIS_URL: Redis connection URL.
         OPENAI_API_KEY: OpenAI API key.
         CHROMA_HOST: ChromaDB server host.
@@ -37,11 +36,11 @@ class Settings(BaseSettings):
         extra="ignore",  # Ignore extra fields in .env
     )
 
-    # Supabase Configuration (Required)
-    SUPABASE_URL: str
-    SUPABASE_ANON_KEY: str
-    SUPABASE_SERVICE_ROLE_KEY: str
-    SUPABASE_DB_URL: Optional[str] = None
+    # Authentication (ivetech auth-service가 발급한 JWT 검증)
+    # AUTH_ENABLED=False(기본값)면 기존처럼 모든 요청을 MockUser로 처리합니다.
+    AUTH_ENABLED: bool = False
+    # auth-service(common-security JwtTokenProvider)의 jwt.secret 과 동일한 Base64 문자열
+    JWT_SECRET: Optional[str] = None
 
     # MariaDB Configuration (환경변수에서 로드)
     MARIADB_HOST: str  # 필수: .env에서 설정
@@ -109,6 +108,12 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_DIR: str = ""  # 파일 로깅 디렉토리 (비어있으면 stdout만 사용)
     CORS_ORIGINS: str  # .env에서 필수로 불러옴
+
+    @model_validator(mode="after")
+    def _require_jwt_secret_when_auth_enabled(self) -> "Settings":
+        if self.AUTH_ENABLED and not self.JWT_SECRET:
+            raise ValueError("AUTH_ENABLED=true 이면 JWT_SECRET 설정이 필요합니다.")
+        return self
 
 
 @lru_cache()

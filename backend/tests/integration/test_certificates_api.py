@@ -6,9 +6,13 @@ These tests follow TDD principles:
 3. Refactor if needed (Refactor)
 """
 
+from typing import Any
+
 import pytest
 from fastapi.testclient import TestClient
-from supabase import Client
+
+# test_supabase_client 는 SQLAlchemy 기반 호환 래퍼 (타입 표기용 별칭)
+Client = Any
 
 
 class TestCertificatesSearch:

@@ -141,14 +141,14 @@ def authenticated_client(mock_user):
 
     This client bypasses authentication for testing.
     """
-    from app.api.deps import get_current_user_mock
+    from app.core.security import get_current_user
     from app.main import app
 
     # Override the authentication dependency
     async def override_get_current_user():
         return mock_user
 
-    app.dependency_overrides[get_current_user_mock] = override_get_current_user
+    app.dependency_overrides[get_current_user] = override_get_current_user
 
     with TestClient(app) as test_client:
         yield test_client
