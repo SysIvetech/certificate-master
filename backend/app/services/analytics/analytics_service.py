@@ -2,8 +2,8 @@
 
 복합 진행도 계산, 이탈 위험 감지, 학습 패턴 분석 등의 비즈니스 로직을 제공합니다.
 """
+
 from datetime import date, datetime, timedelta
-from typing import Optional
 
 from app.schemas.analytics import (
     LearnerStatus,

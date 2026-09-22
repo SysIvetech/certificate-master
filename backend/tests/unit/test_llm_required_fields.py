@@ -89,26 +89,31 @@ class TestPhase2PromptContainsRequiredFields:
 
     def test_phase2_prompt_emphasizes_required_fields(self):
         """Phase 2 프롬프트에 difficulty, study_period_days 필수 명시."""
-        from app.services.llm.service import LLMService
-
         # LLMService 내부의 system_prompt 문자열 확인
         # _phase2_refine의 system_prompt에 필수 필드 강조가 있어야 함
         import inspect
+
+        from app.services.llm.service import LLMService
+
         source = inspect.getsource(LLMService._phase2_refine)
 
         # 프롬프트에 difficulty와 study_period_days 필수 명시 확인
         assert "difficulty" in source.lower(), "Phase 2 프롬프트에 difficulty 언급 필요"
-        assert "study_period_days" in source.lower(), "Phase 2 프롬프트에 study_period_days 언급 필요"
+        assert (
+            "study_period_days" in source.lower()
+        ), "Phase 2 프롬프트에 study_period_days 언급 필요"
 
         # 필수 필드 강조 문구 확인 (수정 후 통과해야 함)
-        assert "필수" in source or "REQUIRED" in source.upper() or "반드시" in source, \
-            "Phase 2 프롬프트에 필수 필드 강조 문구 필요"
+        assert (
+            "필수" in source or "REQUIRED" in source.upper() or "반드시" in source
+        ), "Phase 2 프롬프트에 필수 필드 강조 문구 필요"
 
     def test_phase2_prompt_contains_no_skip_rule(self):
         """Phase 2 프롬프트에 difficulty, study_period_days 절대생략금지 규칙 포함."""
+        import inspect
+
         from app.services.llm.service import LLMService
 
-        import inspect
         source = inspect.getsource(LLMService._phase2_refine)
 
         # 핵심 규칙에 절대생략금지 문구 확인
@@ -116,10 +121,14 @@ class TestPhase2PromptContainsRequiredFields:
 
         # difficulty와 study_period_days가 핵심 규칙에 명시되어 있어야 함
         assert "difficulty 필수" in source, "핵심 규칙에 'difficulty 필수' 명시 필요"
-        assert "study_period_days 필수" in source, "핵심 규칙에 'study_period_days 필수' 명시 필요"
+        assert (
+            "study_period_days 필수" in source
+        ), "핵심 규칙에 'study_period_days 필수' 명시 필요"
 
         # 기본값 안내 확인
-        assert "정보 없으면 3 사용" in source or "기본값 3" in source, \
-            "difficulty 기본값 안내 필요"
-        assert "정보 없으면 90 사용" in source or "기본값 90" in source, \
-            "study_period_days 기본값 안내 필요"
+        assert (
+            "정보 없으면 3 사용" in source or "기본값 3" in source
+        ), "difficulty 기본값 안내 필요"
+        assert (
+            "정보 없으면 90 사용" in source or "기본값 90" in source
+        ), "study_period_days 기본값 안내 필요"

@@ -2,7 +2,7 @@
 
 TDD: RED phase - ChromaDB의 OpenAI 임베딩 기능 사용 테스트.
 """
-import pytest
+
 from unittest.mock import MagicMock, patch
 
 
@@ -29,12 +29,14 @@ class TestVectorStoreServiceIntegrated:
                     "metadatas": [
                         [
                             {"title": "정보처리기사", "category": "국가기술자격"},
-                            {"title": "정보보안기사", "category": "국가기술자격"}
+                            {"title": "정보보안기사", "category": "국가기술자격"},
                         ]
-                    ]
+                    ],
                 }
 
-                with patch("app.services.embedding.vector_store.EmbeddingService") as mock_embed:
+                with patch(
+                    "app.services.embedding.vector_store.EmbeddingService"
+                ) as mock_embed:
                     mock_embed_instance = MagicMock()
                     mock_embed.return_value = mock_embed_instance
                     mock_embed_instance.create_embedding.return_value = [0.1] * 1024
@@ -44,9 +46,7 @@ class TestVectorStoreServiceIntegrated:
                     service = VectorStoreService()
 
                     results = service.search_records(
-                        namespace="certificates",
-                        query="IT 개발자 자격증 추천",
-                        top_k=5
+                        namespace="certificates", query="IT 개발자 자격증 추천", top_k=5
                     )
 
                     mock_embed_instance.create_embedding.assert_called_once()
@@ -142,12 +142,14 @@ class TestVectorStoreServiceIntegrated:
                 mock_collection = MagicMock()
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store.EmbeddingService") as mock_embed:
+                with patch(
+                    "app.services.embedding.vector_store.EmbeddingService"
+                ) as mock_embed:
                     mock_embed_instance = MagicMock()
                     mock_embed.return_value = mock_embed_instance
                     mock_embed_instance.create_embeddings_batch.return_value = [
                         [0.1] * 1024,
-                        [0.2] * 1024
+                        [0.2] * 1024,
                     ]
 
                     from app.services.vector_store import VectorStoreService

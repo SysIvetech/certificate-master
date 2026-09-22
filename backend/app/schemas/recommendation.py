@@ -3,13 +3,11 @@
 This module defines request/response schemas for certificate recommendation endpoints.
 """
 
-
 from pydantic import BaseModel, Field, field_validator
 
 from app.core.constants import RecommendationConstants
 
 from .certificate import Certificate
-
 
 # Valid values for each field
 VALID_PURPOSES = [
@@ -61,28 +59,28 @@ VALID_DIFFICULTY_PREFERENCES = [
 
 # 새 필드: 현재 상황
 VALID_CURRENT_STATUS = [
-    "student",          # 학생 (취업 준비 중인 대학생/취준생)
+    "student",  # 학생 (취업 준비 중인 대학생/취준생)
     "entry_jobseeker",  # 신입 구직자 (첫 직장을 찾고 있어요)
-    "junior_worker",    # 현직자 1-3년차 (경력 개발 또는 이직 준비)
-    "senior_worker",    # 현직자 4년차 이상 (전문성 강화 또는 커리어 전환)
-    "career_break",     # 휴직/전업준비 (재취업 또는 새로운 시작)
+    "junior_worker",  # 현직자 1-3년차 (경력 개발 또는 이직 준비)
+    "senior_worker",  # 현직자 4년차 이상 (전문성 강화 또는 커리어 전환)
+    "career_break",  # 휴직/전업준비 (재취업 또는 새로운 시작)
 ]
 
 # 새 필드: 투자 시간
 VALID_STUDY_COMMITMENT = [
-    "relaxed",    # 여유 있게 (일상과 병행하며 천천히)
-    "moderate",   # 적당히 (주 10시간 정도 투자 가능)
+    "relaxed",  # 여유 있게 (일상과 병행하며 천천히)
+    "moderate",  # 적당히 (주 10시간 정도 투자 가능)
     "intensive",  # 집중해서 (전업으로 빠르게 취득 목표)
-    "unsure",     # 잘 모르겠어요 (추천받고 결정할게요)
+    "unsure",  # 잘 모르겠어요 (추천받고 결정할게요)
 ]
 
 # 새 필드: 자격증 등급 선호
 VALID_CERTIFICATE_LEVELS = [
-    "기능장",      # 기능장 등급 (최고급)
-    "기사",        # 기사 등급
-    "산업기사",    # 산업기사 등급
-    "기능사",      # 기능사 등급 (입문)
-    "상관없음",    # 등급 상관없음
+    "기능장",  # 기능장 등급 (최고급)
+    "기사",  # 기사 등급
+    "산업기사",  # 산업기사 등급
+    "기능사",  # 기능사 등급 (입문)
+    "상관없음",  # 등급 상관없음
 ]
 
 
@@ -113,6 +111,7 @@ VALID_PREFERENCE_TAGS = [
 
 class StructuredRecommendationRequest(BaseModel):
     """구조화된 추천 요청 (Contextual Retrieval)."""
+
     domains: list[str] = Field(..., min_length=1, description="관심 분야")
     purpose: str = Field(..., description="목적")
     current_status: str = Field(..., description="현재 상황")
@@ -123,14 +122,18 @@ class StructuredRecommendationRequest(BaseModel):
     @classmethod
     def validate_purpose(cls, v: str) -> str:
         if v not in VALID_STRUCTURED_PURPOSES:
-            raise ValueError(f"Invalid purpose: {v}. Must be one of {VALID_STRUCTURED_PURPOSES}")
+            raise ValueError(
+                f"Invalid purpose: {v}. Must be one of {VALID_STRUCTURED_PURPOSES}"
+            )
         return v
 
     @field_validator("current_status")
     @classmethod
     def validate_current_status(cls, v: str) -> str:
         if v not in VALID_STRUCTURED_STATUS:
-            raise ValueError(f"Invalid status: {v}. Must be one of {VALID_STRUCTURED_STATUS}")
+            raise ValueError(
+                f"Invalid status: {v}. Must be one of {VALID_STRUCTURED_STATUS}"
+            )
         return v
 
     @field_validator("preference_tags")
@@ -138,7 +141,9 @@ class StructuredRecommendationRequest(BaseModel):
     def validate_preference_tags(cls, v: list[str]) -> list[str]:
         for tag in v:
             if tag not in VALID_PREFERENCE_TAGS:
-                raise ValueError(f"Invalid tag: {tag}. Must be one of {VALID_PREFERENCE_TAGS}")
+                raise ValueError(
+                    f"Invalid tag: {tag}. Must be one of {VALID_PREFERENCE_TAGS}"
+                )
         return v
 
 
@@ -195,10 +200,7 @@ class RecommendationRequest(BaseModel):
     @classmethod
     def validate_purpose(cls, v: str) -> str:
         if v not in VALID_PURPOSES:
-            raise ValueError(
-                "Invalid purpose. "
-                f"Must be one of: {VALID_PURPOSES}"
-            )
+            raise ValueError("Invalid purpose. " f"Must be one of: {VALID_PURPOSES}")
         return v
 
     @field_validator("interest_domains")
@@ -227,7 +229,9 @@ class RecommendationRequest(BaseModel):
     @classmethod
     def validate_timeline(cls, v: str) -> str:
         if v not in VALID_TIMELINES:
-            raise ValueError(f"Invalid study_timeline. Must be one of: {VALID_TIMELINES}")
+            raise ValueError(
+                f"Invalid study_timeline. Must be one of: {VALID_TIMELINES}"
+            )
         return v
 
     @field_validator("difficulty_preference")
@@ -489,9 +493,7 @@ class StructuredUserContext(BaseModel):
     @classmethod
     def validate_goal(cls, v: str) -> str:
         if v not in VALID_NATURAL_GOALS:
-            raise ValueError(
-                f"Invalid goal. Must be one of: {VALID_NATURAL_GOALS}"
-            )
+            raise ValueError(f"Invalid goal. Must be one of: {VALID_NATURAL_GOALS}")
         return v
 
     @field_validator("employment_status")
@@ -641,7 +643,9 @@ def structured_to_recommendation_request(
     # 자연어 추천의 preferred_industries는 자유 형식이라
     # interest_domains (고정 목록)로 변환하기 어려움
     # → target_industries로 전달
-    target_industries = context.preferred_industries if context.preferred_industries else None
+    target_industries = (
+        context.preferred_industries if context.preferred_industries else None
+    )
 
     # interest_domains는 기본값 사용 (자연어에서 정확히 매핑 불가)
     # 사용자의 preferred_industries 기반으로 가장 관련있는 도메인 추론

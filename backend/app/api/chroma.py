@@ -1,4 +1,5 @@
 """ChromaDB 데이터 조회용 단일 페이지 엔드포인트."""
+
 from __future__ import annotations
 
 import html
@@ -76,7 +77,9 @@ def _render_embedding_preview(values: Optional[list]) -> str:
     return f"<p><strong>Embedding preview</strong>: {html.escape(preview + suffix)}</p>"
 
 
-def _render_vectors_table(vectors: list[dict], limit: int, offset: int, search: str, selected_id: str = "") -> str:
+def _render_vectors_table(
+    vectors: list[dict], limit: int, offset: int, search: str, selected_id: str = ""
+) -> str:
     """벡터 리스트 테이블 HTML을 생성합니다."""
     if not vectors:
         return "<tr><td colspan='4'>No vectors found</td></tr>"
@@ -91,9 +94,9 @@ def _render_vectors_table(vectors: list[dict], limit: int, offset: int, search: 
         row_url = f"/chroma?id={vector_id}&limit={limit}&offset={offset}{search_param}"
         is_selected = "selected" if vector_id == selected_id else ""
         rows.append(
-            f"<tr class=\"clickable-row {is_selected}\" data-id=\"{vector_id}\">"
-            f"<td class=\"checkbox-col\" onclick=\"event.stopPropagation()\">"
-            f"<input type=\"checkbox\" class=\"row-checkbox\" value=\"{vector_id}\" onchange=\"updateBulkActions()\" />"
+            f'<tr class="clickable-row {is_selected}" data-id="{vector_id}">'
+            f'<td class="checkbox-col" onclick="event.stopPropagation()">'
+            f'<input type="checkbox" class="row-checkbox" value="{vector_id}" onchange="updateBulkActions()" />'
             f"</td>"
             f"<td onclick=\"window.location.href='{row_url}'\"><code>{vector_id}</code></td>"
             f"<td onclick=\"window.location.href='{row_url}'\">{title}</td>"
@@ -191,21 +194,31 @@ async def chroma_dashboard(
     if search_query:
         # ChromaDB where 필터는 $contains 미지원
         # 전체 벡터를 가져온 후 Python에서 타이틀 필터링
-        all_vectors = service.list_vectors(limit=10000, offset=0, include_embeddings=False, where=None)
+        all_vectors = service.list_vectors(
+            limit=10000, offset=0, include_embeddings=False, where=None
+        )
         # 타이틀에 검색어가 포함된 벡터만 필터링
         vectors = [
-            v for v in all_vectors
-            if search_query.lower() in (v.get("metadata", {}).get("title", "") or "").lower()
+            v
+            for v in all_vectors
+            if search_query.lower()
+            in (v.get("metadata", {}).get("title", "") or "").lower()
         ]
         # 페이지네이션 적용
-        vectors = vectors[offset:offset + limit]
-        display_total = len([
-            v for v in all_vectors
-            if search_query.lower() in (v.get("metadata", {}).get("title", "") or "").lower()
-        ])
+        vectors = vectors[offset : offset + limit]
+        display_total = len(
+            [
+                v
+                for v in all_vectors
+                if search_query.lower()
+                in (v.get("metadata", {}).get("title", "") or "").lower()
+            ]
+        )
     else:
         # 일반 목록 조회
-        vectors = service.list_vectors(limit=limit, offset=offset, include_embeddings=False, where=None)
+        vectors = service.list_vectors(
+            limit=limit, offset=offset, include_embeddings=False, where=None
+        )
         display_total = total_vectors
 
     detail = None

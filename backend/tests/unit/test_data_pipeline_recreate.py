@@ -3,12 +3,13 @@
 `--recreate <cert_id>` 또는 `--recreate-by-name <name>` 옵션으로
 특정 자격증의 보강 데이터를 완전히 새로 생성하는 기능을 테스트합니다.
 """
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
 
 import sys
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
+
+import pytest
 
 # backend 디렉토리를 path에 추가
 backend_dir = Path(__file__).parent.parent.parent
@@ -78,16 +79,18 @@ class TestRecreateCommand:
         pipeline = DataPipeline(test_mode=True)
 
         # enrich_step과 embedding_step을 mock
-        with patch(
-            "scripts.data_pipeline.get_mariadb_session", return_value=mock_session
-        ), patch.object(
-            pipeline, "enrich_step", new_callable=AsyncMock
-        ) as mock_enrich, patch.object(
-            pipeline, "embedding_step", new_callable=AsyncMock
-        ) as mock_embedding, patch(
-            "app.services.embedding_factory.get_embedding_service"
-        ), patch(
-            "app.services.vector_store.VectorStoreService"
+        with (
+            patch(
+                "scripts.data_pipeline.get_mariadb_session", return_value=mock_session
+            ),
+            patch.object(
+                pipeline, "enrich_step", new_callable=AsyncMock
+            ) as mock_enrich,
+            patch.object(
+                pipeline, "embedding_step", new_callable=AsyncMock
+            ) as mock_embedding,
+            patch("app.services.embedding_factory.get_embedding_service"),
+            patch("app.services.vector_store.VectorStoreService"),
         ):
             mock_enrich.return_value = {
                 "processed": 1,
@@ -128,16 +131,18 @@ class TestRecreateCommand:
 
         pipeline = DataPipeline(test_mode=True)
 
-        with patch(
-            "scripts.data_pipeline.get_mariadb_session", return_value=mock_session
-        ), patch.object(
-            pipeline, "enrich_step", new_callable=AsyncMock
-        ) as mock_enrich, patch.object(
-            pipeline, "embedding_step", new_callable=AsyncMock
-        ) as mock_embedding, patch(
-            "app.services.embedding_factory.get_embedding_service"
-        ), patch(
-            "app.services.vector_store.VectorStoreService"
+        with (
+            patch(
+                "scripts.data_pipeline.get_mariadb_session", return_value=mock_session
+            ),
+            patch.object(
+                pipeline, "enrich_step", new_callable=AsyncMock
+            ) as mock_enrich,
+            patch.object(
+                pipeline, "embedding_step", new_callable=AsyncMock
+            ) as mock_embedding,
+            patch("app.services.embedding_factory.get_embedding_service"),
+            patch("app.services.vector_store.VectorStoreService"),
         ):
             mock_enrich.return_value = {
                 "processed": 1,
@@ -164,7 +169,9 @@ class TestRecreateCommand:
             assert result["status"] == "success"
 
     @pytest.mark.asyncio
-    async def test_recreate_by_name_finds_and_recreates(self, cert_id, mock_certificate):
+    async def test_recreate_by_name_finds_and_recreates(
+        self, cert_id, mock_certificate
+    ):
         """이름으로 자격증을 찾아서 재생성해야 한다."""
         from scripts.data_pipeline import DataPipeline
 
@@ -177,11 +184,14 @@ class TestRecreateCommand:
 
         pipeline = DataPipeline(test_mode=True)
 
-        with patch(
-            "scripts.data_pipeline.get_mariadb_session", return_value=mock_session
-        ), patch.object(
-            pipeline, "recreate_certificate", new_callable=AsyncMock
-        ) as mock_recreate:
+        with (
+            patch(
+                "scripts.data_pipeline.get_mariadb_session", return_value=mock_session
+            ),
+            patch.object(
+                pipeline, "recreate_certificate", new_callable=AsyncMock
+            ) as mock_recreate,
+        ):
             mock_recreate.return_value = {"status": "success"}
 
             result = await pipeline.recreate_certificate_by_name("정보처리기사")
@@ -213,7 +223,9 @@ class TestRecreateCommand:
             assert "not found" in result["message"].lower()
 
     @pytest.mark.asyncio
-    async def test_recreate_deletes_vector_from_chromadb(self, cert_id, mock_certificate):
+    async def test_recreate_deletes_vector_from_chromadb(
+        self, cert_id, mock_certificate
+    ):
         """기존 벡터가 있으면 ChromaDB에서 삭제해야 한다."""
         from scripts.data_pipeline import DataPipeline
 
@@ -229,16 +241,21 @@ class TestRecreateCommand:
 
         pipeline = DataPipeline(test_mode=True)
 
-        with patch(
-            "scripts.data_pipeline.get_mariadb_session", return_value=mock_session
-        ), patch.object(
-            pipeline, "enrich_step", new_callable=AsyncMock
-        ) as mock_enrich, patch.object(
-            pipeline, "embedding_step", new_callable=AsyncMock
-        ) as mock_embedding, patch(
-            "app.services.embedding_factory.get_embedding_service"
-        ), patch(
-            "app.services.vector_store.VectorStoreService", return_value=mock_vector_store
+        with (
+            patch(
+                "scripts.data_pipeline.get_mariadb_session", return_value=mock_session
+            ),
+            patch.object(
+                pipeline, "enrich_step", new_callable=AsyncMock
+            ) as mock_enrich,
+            patch.object(
+                pipeline, "embedding_step", new_callable=AsyncMock
+            ) as mock_embedding,
+            patch("app.services.embedding_factory.get_embedding_service"),
+            patch(
+                "app.services.vector_store.VectorStoreService",
+                return_value=mock_vector_store,
+            ),
         ):
             mock_enrich.return_value = {
                 "processed": 1,
@@ -269,13 +286,13 @@ class TestRecreateCommandLineArgs:
 
     def test_recreate_argument_exists(self):
         """--recreate 인자가 argparser에 존재해야 한다."""
-        import argparse
 
         # data_pipeline 모듈의 argparser를 검사
-        from scripts.data_pipeline import main
-
         # main 함수 소스 코드를 확인하여 --recreate 옵션이 있는지 검사
         import inspect
+
+        from scripts.data_pipeline import main
+
         source = inspect.getsource(main)
 
         assert "--recreate" in source
@@ -288,12 +305,16 @@ class TestRecreateCommandLineArgs:
 
         parser = argparse.ArgumentParser()
         parser.add_argument(
-            "--recreate", type=str, metavar="CERT_ID",
-            help="특정 자격증 ID의 보강 데이터를 완전히 새로 생성"
+            "--recreate",
+            type=str,
+            metavar="CERT_ID",
+            help="특정 자격증 ID의 보강 데이터를 완전히 새로 생성",
         )
         parser.add_argument(
-            "--recreate-by-name", type=str, metavar="NAME",
-            help="자격증 이름으로 검색하여 보강 데이터를 완전히 새로 생성"
+            "--recreate-by-name",
+            type=str,
+            metavar="NAME",
+            help="자격증 이름으로 검색하여 보강 데이터를 완전히 새로 생성",
         )
 
         # 파서의 format_help()에 옵션이 포함되는지 확인

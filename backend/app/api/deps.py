@@ -3,13 +3,13 @@
 This module provides common dependencies used across API endpoints.
 MariaDB (SQLAlchemy) + 임시 Mock 인증으로 변경됨.
 """
+
 from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-
 
 # Type aliases for cleaner dependency injection
 DBSession = Annotated[Session, Depends(get_db)]

@@ -1,8 +1,8 @@
 """Contextual 임베딩 텍스트 생성 함수 테스트."""
-import pytest
+
 from app.utils.certificate_formatter import (
-    format_contextual_search_text,
     build_contextual_prefix,
+    format_contextual_search_text,
 )
 
 

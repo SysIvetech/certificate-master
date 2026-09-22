@@ -3,17 +3,20 @@
 이 모듈은 사용자 컨텍스트 기반 자격증 추천 API를 제공합니다.
 하이브리드 검색(Dense + BM25 Sparse + RRF) 기반 통합 엔드포인트만 활성화.
 """
+
 import logging
 
 from fastapi import APIRouter
 
 from app.api.deps import DBSession
 from app.schemas.recommendation import (
+    StructuredRecommendationRequest,
     UnifiedRecommendationRequest,
     UnifiedRecommendationResponse,
-    StructuredRecommendationRequest,
 )
-from app.services.study.natural_recommendation_service import NaturalRecommendationService
+from app.services.study.natural_recommendation_service import (
+    NaturalRecommendationService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,17 +45,22 @@ async def get_unified_recommendations(
     Returns:
         UnifiedRecommendationResponse: 추천 결과
     """
-    logger.info(f"Unified recommendation request: domains={request.domains}, input={request.user_input[:50]}...")
+    logger.info(
+        f"Unified recommendation request: domains={request.domains}, input={request.user_input[:50]}..."
+    )
 
     try:
         service = NaturalRecommendationService(db)
         response = await service.get_unified_recommendations(request)
 
-        logger.info(f"Returning {len(response.recommendations)} unified recommendations")
+        logger.info(
+            f"Returning {len(response.recommendations)} unified recommendations"
+        )
         return response
     except Exception as e:
         logger.error(f"Unified recommendation error: {type(e).__name__}: {e}")
         import traceback
+
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise
 
@@ -76,16 +84,21 @@ async def get_structured_recommendations(
     Returns:
         UnifiedRecommendationResponse: 추천 결과
     """
-    logger.info(f"Structured recommendation request: domains={request.domains}, purpose={request.purpose}")
+    logger.info(
+        f"Structured recommendation request: domains={request.domains}, purpose={request.purpose}"
+    )
 
     try:
         service = NaturalRecommendationService(db)
         response = await service.get_structured_recommendations(request)
 
-        logger.info(f"Returning {len(response.recommendations)} structured recommendations")
+        logger.info(
+            f"Returning {len(response.recommendations)} structured recommendations"
+        )
         return response
     except Exception as e:
         logger.error(f"Structured recommendation error: {type(e).__name__}: {e}")
         import traceback
+
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise

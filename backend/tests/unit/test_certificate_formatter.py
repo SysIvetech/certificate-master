@@ -2,7 +2,6 @@
 
 B4: format 함수 중복 제거 - 공통 유틸리티 함수 테스트.
 """
-import pytest
 
 
 class TestCertificateFormatter:
@@ -43,7 +42,7 @@ class TestCertificateFormatter:
                 "related_jobs": ["개발자", "SE"],
                 "job_prospects": "매우 좋음",
                 "average_salary": "연 5,000만원",
-            }
+            },
         }
 
         result = format_certificate_text(cert)
@@ -65,7 +64,7 @@ class TestCertificateFormatter:
                 "exam_type": "필기+실기",
                 "subjects": ["소프트웨어설계", "데이터베이스"],
                 "passing_criteria": "60점 이상",
-            }
+            },
         }
 
         result = format_certificate_text(cert)
@@ -93,7 +92,7 @@ class TestCertificateFormatter:
                     {"name": "인쇄공정관리", "questions": 20, "time": 60},
                 ],
                 "passing_criteria": "60점 이상",
-            }
+            },
         }
 
         result = format_certificate_text(cert)
@@ -142,7 +141,7 @@ class TestCertificateFormatter:
             },
             "exam_info": {
                 "exam_type": "필기+실기",
-            }
+            },
         }
 
         metadata = build_certificate_metadata(cert)
@@ -161,8 +160,8 @@ class TestFormatterIntegration:
 
     def test_embedding_service_uses_common_formatter(self):
         """EmbeddingService가 공통 포맷터를 사용하는지 테스트."""
-        from app.utils.certificate_formatter import format_certificate_text
         from app.services.embedding_service import EmbeddingService
+        from app.utils.certificate_formatter import format_certificate_text
 
         service = EmbeddingService()
 
@@ -180,7 +179,8 @@ class TestFormatterIntegration:
 
     def test_vector_store_uses_common_formatter(self):
         """VectorStoreService가 공통 포맷터(format_contextual_search_text)를 사용하는지 테스트."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
+
         from app.utils.certificate_formatter import format_contextual_search_text
 
         with patch("app.services.embedding.vector_store.get_settings") as mock_settings:

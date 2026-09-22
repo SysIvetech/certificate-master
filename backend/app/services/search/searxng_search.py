@@ -28,11 +28,11 @@ from app.services.search.crawler.smart_crawler import (
     SmartCrawler,
     get_smart_crawler,
 )
+from app.services.search.query_generator import is_official_domain
 from app.services.search.url_filter import (
     DomainFailureCache,
     is_valid_snippet,
 )
-from app.services.search.query_generator import is_official_domain, OFFICIAL_DOMAINS
 
 logger = logging.getLogger(__name__)
 
@@ -301,7 +301,9 @@ class SearXNGSearchService:
                 if "official" not in results:
                     results["official"] = []
                 results["official"].extend(fallback_results)
-                logger.info(f"Fallback 검색으로 {len(fallback_results)}개 공식 출처 추가됨")
+                logger.info(
+                    f"Fallback 검색으로 {len(fallback_results)}개 공식 출처 추가됨"
+                )
             else:
                 logger.warning("Fallback 검색에서도 공식 출처를 찾지 못했습니다.")
 
@@ -390,16 +392,20 @@ class SearXNGSearchService:
 
             text = f"{result.get('title', '')} {result.get('description', '')}"
 
-            extracted.append({
-                "title": result.get("title", ""),
-                "url": url,
-                "description": result.get("description", ""),
-                "age": result.get("age", ""),
-                "language": result.get("language", "ko"),
-                "url_quality": self._calculate_url_quality(url),
-                "recency_score": self._calculate_recency_score(result.get("age", "")),
-                "keyword_score": self._calculate_keyword_score(text, hints),
-            })
+            extracted.append(
+                {
+                    "title": result.get("title", ""),
+                    "url": url,
+                    "description": result.get("description", ""),
+                    "age": result.get("age", ""),
+                    "language": result.get("language", "ko"),
+                    "url_quality": self._calculate_url_quality(url),
+                    "recency_score": self._calculate_recency_score(
+                        result.get("age", "")
+                    ),
+                    "keyword_score": self._calculate_keyword_score(text, hints),
+                }
+            )
 
         if skipped_count > 0:
             logger.debug(f"파일 다운로드 URL {skipped_count}개 제외됨")
@@ -476,7 +482,9 @@ class SearXNGSearchService:
                 if is_valid_snippet(description):
                     crawled_content[url] = (description, "snippet_fallback")
                     success_count += 1
-                    logger.info(f"도메인 캐시 스킵 + snippet ({success_count}/{self.crawl_target_success}): {url[:50]}")
+                    logger.info(
+                        f"도메인 캐시 스킵 + snippet ({success_count}/{self.crawl_target_success}): {url[:50]}"
+                    )
                 continue
 
             try:
@@ -487,7 +495,9 @@ class SearXNGSearchService:
                     crawled_content[url] = (crawl_result.content, crawl_result.method)
                     success_count += 1
                     self._failure_cache.record_success(url)
-                    logger.info(f"크롤링 성공 ({success_count}/{self.crawl_target_success}): {url[:50]}")
+                    logger.info(
+                        f"크롤링 성공 ({success_count}/{self.crawl_target_success}): {url[:50]}"
+                    )
                 else:
                     # 크롤링 실패 → 실패 캐시 기록
                     self._failure_cache.record_failure(url)
@@ -496,7 +506,9 @@ class SearXNGSearchService:
                     if is_valid_snippet(description):
                         crawled_content[url] = (description, "snippet_fallback")
                         success_count += 1
-                        logger.info(f"Snippet fallback ({success_count}/{self.crawl_target_success}): {url[:50]}")
+                        logger.info(
+                            f"Snippet fallback ({success_count}/{self.crawl_target_success}): {url[:50]}"
+                        )
                     else:
                         logger.warning(f"크롤링 실패 (유효한 snippet 없음): {url[:50]}")
 
@@ -568,8 +580,11 @@ class SearXNGSearchService:
 
         # 채용 사이트
         job_sites = [
-            "saramin.co.kr", "jobkorea.co.kr", "wanted.co.kr",
-            "incruit.com", "career.co.kr",
+            "saramin.co.kr",
+            "jobkorea.co.kr",
+            "wanted.co.kr",
+            "incruit.com",
+            "career.co.kr",
         ]
         if any(d in url_lower for d in job_sites):
             return 95
@@ -581,8 +596,11 @@ class SearXNGSearchService:
 
         # 뉴스 사이트
         news = [
-            "naver.com/news", "daum.net/news", "chosun.com",
-            "joongang.co.kr", "hani.co.kr",
+            "naver.com/news",
+            "daum.net/news",
+            "chosun.com",
+            "joongang.co.kr",
+            "hani.co.kr",
         ]
         if any(d in url_lower for d in news):
             return 75
@@ -811,7 +829,14 @@ class SearXNGSearchService:
             # 시험 일정 카테고리 (NEW)
             "exam_schedule": {
                 "query": f"{certificate_title} 시험 일정 접수 기간 2025 2026",
-                "keywords": ["시험 일정", "접수 기간", "시행계획", "공고", "시험일", "원서접수"],
+                "keywords": [
+                    "시험 일정",
+                    "접수 기간",
+                    "시행계획",
+                    "공고",
+                    "시험일",
+                    "원서접수",
+                ],
             },
         }
 

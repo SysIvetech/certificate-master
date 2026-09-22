@@ -6,9 +6,9 @@
 - VectorStoreService: ChromaDB 벡터 스토어
 """
 
+from .factory import get_embedding_service
 from .protocol import EmbeddingServiceProtocol
 from .service import EmbeddingService
-from .factory import get_embedding_service
 from .vector_store import VectorStoreService
 
 __all__ = [

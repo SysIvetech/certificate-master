@@ -3,8 +3,6 @@
 자연어 추천의 구조화된 컨텍스트를 기존 추천 요청으로 변환하는 기능을 테스트합니다.
 """
 
-import pytest
-
 
 class TestContextToRequestConversion:
     """StructuredUserContext → RecommendationRequest 변환 테스트."""
@@ -201,7 +199,10 @@ class TestContextToRequestConversion:
             difficulty_preference="하",
             preferred_industries=["IT"],
         )
-        assert structured_to_recommendation_request(context_easy).difficulty_preference == "쉬운 편"
+        assert (
+            structured_to_recommendation_request(context_easy).difficulty_preference
+            == "쉬운 편"
+        )
 
         # "중" → "중간"
         context_medium = StructuredUserContext(
@@ -213,7 +214,10 @@ class TestContextToRequestConversion:
             difficulty_preference="중",
             preferred_industries=["IT"],
         )
-        assert structured_to_recommendation_request(context_medium).difficulty_preference == "중간"
+        assert (
+            structured_to_recommendation_request(context_medium).difficulty_preference
+            == "중간"
+        )
 
         # "중상", "상" → "어려워도 상관없음"
         context_hard = StructuredUserContext(
@@ -225,7 +229,10 @@ class TestContextToRequestConversion:
             difficulty_preference="상",
             preferred_industries=["IT"],
         )
-        assert structured_to_recommendation_request(context_hard).difficulty_preference == "어려워도 상관없음"
+        assert (
+            structured_to_recommendation_request(context_hard).difficulty_preference
+            == "어려워도 상관없음"
+        )
 
     def test_preferred_industries_to_target_industries(self):
         """preferred_industries → target_industries 매핑."""

@@ -3,9 +3,9 @@
 종목명(title)을 기준으로 중복을 제거하고, 같은 종목명이 여러 자격구분을 가지면
 categories 배열에 모두 포함한다.
 """
+
 import csv
 import json
-from collections import defaultdict
 from pathlib import Path
 from typing import TypedDict
 

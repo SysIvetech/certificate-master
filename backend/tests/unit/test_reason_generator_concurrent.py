@@ -3,10 +3,7 @@
 TDD: 개별 LLM 호출을 단일 배치 호출로 변경하고, 에러 처리를 검증합니다.
 """
 
-import asyncio
-import json
-import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -50,8 +47,7 @@ class TestGenerateReasonsBatchSingleCall:
         # _call_llm_batch mock: JSON 배열 반환
         certs = [make_cert_info(f"자격증{i}") for i in range(5)]
         mock_reasons = {
-            f"자격증{i}": f"자격증{i}에 대한 추천 이유입니다."
-            for i in range(5)
+            f"자격증{i}": f"자격증{i}에 대한 추천 이유입니다." for i in range(5)
         }
 
         service._call_llm_batch = AsyncMock(return_value=mock_reasons)

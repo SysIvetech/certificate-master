@@ -1,8 +1,8 @@
 """구조화된 쿼리 생성 함수 테스트."""
-import pytest
+
 from app.services.search.structured_query import (
-    build_structured_query,
     build_structured_metadata_filter,
+    build_structured_query,
 )
 
 

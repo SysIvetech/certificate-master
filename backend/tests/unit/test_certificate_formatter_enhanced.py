@@ -2,19 +2,19 @@
 
 사용자 추천 매칭을 위한 임베딩 텍스트 보강 기능 테스트.
 """
+
 import pytest
 
 from app.utils.certificate_formatter import (
-    format_certificate_text,
-    build_certificate_metadata,
-    format_user_matching_text,  # NEW: 사용자 매칭용 텍스트
     build_user_matching_metadata,  # NEW: 사용자 매칭용 메타데이터
+    format_certificate_text,
+    format_user_matching_text,  # NEW: 사용자 매칭용 텍스트
 )
-
 
 # ============================================================
 # 테스트 픽스처: 보강된 자격증 데이터
 # ============================================================
+
 
 @pytest.fixture
 def enriched_certificate():
@@ -78,6 +78,7 @@ def enriched_certificate():
 # 사용자 매칭용 텍스트 생성 테스트
 # ============================================================
 
+
 class TestFormatUserMatchingText:
     """사용자 매칭용 임베딩 텍스트 생성 테스트."""
 
@@ -140,6 +141,7 @@ class TestFormatUserMatchingText:
 # 사용자 매칭용 메타데이터 테스트
 # ============================================================
 
+
 class TestBuildUserMatchingMetadata:
     """사용자 매칭용 메타데이터 생성 테스트."""
 
@@ -196,6 +198,7 @@ class TestBuildUserMatchingMetadata:
 # ============================================================
 # 기존 함수 보강 테스트 (format_certificate_text)
 # ============================================================
+
 
 class TestFormatCertificateTextEnhanced:
     """기존 format_certificate_text 함수의 보강된 기능 테스트."""

@@ -57,7 +57,7 @@ async def get_velocity_metrics(
     if not study_plan_model:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Study plan not found or you don't have access"
+            detail="Study plan not found or you don't have access",
         )
 
     study_plan = study_plan_model.to_dict()

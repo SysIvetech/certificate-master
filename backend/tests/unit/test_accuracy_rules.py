@@ -5,7 +5,6 @@
 2. 연봉 정보는 신뢰할 수 있는 출처 기반으로만 표시
 """
 
-import pytest
 import inspect
 
 from app.services.llm.service import LLMService

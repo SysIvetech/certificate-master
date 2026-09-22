@@ -1,7 +1,6 @@
 """LLM 프롬프트에 difficulty-study_period_days 정합성 규칙이 포함되어 있는지 검증."""
 
 import inspect
-import pytest
 
 from app.services.llm.service import LLMService
 

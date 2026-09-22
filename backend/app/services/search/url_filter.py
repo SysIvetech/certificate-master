@@ -9,9 +9,9 @@ Note:
     블랙리스트/실패 캐싱은 "크롤링만 스킵"하고 snippet은 계속 사용합니다.
     따라서 데이터 손실 없이 처리 속도만 개선됩니다.
 """
+
 from typing import Optional
 from urllib.parse import urlparse
-
 
 # ============================================================
 # JS 렌더링 사이트 감지

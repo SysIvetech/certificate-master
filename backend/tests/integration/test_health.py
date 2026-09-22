@@ -2,6 +2,7 @@
 
 Simple tests to verify the API is running correctly.
 """
+
 from fastapi.testclient import TestClient
 
 

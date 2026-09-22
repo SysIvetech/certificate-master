@@ -2,18 +2,19 @@
 
 LLM 호출 없이 실제 벡터 검색 → 리랭킹 효과만 확인합니다.
 """
+
 import sys
 from pathlib import Path
 
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
+from app.services.study.reranker import DomainReranker
 from sqlalchemy.orm import sessionmaker
 
 from app.core.database import get_engine
 from app.models.certificate import Certificate as CertModel
 from app.services.embedding.vector_store import VectorStoreService
-from app.services.study.reranker import DomainReranker
 
 
 def quick_test():
@@ -37,7 +38,7 @@ def quick_test():
             "NOT: manufacturing welding machining metal woodwork cooking beauty tourism"
         )
 
-        print(f"\n[Query]")
+        print("\n[Query]")
         print(f"{it_query[:100]}...")
 
         # 벡터 검색
@@ -69,7 +70,9 @@ def quick_test():
         for idx, cert in enumerate(sorted_by_vector[:10], 1):
             score = vector_scores.get(cert.id, 0)
             industry = cert.career_info.get("industry", []) if cert.career_info else []
-            print(f"{idx:2d}. {cert.title:30s} (score: {score:.3f}) [{', '.join(industry[:2])}]")
+            print(
+                f"{idx:2d}. {cert.title:30s} (score: {score:.3f}) [{', '.join(industry[:2])}]"
+            )
 
         # 리랭킹
         print("\n[Reranking...]")
@@ -77,7 +80,9 @@ def quick_test():
         user_domains = ["IT개발"]
 
         # Certificate 모델 객체 리스트
-        vector_score_dict = {cert.id: vector_scores.get(cert.id, 0) for cert in certificates}
+        vector_score_dict = {
+            cert.id: vector_scores.get(cert.id, 0) for cert in certificates
+        }
         reranked = reranker.rerank(
             certificates=certificates,
             vector_scores=vector_score_dict,
@@ -118,20 +123,23 @@ def quick_test():
             if any(kw in cert.title for kw in it_keywords):
                 after_it_count += 1
 
-        print(f"IT certificates in top 10:")
+        print("IT certificates in top 10:")
         print(f"  Before reranking: {before_it_count}/10")
         print(f"  After reranking:  {after_it_count}/10")
 
         if after_it_count > before_it_count:
-            print(f"\n[SUCCESS] Reranking improved IT ranking (+{after_it_count - before_it_count})")
+            print(
+                f"\n[SUCCESS] Reranking improved IT ranking (+{after_it_count - before_it_count})"
+            )
         else:
-            print(f"\n[WARNING] No improvement in IT ranking")
+            print("\n[WARNING] No improvement in IT ranking")
 
         print("\n" + "=" * 80)
 
     except Exception as e:
         print(f"[ERROR] {e}")
         import traceback
+
         traceback.print_exc()
     finally:
         db.close()

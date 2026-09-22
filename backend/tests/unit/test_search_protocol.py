@@ -1,6 +1,8 @@
 """SearchServiceProtocol 및 팩토리 테스트."""
+
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 
 
 class TestSearchServiceProtocol:
@@ -201,18 +203,22 @@ class TestSearXNGSearchService:
 
         service = SearXNGSearchService()
 
-        with patch.object(
-            service,
-            "search",
-            new_callable=AsyncMock,
-            return_value={"web": {"results": []}},
-        ) as mock_search, patch.object(
-            service,
-            "_extract_results",
-            return_value=[],
-        ) as mock_extract, patch(
-            "app.services.searxng_search.asyncio.sleep",
-            new_callable=AsyncMock,
+        with (
+            patch.object(
+                service,
+                "search",
+                new_callable=AsyncMock,
+                return_value={"web": {"results": []}},
+            ) as mock_search,
+            patch.object(
+                service,
+                "_extract_results",
+                return_value=[],
+            ) as mock_extract,
+            patch(
+                "app.services.searxng_search.asyncio.sleep",
+                new_callable=AsyncMock,
+            ),
         ):
             results = await service.search_study_plan_context(
                 "정보처리기사",
@@ -274,5 +280,3 @@ class TestSearXNGSearchService:
             assert "query" in payload
             assert "keywords" in payload
             assert "정보처리기사" in payload["query"]
-
-

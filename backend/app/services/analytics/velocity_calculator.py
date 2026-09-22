@@ -42,7 +42,7 @@ class VelocityCalculator:
             current_date = date.today()
 
         # Get start and target dates
-        created_at = self.plan['created_at']
+        created_at = self.plan["created_at"]
         if isinstance(created_at, datetime):
             start_date = created_at.date()
         elif isinstance(created_at, str):
@@ -50,7 +50,7 @@ class VelocityCalculator:
         else:
             start_date = created_at
 
-        target_date_str = self.plan['target_date']
+        target_date_str = self.plan["target_date"]
         if isinstance(target_date_str, str):
             target_date = datetime.fromisoformat(target_date_str).date()
         else:
@@ -78,12 +78,12 @@ class VelocityCalculator:
         Returns:
             실제 진행률(0-100)
         """
-        milestones = self.plan.get('milestones', [])
+        milestones = self.plan.get("milestones", [])
         if not milestones:
             # Fallback to progress_percentage if no milestones
-            return self.plan.get('progress_percentage', 0.0)
+            return self.plan.get("progress_percentage", 0.0)
 
-        completed_count = sum(1 for m in milestones if m.get('completed', False))
+        completed_count = sum(1 for m in milestones if m.get("completed", False))
         total_count = len(milestones)
 
         if total_count == 0:
@@ -108,8 +108,8 @@ class VelocityCalculator:
         oldest = self.snapshots[-1]
 
         # Calculate time difference
-        newest_date = newest['snapshot_date']
-        oldest_date = oldest['snapshot_date']
+        newest_date = newest["snapshot_date"]
+        oldest_date = oldest["snapshot_date"]
 
         if isinstance(newest_date, str):
             newest_date = datetime.fromisoformat(newest_date).date()
@@ -122,7 +122,7 @@ class VelocityCalculator:
             return 0.0
 
         # Calculate progress difference
-        progress_diff = newest['progress_percentage'] - oldest['progress_percentage']
+        progress_diff = newest["progress_percentage"] - oldest["progress_percentage"]
 
         return progress_diff / days_diff
 
@@ -137,7 +137,7 @@ class VelocityCalculator:
 
         # If velocity is zero or negative, return target date
         if velocity <= 0:
-            target_date_str = self.plan['target_date']
+            target_date_str = self.plan["target_date"]
             if isinstance(target_date_str, str):
                 return datetime.fromisoformat(target_date_str).date()
             return target_date_str
@@ -152,7 +152,7 @@ class VelocityCalculator:
         # Use most recent snapshot date if available, otherwise today
         base_date = date.today()
         if self.snapshots and len(self.snapshots) > 0:
-            snapshot_date = self.snapshots[0]['snapshot_date']
+            snapshot_date = self.snapshots[0]["snapshot_date"]
             if isinstance(snapshot_date, str):
                 base_date = datetime.fromisoformat(snapshot_date).date()
             else:
@@ -184,19 +184,19 @@ class VelocityCalculator:
 
         # Determine status
         if delta > 10:
-            status = 'ahead'
+            status = "ahead"
         elif delta > -5:
-            status = 'on-track'
+            status = "on-track"
         elif delta > -15:
-            status = 'behind'
+            status = "behind"
         else:
-            status = 'critical'
+            status = "critical"
 
         return {
-            'expected_progress': round(expected, 1),
-            'actual_progress': round(actual, 1),
-            'progress_delta': round(delta, 1),
-            'velocity': round(velocity, 2),
-            'predicted_date': predicted.isoformat(),
-            'status': status,
+            "expected_progress": round(expected, 1),
+            "actual_progress": round(actual, 1),
+            "progress_delta": round(delta, 1),
+            "velocity": round(velocity, 2),
+            "predicted_date": predicted.isoformat(),
+            "status": status,
         }

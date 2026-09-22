@@ -56,7 +56,7 @@ async def test_searxng_connection(base_url: str) -> bool:
         연결 성공 여부
     """
     print(f"\n{'='*60}")
-    print(f"[1] SearXNG 서버 연결 테스트")
+    print("[1] SearXNG 서버 연결 테스트")
     print(f"{'='*60}")
     print(f"URL: {base_url}")
 
@@ -65,7 +65,9 @@ async def test_searxng_connection(base_url: str) -> bool:
             # 1. 기본 연결 테스트
             response = await client.get(base_url, timeout=10.0)
             print(f"  상태 코드: {response.status_code}")
-            headers_str = str(dict(response.headers))[:200] if response.headers else "None"
+            headers_str = (
+                str(dict(response.headers))[:200] if response.headers else "None"
+            )
             print(f"  응답 헤더: {headers_str}...")
 
             if response.status_code == 200:
@@ -96,7 +98,7 @@ async def test_searxng_search_html(base_url: str, query: str) -> bool:
         검색 성공 여부
     """
     print(f"\n{'='*60}")
-    print(f"[2] HTML 검색 테스트 (format 없음)")
+    print("[2] HTML 검색 테스트 (format 없음)")
     print(f"{'='*60}")
 
     params = {
@@ -138,7 +140,7 @@ async def test_searxng_search_json(base_url: str, query: str) -> bool:
         검색 성공 여부
     """
     print(f"\n{'='*60}")
-    print(f"[3] JSON 검색 테스트 (format=json)")
+    print("[3] JSON 검색 테스트 (format=json)")
     print(f"{'='*60}")
 
     params = {
@@ -161,13 +163,13 @@ async def test_searxng_search_json(base_url: str, query: str) -> bool:
                 results = data.get("results", [])
                 print(f"  결과 수: {len(results)}")
                 if results:
-                    print(f"  첫 번째 결과:")
+                    print("  첫 번째 결과:")
                     print(f"    - 제목: {results[0].get('title', 'N/A')}")
                     print(f"    - URL: {results[0].get('url', 'N/A')}")
                 print("  [OK] JSON 검색 성공")
                 return True
             elif response.status_code == 403:
-                print(f"  [FAIL] 403 Forbidden - JSON API 접근 차단됨")
+                print("  [FAIL] 403 Forbidden - JSON API 접근 차단됨")
                 print("  -> SearXNG 설정에서 JSON API를 활성화해야 합니다.")
                 print("  -> settings.yml에서 다음 설정 확인:")
                 print("     search:")
@@ -196,7 +198,7 @@ async def test_searxng_search_json_with_headers(base_url: str, query: str) -> bo
         검색 성공 여부
     """
     print(f"\n{'='*60}")
-    print(f"[4] JSON 검색 테스트 (User-Agent 포함)")
+    print("[4] JSON 검색 테스트 (User-Agent 포함)")
     print(f"{'='*60}")
 
     params = {
@@ -228,7 +230,7 @@ async def test_searxng_search_json_with_headers(base_url: str, query: str) -> bo
                 print("  [OK] JSON 검색 성공 (헤더 포함)")
                 return True
             elif response.status_code == 403:
-                print(f"  [FAIL] 403 Forbidden - 헤더 추가로도 해결 안 됨")
+                print("  [FAIL] 403 Forbidden - 헤더 추가로도 해결 안 됨")
                 return False
             else:
                 print(f"  [FAIL] 검색 실패: {response.status_code}")
@@ -249,7 +251,7 @@ async def test_searxng_config(base_url: str) -> bool:
         조회 성공 여부
     """
     print(f"\n{'='*60}")
-    print(f"[5] SearXNG 설정 조회 (/config)")
+    print("[5] SearXNG 설정 조회 (/config)")
     print(f"{'='*60}")
 
     try:
@@ -311,7 +313,9 @@ async def main():
         "connection": await test_searxng_connection(base_url),
         "html_search": await test_searxng_search_html(base_url, query),
         "json_search": await test_searxng_search_json(base_url, query),
-        "json_with_headers": await test_searxng_search_json_with_headers(base_url, query),
+        "json_with_headers": await test_searxng_search_json_with_headers(
+            base_url, query
+        ),
         "config": await test_searxng_config(base_url),
     }
 

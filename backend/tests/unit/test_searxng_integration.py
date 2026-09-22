@@ -2,8 +2,8 @@
 
 이 모듈은 SearXNG 검색 서비스에 SmartCrawler가 통합되었는지 테스트합니다.
 """
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+
+from unittest.mock import MagicMock, patch
 
 
 class TestSearXNGSmartCrawlerIntegration:
@@ -11,10 +11,11 @@ class TestSearXNGSmartCrawlerIntegration:
 
     def test_searxng_has_smart_crawler_option(self):
         """SearXNGSearchService에 use_smart_crawler 옵션이 있어야 합니다."""
-        from app.services.search.searxng_search import SearXNGSearchService
-
         # 생성자에 use_smart_crawler 파라미터가 있는지 확인
         import inspect
+
+        from app.services.search.searxng_search import SearXNGSearchService
+
         sig = inspect.signature(SearXNGSearchService.__init__)
         params = list(sig.parameters.keys())
 
@@ -90,6 +91,7 @@ class TestSearXNGCrawlerSelection:
 
             # ContentCrawlerService는 provider_name이 없으므로 타입으로 확인
             from app.services.search.content_crawler import ContentCrawlerService
+
             assert isinstance(crawler, ContentCrawlerService)
 
 
@@ -174,4 +176,6 @@ class TestExamScheduleQueries:
             required_keywords = ["시험 일정", "접수 기간", "시험일"]
 
             for keyword in required_keywords:
-                assert keyword in exam_schedule["keywords"], f"Missing keyword: {keyword}"
+                assert (
+                    keyword in exam_schedule["keywords"]
+                ), f"Missing keyword: {keyword}"

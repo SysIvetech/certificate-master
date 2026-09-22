@@ -16,25 +16,25 @@
     # 상세 출력
     uv run python -m scripts.test_search_crawl --verbose
 """
+
 import argparse
 import asyncio
-import json
-import sys
 import io
+import sys
 from datetime import datetime
 from pathlib import Path
 
 # Windows 콘솔 UTF-8 출력 설정
 if sys.platform == "win32":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 # 프로젝트 루트 추가
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.core.config import get_settings
-from app.services.search_factory import get_search_service
 from app.services.content_crawler import ContentCrawlerService
+from app.services.search_factory import get_search_service
 
 
 async def test_single_crawl(url: str) -> None:
@@ -47,14 +47,14 @@ async def test_single_crawl(url: str) -> None:
     crawler = ContentCrawlerService()
     result = await crawler.extract_content(url)
 
-    print(f"\n결과:")
+    print("\n결과:")
     print(f"  성공: {result.success}")
     print(f"  방법: {result.method}")
     print(f"  제목: {result.title}")
     print(f"  콘텐츠 길이: {len(result.content)} 자")
 
     if result.success:
-        print(f"\n콘텐츠 미리보기 (처음 500자):")
+        print("\n콘텐츠 미리보기 (처음 500자):")
         print("-" * 40)
         print(result.content[:500])
         if len(result.content) > 500:
@@ -72,7 +72,7 @@ async def test_search_with_crawl(
     settings = get_settings()
 
     print(f"\n{'='*60}")
-    print(f"[TEST] 검색 및 크롤링 통합 테스트")
+    print("[TEST] 검색 및 크롤링 통합 테스트")
     print(f"{'='*60}")
     print(f"[CONFIG] 자격증: {certificate_title}")
     print(f"[CONFIG] 검색 프로바이더: {settings.SEARCH_PROVIDER}")
@@ -82,17 +82,17 @@ async def test_search_with_crawl(
     sys.stdout.flush()
 
     # 검색 서비스 생성
-    print(f"\n[INIT] 검색 서비스 초기화 중...")
+    print("\n[INIT] 검색 서비스 초기화 중...")
     sys.stdout.flush()
     search_service = get_search_service()
 
     # 크롤링 설정 적용
     search_service.crawl_enabled = crawl_enabled
     search_service.crawl_top_n = settings.CRAWL_TOP_N
-    print(f"[INIT] 검색 서비스 준비 완료")
+    print("[INIT] 검색 서비스 준비 완료")
     sys.stdout.flush()
 
-    print(f"\n[START] 검색 및 크롤링 시작...")
+    print("\n[START] 검색 및 크롤링 시작...")
     sys.stdout.flush()
     start_time = datetime.now()
 
@@ -134,7 +134,7 @@ async def test_search_with_crawl(
                     print(f"      콘텐츠 ({len(result['full_content'])}자):")
                     print(f"        {content_preview}...")
                 else:
-                    desc = result['description'][:100]
+                    desc = result["description"][:100]
                     print(f"      설명: {desc}...")
 
     print(f"\n{'='*60}")
@@ -157,9 +157,7 @@ async def test_search_with_crawl(
 
 async def main():
     """메인 함수."""
-    parser = argparse.ArgumentParser(
-        description="검색 및 크롤링 결과 테스트"
-    )
+    parser = argparse.ArgumentParser(description="검색 및 크롤링 결과 테스트")
     parser.add_argument(
         "--cert",
         type=str,
@@ -172,7 +170,8 @@ async def main():
         help="크롤링 비활성화",
     )
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="상세 출력",
     )

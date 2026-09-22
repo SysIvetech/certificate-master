@@ -2,6 +2,7 @@
 
 이 모듈은 임베딩 서비스의 공통 인터페이스를 정의합니다.
 """
+
 from typing import Protocol, runtime_checkable
 
 

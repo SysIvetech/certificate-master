@@ -5,6 +5,7 @@
 사용 예:
     service = get_embedding_service()
 """
+
 import logging
 
 from app.services.embedding.protocol import EmbeddingServiceProtocol
@@ -21,4 +22,5 @@ def get_embedding_service() -> EmbeddingServiceProtocol:
     logger.info("임베딩 서비스 생성: provider=openai")
 
     from app.services.embedding.service import EmbeddingService
+
     return EmbeddingService()

@@ -3,6 +3,7 @@
 These tests verify the API behavior by making actual HTTP requests
 to a running server, similar to how Playwright tests work.
 """
+
 import os
 
 import pytest
@@ -34,7 +35,9 @@ def check_server_running(api_url):
         if response.status_code != 200:
             pytest.skip(f"API server is not healthy at {api_url}")
     except requests.exceptions.ConnectionError:
-        pytest.skip(f"API server is not running at {api_url}. Please start the server first.")
+        pytest.skip(
+            f"API server is not running at {api_url}. Please start the server first."
+        )
 
 
 class TestAPIHealth:
@@ -106,8 +109,7 @@ class TestCertificatesAPIE2E:
         Then: Returns matching certificates
         """
         response = requests.get(
-            f"{api_url}/api/v1/certificates/search",
-            params={"q": "정보처리"}
+            f"{api_url}/api/v1/certificates/search", params={"q": "정보처리"}
         )
 
         assert response.status_code == 200
@@ -140,8 +142,7 @@ class TestCertificatesAPIE2E:
         Then: Returns correct page size
         """
         response = requests.get(
-            f"{api_url}/api/v1/certificates/search",
-            params={"page": 1, "page_size": 5}
+            f"{api_url}/api/v1/certificates/search", params={"page": 1, "page_size": 5}
         )
 
         assert response.status_code == 200
@@ -186,16 +187,24 @@ class TestAPIErrorHandling:
 
         # Check for CORS headers
         assert "access-control-allow-origin" in response.headers
-        assert response.headers["access-control-allow-origin"] in ["*", CORS_TEST_ORIGIN]
-        print(f"\n[PASS] CORS headers present: {response.headers.get('access-control-allow-origin')}")
+        assert response.headers["access-control-allow-origin"] in [
+            "*",
+            CORS_TEST_ORIGIN,
+        ]
+        print(
+            f"\n[PASS] CORS headers present: {response.headers.get('access-control-allow-origin')}"
+        )
 
 
-@pytest.mark.parametrize("endpoint", [
-    "/health",
-    "/",
-    "/api/v1/certificates/search",
-    "/api/v1/certificates/categories",
-])
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "/health",
+        "/",
+        "/api/v1/certificates/search",
+        "/api/v1/certificates/categories",
+    ],
+)
 def test_all_endpoints_accessible(api_url, check_server_running, endpoint):
     """Test that all main endpoints are accessible.
 
@@ -207,4 +216,3 @@ def test_all_endpoints_accessible(api_url, check_server_running, endpoint):
 
     assert response.status_code == 200
     print(f"\n[PASS] {endpoint}: OK")
-

@@ -3,9 +3,6 @@
 프롬프트와 스키마의 Enum 값이 일치하는지 검증합니다.
 """
 
-import pytest
-import json
-
 
 class TestEnumConstantsConsistency:
     """Enum 상수 일관성 테스트."""
@@ -54,9 +51,9 @@ class TestEnumConstantsConsistency:
 
         # 프롬프트에 모든 goal 값이 포함되어야 함
         for goal in RecommendationConstants.NATURAL_GOALS:
-            assert goal in CONTEXT_EXTRACTION_SYSTEM_PROMPT, (
-                f"Goal '{goal}' not found in prompt"
-            )
+            assert (
+                goal in CONTEXT_EXTRACTION_SYSTEM_PROMPT
+            ), f"Goal '{goal}' not found in prompt"
 
     def test_prompt_uses_constants_for_employment_status(self):
         """프롬프트가 constants에서 employment_status 값을 포함하는지 확인."""
@@ -66,9 +63,9 @@ class TestEnumConstantsConsistency:
         )
 
         for status in RecommendationConstants.EMPLOYMENT_STATUS:
-            assert status in CONTEXT_EXTRACTION_SYSTEM_PROMPT, (
-                f"Employment status '{status}' not found in prompt"
-            )
+            assert (
+                status in CONTEXT_EXTRACTION_SYSTEM_PROMPT
+            ), f"Employment status '{status}' not found in prompt"
 
     def test_prompt_uses_constants_for_major_background(self):
         """프롬프트가 constants에서 major_background 값을 포함하는지 확인."""
@@ -78,9 +75,9 @@ class TestEnumConstantsConsistency:
         )
 
         for background in RecommendationConstants.MAJOR_BACKGROUND:
-            assert background in CONTEXT_EXTRACTION_SYSTEM_PROMPT, (
-                f"Major background '{background}' not found in prompt"
-            )
+            assert (
+                background in CONTEXT_EXTRACTION_SYSTEM_PROMPT
+            ), f"Major background '{background}' not found in prompt"
 
     def test_prompt_uses_constants_for_difficulty(self):
         """프롬프트가 constants에서 difficulty 값을 포함하는지 확인."""
@@ -90,9 +87,9 @@ class TestEnumConstantsConsistency:
         )
 
         for difficulty in RecommendationConstants.NATURAL_DIFFICULTY:
-            assert difficulty in CONTEXT_EXTRACTION_SYSTEM_PROMPT, (
-                f"Difficulty '{difficulty}' not found in prompt"
-            )
+            assert (
+                difficulty in CONTEXT_EXTRACTION_SYSTEM_PROMPT
+            ), f"Difficulty '{difficulty}' not found in prompt"
 
 
 class TestPromptDynamicGeneration:
@@ -100,10 +97,10 @@ class TestPromptDynamicGeneration:
 
     def test_prompt_generated_from_constants(self):
         """프롬프트가 constants에서 동적으로 생성되는지 확인."""
+        from app.core.constants import RecommendationConstants
         from app.services.study.prompts.context_extraction import (
             build_context_extraction_prompt,
         )
-        from app.core.constants import RecommendationConstants
 
         prompt = build_context_extraction_prompt()
 
@@ -130,14 +127,25 @@ class TestSchemaUsesConstants:
 
     def test_schema_imports_from_constants(self):
         """recommendation.py가 constants에서 값을 import하는지 확인."""
-        from app.schemas import recommendation
         from app.core.constants import RecommendationConstants
+        from app.schemas import recommendation
 
         # recommendation 모듈의 상수가 constants와 동일한 객체여야 함
-        assert recommendation.VALID_NATURAL_GOALS is RecommendationConstants.NATURAL_GOALS
-        assert recommendation.VALID_EMPLOYMENT_STATUS is RecommendationConstants.EMPLOYMENT_STATUS
-        assert recommendation.VALID_MAJOR_BACKGROUND is RecommendationConstants.MAJOR_BACKGROUND
-        assert recommendation.VALID_NATURAL_DIFFICULTY is RecommendationConstants.NATURAL_DIFFICULTY
+        assert (
+            recommendation.VALID_NATURAL_GOALS is RecommendationConstants.NATURAL_GOALS
+        )
+        assert (
+            recommendation.VALID_EMPLOYMENT_STATUS
+            is RecommendationConstants.EMPLOYMENT_STATUS
+        )
+        assert (
+            recommendation.VALID_MAJOR_BACKGROUND
+            is RecommendationConstants.MAJOR_BACKGROUND
+        )
+        assert (
+            recommendation.VALID_NATURAL_DIFFICULTY
+            is RecommendationConstants.NATURAL_DIFFICULTY
+        )
 
 
 class TestSchemaMappingDocumentation:
@@ -147,14 +155,26 @@ class TestSchemaMappingDocumentation:
         """SCHEMA_MAPPING.md 문서가 존재하는지 확인."""
         from pathlib import Path
 
-        doc_path = Path(__file__).parent.parent.parent / "app" / "services" / "llm" / "SCHEMA_MAPPING.md"
+        doc_path = (
+            Path(__file__).parent.parent.parent
+            / "app"
+            / "services"
+            / "llm"
+            / "SCHEMA_MAPPING.md"
+        )
         assert doc_path.exists(), "SCHEMA_MAPPING.md not found"
 
     def test_schema_mapping_doc_contains_key_sections(self):
         """문서에 필수 섹션이 포함되어 있는지 확인."""
         from pathlib import Path
 
-        doc_path = Path(__file__).parent.parent.parent / "app" / "services" / "llm" / "SCHEMA_MAPPING.md"
+        doc_path = (
+            Path(__file__).parent.parent.parent
+            / "app"
+            / "services"
+            / "llm"
+            / "SCHEMA_MAPPING.md"
+        )
         content = doc_path.read_text(encoding="utf-8")
 
         required_sections = [
@@ -190,9 +210,9 @@ class TestConstantsExistence:
         ]
 
         for attr in required_attrs:
-            assert hasattr(RecommendationConstants, attr), (
-                f"RecommendationConstants missing '{attr}'"
-            )
+            assert hasattr(
+                RecommendationConstants, attr
+            ), f"RecommendationConstants missing '{attr}'"
 
     def test_constants_are_lists(self):
         """상수들이 리스트 타입인지 확인."""

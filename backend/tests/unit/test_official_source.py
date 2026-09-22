@@ -2,8 +2,10 @@
 
 이 모듈은 검색 결과에서 공식 출처(Q-Net 등)가 필수로 포함되는지 테스트합니다.
 """
-import pytest
+
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 class TestOfficialSourceDetection:
@@ -138,7 +140,7 @@ class TestEnsureOfficialSource:
                 ],
             }
 
-            updated = await service._ensure_official_source("정보처리기사", results)
+            await service._ensure_official_source("정보처리기사", results)
 
             # fallback 검색이 호출되었는지 확인
             service.search.assert_called_once()
@@ -168,7 +170,7 @@ class TestSearchWithOfficialSource:
             service._ensure_official_source = AsyncMock(return_value=mock_results)
             service._build_comprehensive_queries = MagicMock(return_value={})
 
-            results = await service.search_certificate_comprehensive("정보처리기사")
+            await service.search_certificate_comprehensive("정보처리기사")
 
             # _ensure_official_source가 호출되었는지 확인
             service._ensure_official_source.assert_called_once()

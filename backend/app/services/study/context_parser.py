@@ -4,9 +4,8 @@ LLM 호출 없이 user_input + domains에서 StructuredUserContext를 생성합�
 통합 추천(/unified) 엔드포인트의 Step 1을 대체하여 ~29초 → ~0초로 개선합니다.
 """
 
-import re
 import logging
-from typing import Optional
+import re
 
 from app.schemas.recommendation import StructuredUserContext
 
@@ -96,7 +95,9 @@ def build_search_query(
     # user_input에서 불필요한 부분 제거 (질문형 어미 등)
     cleaned = user_input.strip()
     # "있나요?", "있을까요?", "추천해주세요" 등 제거
-    cleaned = re.sub(r"(있나요|있을까요|알려주세요|추천해주세요|부탁합니다)[.?!]*$", "", cleaned).strip()
+    cleaned = re.sub(
+        r"(있나요|있을까요|알려주세요|추천해주세요|부탁합니다)[.?!]*$", "", cleaned
+    ).strip()
 
     query = f"{domain_str} {cleaned}"
 

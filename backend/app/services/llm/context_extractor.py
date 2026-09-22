@@ -98,7 +98,7 @@ class ContextExtractorService:
         if not content:
             raise ValueError("Empty response from LLM")
 
-        logger.info(f"[ContextExtractor] LLM response received")
+        logger.info("[ContextExtractor] LLM response received")
 
         return json.loads(content)
 
@@ -161,14 +161,20 @@ class ContextExtractorService:
         try:
             context = StructuredUserContext(**context_data)
         except Exception as e:
-            logger.error(f"[ContextExtractor] Failed to parse context: {e}, data={context_data}")
+            logger.error(
+                f"[ContextExtractor] Failed to parse context: {e}, data={context_data}"
+            )
             # 기본값으로 폴백
             context = StructuredUserContext(
                 goal=context_data.get("goal", "취업"),
                 employment_status=context_data.get("employment_status", "구직 중"),
                 major_background=context_data.get("major_background", "비전공자"),
-                weekly_study_hours=max(1, min(40, int(context_data.get("weekly_study_hours", 15)))),
-                max_study_period_days=max(30, min(730, int(context_data.get("max_study_period_days", 180)))),
+                weekly_study_hours=max(
+                    1, min(40, int(context_data.get("weekly_study_hours", 15)))
+                ),
+                max_study_period_days=max(
+                    30, min(730, int(context_data.get("max_study_period_days", 180)))
+                ),
                 difficulty_preference=context_data.get("difficulty_preference", "중"),
                 preferred_industries=context_data.get("preferred_industries", []),
             )

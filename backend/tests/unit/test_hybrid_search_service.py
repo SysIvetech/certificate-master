@@ -1,7 +1,9 @@
 """하이브리드 검색 서비스 (Dense + Sparse + RRF) 테스트."""
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
 from app.services.search.hybrid_search_service import HybridSearchService
 
 
@@ -9,11 +11,13 @@ from app.services.search.hybrid_search_service import HybridSearchService
 def mock_vector_store():
     store = MagicMock()
     store.NAMESPACE = "certificates"
-    store.search_records = MagicMock(return_value=[
-        {"id": "cert-A", "score": 0.8, "metadata": {}},
-        {"id": "cert-B", "score": 0.6, "metadata": {}},
-        {"id": "cert-C", "score": 0.4, "metadata": {}},
-    ])
+    store.search_records = MagicMock(
+        return_value=[
+            {"id": "cert-A", "score": 0.8, "metadata": {}},
+            {"id": "cert-B", "score": 0.6, "metadata": {}},
+            {"id": "cert-C", "score": 0.4, "metadata": {}},
+        ]
+    )
     return store
 
 
@@ -93,25 +97,24 @@ class TestRRFFusion:
         """search_records에 namespace 인자가 전달되는지 확인."""
         await service.search("테스트", top_k=5)
         service._vector_store.search_records.assert_called_once_with(
-            "certificates", "테스트", 15,
-            filter_dict=None
+            "certificates", "테스트", 15, filter_dict=None
         )
 
     @pytest.mark.asyncio
     async def test_bm25_called_with_correct_args(self, service):
         """BM25 search에 올바른 인자가 전달되는지 확인."""
         await service.search("테스트", top_k=5, domains=["IT"])
-        service._bm25_service.search.assert_called_once_with(
-            "테스트", 15, ["IT"]
-        )
+        service._bm25_service.search.assert_called_once_with("테스트", 15, ["IT"])
 
     @pytest.mark.asyncio
     async def test_dense_search_passes_domain_filter(self, service):
         """domains가 주어지면 Dense 검색에 filter_dict가 전달되는지 확인."""
         await service.search("테스트", top_k=5, domains=["IT/소프트웨어"])
         service._vector_store.search_records.assert_called_once_with(
-            "certificates", "테스트", 15,
-            filter_dict={"domain": {"$in": ["IT/소프트웨어"]}}
+            "certificates",
+            "테스트",
+            15,
+            filter_dict={"domain": {"$in": ["IT/소프트웨어"]}},
         )
 
     @pytest.mark.asyncio
@@ -119,8 +122,7 @@ class TestRRFFusion:
         """domains가 없으면 Dense 검색에 filter_dict가 전달되지 않는지 확인."""
         await service.search("테스트", top_k=5)
         service._vector_store.search_records.assert_called_once_with(
-            "certificates", "테스트", 15,
-            filter_dict=None
+            "certificates", "테스트", 15, filter_dict=None
         )
 
     @pytest.mark.asyncio
@@ -128,6 +130,5 @@ class TestRRFFusion:
         """domains가 빈 리스트면 filter_dict가 전달되지 않는지 확인."""
         await service.search("테스트", top_k=5, domains=[])
         service._vector_store.search_records.assert_called_once_with(
-            "certificates", "테스트", 15,
-            filter_dict=None
+            "certificates", "테스트", 15, filter_dict=None
         )

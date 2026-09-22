@@ -3,24 +3,13 @@
 자격증의 검색, 조회, 업데이트 기능을 제공합니다.
 MariaDB (SQLAlchemy)로 마이그레이션됨.
 """
+
 import logging
 import re
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import or_
-from sqlalchemy.dialects.mysql import JSON
-
-# UUID v4 패턴 감지용 정규식
-_UUID_PATTERN = re.compile(
-    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
-    re.IGNORECASE,
-)
-
-
-def is_uuid(value: str) -> bool:
-    """문자열이 UUID v4 형식인지 확인."""
-    return bool(_UUID_PATTERN.match(value))
 
 from app.api.deps import DBSession
 from app.models.certificate import Certificate as CertificateModel
@@ -33,6 +22,18 @@ from app.schemas.certificate import (
     SeriesByCategory,
 )
 
+# UUID v4 패턴 감지용 정규식
+_UUID_PATTERN = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    re.IGNORECASE,
+)
+
+
+def is_uuid(value: str) -> bool:
+    """문자열이 UUID v4 형식인지 확인."""
+    return bool(_UUID_PATTERN.match(value))
+
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
@@ -41,8 +42,12 @@ logger = logging.getLogger(__name__)
 async def search_certificates(
     db: DBSession,
     q: Optional[str] = Query(None, description="검색 키워드"),
-    categories: Optional[list[str]] = Query(None, description="자격구분명 필터 (여러 개 가능)"),
-    category_codes: Optional[list[str]] = Query(None, description="자격구분코드 필터 (여러 개 가능)"),
+    categories: Optional[list[str]] = Query(
+        None, description="자격구분명 필터 (여러 개 가능)"
+    ),
+    category_codes: Optional[list[str]] = Query(
+        None, description="자격구분코드 필터 (여러 개 가능)"
+    ),
     series: Optional[str] = Query(None, description="계열명 필터"),
     sort_by: str = Query("view_count", description="정렬 기준 (view_count, title)"),
     page: int = Query(1, ge=1, description="페이지 번호"),
@@ -88,7 +93,7 @@ async def search_certificates(
                 func.json_contains(
                     CertificateModel.categories,
                     func.json_quote(cat_name),
-                    text("'$[*].name'")
+                    text("'$[*].name'"),
                 )
             )
         if category_conditions:
@@ -102,7 +107,7 @@ async def search_certificates(
                 func.json_contains(
                     CertificateModel.categories,
                     func.json_quote(code),
-                    text("'$[*].code'")
+                    text("'$[*].code'"),
                 )
             )
         if code_conditions:
@@ -196,14 +201,18 @@ async def get_categories(db: DBSession):
     from sqlalchemy import text
 
     # JSON_TABLE을 사용하여 categories 배열에서 고유 카테고리 추출
-    result = db.execute(text("""
+    result = db.execute(
+        text(
+            """
         SELECT DISTINCT
             JSON_UNQUOTE(JSON_EXTRACT(cat.value, '$.code')) as code,
             JSON_UNQUOTE(JSON_EXTRACT(cat.value, '$.name')) as name
         FROM certificates,
              JSON_TABLE(categories, '$[*]' COLUMNS (value JSON PATH '$')) as cat
         ORDER BY name
-    """))
+    """
+        )
+    )
 
     return [CategoryInfo(code=row.code, name=row.name) for row in result.fetchall()]
 
@@ -225,22 +234,19 @@ async def get_series_by_category(
     Returns:
         list[SeriesByCategory]: 카테고리별 계열 목록.
     """
-    from sqlalchemy import text, func
+    from sqlalchemy import func, text
 
     # JSON_TABLE로 categories 배열 펼치기
     if category_name or category_code:
         # 특정 카테고리만 필터링
-        query = db.query(
-            CertificateModel.categories,
-            CertificateModel.series
-        )
+        query = db.query(CertificateModel.categories, CertificateModel.series)
 
         if category_name:
             query = query.filter(
                 func.json_contains(
                     CertificateModel.categories,
                     func.json_quote(category_name),
-                    text("'$[*].name'")
+                    text("'$[*].name'"),
                 )
             )
 
@@ -249,7 +255,7 @@ async def get_series_by_category(
                 func.json_contains(
                     CertificateModel.categories,
                     func.json_quote(category_code),
-                    text("'$[*].code'")
+                    text("'$[*].code'"),
                 )
             )
 
@@ -273,10 +279,7 @@ async def get_series_by_category(
                     series_map[key].add(ser)
     else:
         # 전체 카테고리
-        results = db.query(
-            CertificateModel.categories,
-            CertificateModel.series
-        ).all()
+        results = db.query(CertificateModel.categories, CertificateModel.series).all()
 
         series_map: dict[tuple[str, str], set] = {}
         for categories_json, ser in results:
@@ -292,11 +295,11 @@ async def get_series_by_category(
     # Format result
     result = []
     for (code, name), series_set in sorted(series_map.items(), key=lambda x: x[1]):
-        result.append(SeriesByCategory(
-            category_code=code,
-            category_name=name,
-            series=sorted(list(series_set))
-        ))
+        result.append(
+            SeriesByCategory(
+                category_code=code, category_name=name, series=sorted(list(series_set))
+            )
+        )
 
     return result
 
@@ -322,9 +325,7 @@ async def get_certificate(
     """
     if is_uuid(identifier):
         cert = (
-            db.query(CertificateModel)
-            .filter(CertificateModel.id == identifier)
-            .first()
+            db.query(CertificateModel).filter(CertificateModel.id == identifier).first()
         )
     else:
         cert = (
@@ -413,9 +414,7 @@ async def update_certificate(
 
     # Find certificate
     cert = (
-        db.query(CertificateModel)
-        .filter(CertificateModel.id == certificate_id)
-        .first()
+        db.query(CertificateModel).filter(CertificateModel.id == certificate_id).first()
     )
 
     if not cert:

@@ -2,6 +2,7 @@
 
 복합 진행도 지표 및 학습 패턴 분석 관련 Pydantic 모델을 정의합니다.
 """
+
 from datetime import date, datetime
 from enum import Enum
 from typing import Optional
@@ -13,17 +14,17 @@ class LearnerStatus(str, Enum):
     """학습자 상태 분류."""
 
     EXCEEDING = "exceeding"  # 초과 달성 (진도 > 120%)
-    ON_TRACK = "on_track"    # 정상 진행 (80% ≤ 진도 ≤ 120%)
+    ON_TRACK = "on_track"  # 정상 진행 (80% ≤ 진도 ≤ 120%)
     NEEDS_ATTENTION = "needs_attention"  # 주의 필요 (50% ≤ 진도 < 80%)
-    AT_RISK = "at_risk"      # 이탈 위험 (진도 < 50% 또는 연속성 = 0)
+    AT_RISK = "at_risk"  # 이탈 위험 (진도 < 50% 또는 연속성 = 0)
 
 
 class ReviewUrgency(str, Enum):
     """복습 긴급도."""
 
-    LOW = "low"       # 최근 7일 이내 복습
+    LOW = "low"  # 최근 7일 이내 복습
     MEDIUM = "medium"  # 7-14일 전 복습
-    HIGH = "high"     # 14일 이상 복습 안함
+    HIGH = "high"  # 14일 이상 복습 안함
 
 
 class RiskSignalType(str, Enum):
@@ -59,15 +60,21 @@ class ProgressAnalytics(BaseModel):
     learning_pattern_score: float = Field(
         default=0.0, ge=0.0, le=100.0, description="학습 패턴 점수"
     )
-    review_urgency: ReviewUrgency = Field(default=ReviewUrgency.LOW, description="복습 긴급도")
+    review_urgency: ReviewUrgency = Field(
+        default=ReviewUrgency.LOW, description="복습 긴급도"
+    )
 
     # 상태 및 예측
     status: LearnerStatus = Field(..., description="학습자 상태")
     predicted_completion_date: Optional[date] = Field(None, description="예상 완료일")
 
     # 추천 액션
-    recommendations: list[str] = Field(default_factory=list, description="추천 액션 목록")
-    risk_signals: list[RiskSignal] = Field(default_factory=list, description="이탈 위험 신호")
+    recommendations: list[str] = Field(
+        default_factory=list, description="추천 액션 목록"
+    )
+    risk_signals: list[RiskSignal] = Field(
+        default_factory=list, description="이탈 위험 신호"
+    )
 
 
 class LearningPattern(BaseModel):
@@ -79,15 +86,21 @@ class LearningPattern(BaseModel):
     preferred_time_slots: list[str] = Field(
         default_factory=list, description="선호 학습 시간대 (예: 오전, 오후, 저녁)"
     )
-    average_session_duration: float = Field(0.0, description="평균 학습 세션 시간 (시간)")
+    average_session_duration: float = Field(
+        0.0, description="평균 학습 세션 시간 (시간)"
+    )
 
     # 요일별 효율
     best_weekday: Optional[str] = Field(None, description="가장 효율적인 요일")
     worst_weekday: Optional[str] = Field(None, description="가장 비효율적인 요일")
 
     # 기분 추이
-    mood_trend: str = Field(default="stable", description="기분 추이 (improving, stable, declining)")
-    recent_moods: list[str] = Field(default_factory=list, description="최근 7일 기분 기록")
+    mood_trend: str = Field(
+        default="stable", description="기분 추이 (improving, stable, declining)"
+    )
+    recent_moods: list[str] = Field(
+        default_factory=list, description="최근 7일 기분 기록"
+    )
 
     # 학습 일관성
     consistency_score: float = Field(

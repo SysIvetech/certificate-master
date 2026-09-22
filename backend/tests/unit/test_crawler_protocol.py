@@ -2,8 +2,6 @@
 
 이 모듈은 크롤러 프로토콜 인터페이스와 팩토리 패턴을 테스트합니다.
 """
-import pytest
-from typing import Protocol, runtime_checkable
 
 
 class TestCrawlerProtocol:
@@ -60,7 +58,6 @@ class TestCrawlerFactory:
     def test_factory_returns_crawler_protocol(self):
         """팩토리가 CrawlerProtocol을 구현한 객체를 반환해야 합니다."""
         from app.services.search.crawler.factory import get_crawler
-        from app.services.search.crawler.protocol import CrawlerProtocol
 
         crawler = get_crawler()
 

@@ -2,7 +2,6 @@
 
 생성된 추천 이유가 필수 요소를 포함하는지 검증합니다.
 """
-import pytest
 
 from app.schemas.recommendation import StructuredUserContext
 
@@ -55,11 +54,7 @@ class TestRecommendationReasonQuality:
         reason = _generate_test_reason(context, cert_info)
 
         # 자격증 제목 또는 핵심 키워드 포함
-        assert (
-            "정보처리기사" in reason
-            or "정보처리" in reason
-            or "IT" in reason
-        )
+        assert "정보처리기사" in reason or "정보처리" in reason or "IT" in reason
 
     def test_reason_includes_industry_match(self):
         """IT 쿼리에 IT 자격증 추천 시 산업 분야 언급이 있어야 함."""
@@ -160,9 +155,7 @@ class TestRecommendationReasonQuality:
         assert not any(kw in reason for kw in excluded_keywords)
 
 
-def _generate_test_reason(
-    context: StructuredUserContext, cert_info: dict
-) -> str:
+def _generate_test_reason(context: StructuredUserContext, cert_info: dict) -> str:
     """테스트용 추천 이유 생성.
 
     실제로는 프롬프트 기반으로 생성되지만, 테스트에서는
@@ -173,9 +166,7 @@ def _generate_test_reason(
     goal = context.goal
     title = cert_info.get("title", "자격증")
     industries = cert_info.get("career_info", {}).get("industry", [])
-    self_study = cert_info.get("feasibility_info", {}).get(
-        "self_study_possible", False
-    )
+    self_study = cert_info.get("feasibility_info", {}).get("self_study_possible", False)
 
     # 간단한 템플릿 (실제 프롬프트는 더 정교해야 함)
     reason = f"{goal}을 준비하시는 분께 {title}을(를) 추천합니다. "

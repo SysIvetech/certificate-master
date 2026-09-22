@@ -5,6 +5,7 @@
 2. 리랭킹 시스템
 3. 추천 이유 생성 개선
 """
+
 import asyncio
 import sys
 from pathlib import Path
@@ -16,7 +17,9 @@ from sqlalchemy.orm import sessionmaker
 
 from app.core.database import get_engine
 from app.schemas.recommendation import NaturalLanguageRequest
-from app.services.study.natural_recommendation_service import NaturalRecommendationService
+from app.services.study.natural_recommendation_service import (
+    NaturalRecommendationService,
+)
 
 
 async def comprehensive_test():
@@ -45,6 +48,7 @@ async def comprehensive_test():
     except Exception as e:
         print(f"\n[ERROR] {e}")
         import traceback
+
         traceback.print_exc()
     finally:
         session.close()
@@ -61,7 +65,7 @@ async def test_it_job_search(session):
         "비전공자인데 3개월 내에 딸 수 있는 자격증을 추천해주세요."
     )
 
-    print(f"\n[User Input]")
+    print("\n[User Input]")
     print(f'"{user_input}"')
 
     service = NaturalRecommendationService(db=session)
@@ -70,7 +74,7 @@ async def test_it_job_search(session):
     response = await service.get_recommendations(request)
 
     # 1. 구조화된 컨텍스트
-    print(f"\n[1] Structured Context")
+    print("\n[1] Structured Context")
     print("-" * 80)
     ctx = response.structured_context
     print(f"Goal: {ctx.goal}")
@@ -81,7 +85,7 @@ async def test_it_job_search(session):
     print(f"Industries: {', '.join(ctx.preferred_industries)}")
 
     # 2. 생성된 쿼리
-    print(f"\n[2] Generated Query (Enhanced)")
+    print("\n[2] Generated Query (Enhanced)")
     print("-" * 80)
     print(f"{response.query_used[:150]}...")
 
@@ -114,10 +118,10 @@ async def test_it_job_search(session):
                 print(f"      Industry: {', '.join(industry[:3])}")
 
         # 추천 이유 (개선된 프롬프트 적용)
-        print(f"      Reason: \"{rec.recommendation_reason}\"")
+        print(f'      Reason: "{rec.recommendation_reason}"')
 
     # 4. 품질 평가
-    print(f"\n[4] Quality Assessment")
+    print("\n[4] Quality Assessment")
     print("-" * 80)
     print(f"IT certificates in top 5: {it_count}/5")
 
@@ -130,7 +134,9 @@ async def test_it_job_search(session):
     if response.recommendations:
         first_reason = response.recommendations[0].recommendation_reason
         reason_checks = {
-            "Mentions IT/Software": any(kw in first_reason for kw in ["IT", "소프트웨어", "정보"]),
+            "Mentions IT/Software": any(
+                kw in first_reason for kw in ["IT", "소프트웨어", "정보"]
+            ),
             "Mentions goal (취업)": any(kw in first_reason for kw in ["취업", "채용"]),
             "Mentions non-major": any(kw in first_reason for kw in ["비전공", "독학"]),
             "Appropriate length": 80 <= len(first_reason) <= 200,
@@ -153,7 +159,7 @@ async def test_finance_expertise(session):
         "전문성을 키우고 싶은데 6개월 정도 준비할 수 있는 자격증 추천해주세요."
     )
 
-    print(f"\n[User Input]")
+    print("\n[User Input]")
     print(f'"{user_input}"')
 
     service = NaturalRecommendationService(db=session)
@@ -162,7 +168,7 @@ async def test_finance_expertise(session):
     response = await service.get_recommendations(request)
 
     # 구조화된 컨텍스트
-    print(f"\n[1] Structured Context")
+    print("\n[1] Structured Context")
     print("-" * 80)
     ctx = response.structured_context
     print(f"Goal: {ctx.goal}")
@@ -194,10 +200,10 @@ async def test_finance_expertise(session):
             if industry:
                 print(f"       Industry: {', '.join(industry[:2])}")
 
-        print(f"       Reason: \"{rec.recommendation_reason}\"")
+        print(f'       Reason: "{rec.recommendation_reason}"')
 
     # 품질 평가
-    print(f"\n[3] Quality Assessment")
+    print("\n[3] Quality Assessment")
     print("-" * 80)
     print(f"Finance certificates in top 3: {finance_count}/3")
 

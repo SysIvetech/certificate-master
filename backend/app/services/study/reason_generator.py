@@ -13,9 +13,9 @@ from openai import AsyncOpenAI
 from app.core.config import get_settings
 from app.schemas.recommendation import StructuredUserContext
 from app.services.study.prompts.recommendation_reason import (
+    RECOMMENDATION_REASON_BATCH_USER_PROMPT_TEMPLATE,
     RECOMMENDATION_REASON_SYSTEM_PROMPT,
     RECOMMENDATION_REASON_USER_PROMPT_TEMPLATE,
-    RECOMMENDATION_REASON_BATCH_USER_PROMPT_TEMPLATE,
 )
 
 logger = logging.getLogger(__name__)
@@ -117,7 +117,9 @@ class ReasonGeneratorService:
         if not content:
             raise ValueError("Empty response from LLM")
 
-        logger.info(f"[ReasonGenerator] Generated reason for {certificate_info.get('title', 'cert')}")
+        logger.info(
+            f"[ReasonGenerator] Generated reason for {certificate_info.get('title', 'cert')}"
+        )
 
         return content
 
@@ -241,7 +243,9 @@ class ReasonGeneratorService:
             if reason and isinstance(reason, str) and reason.strip():
                 results.append(reason.strip())
             else:
-                logger.warning(f"[ReasonGenerator] Missing reason for '{title}', using default")
+                logger.warning(
+                    f"[ReasonGenerator] Missing reason for '{title}', using default"
+                )
                 results.append(default_reasons[i])
 
         return results

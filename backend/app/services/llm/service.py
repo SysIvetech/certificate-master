@@ -3,26 +3,26 @@
 1단계: 검색 결과에서 구조화 데이터 추출
 2단계: 추출 데이터 정제 및 보강
 """
+
+import json
 import re
 import time
 from typing import Optional
-import json
 
 from openai import AsyncOpenAI, BadRequestError
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.core.config import get_settings
 
-
 # JSON 복구 설정
 MAX_RETRIES = 2  # 최대 재시도 횟수
 
 # 난이도별 허용 study_period_days 범위 (프롬프트 난이도 기준과 동기화)
 DIFFICULTY_PERIOD_RANGES: dict[int, tuple[int, int]] = {
-    1: (1, 21),      # 1~3주: 누구나 쉽게 합격 가능
-    2: (14, 90),     # 2주~3개월: 기초 지식으로 합격 가능
-    3: (60, 210),    # 2~7개월: 체계적 학습 필요
-    4: (150, 540),   # 5개월~1.5년: 전문 지식 및 집중 학습 필요
+    1: (1, 21),  # 1~3주: 누구나 쉽게 합격 가능
+    2: (14, 90),  # 2주~3개월: 기초 지식으로 합격 가능
+    3: (60, 210),  # 2~7개월: 체계적 학습 필요
+    4: (150, 540),  # 5개월~1.5년: 전문 지식 및 집중 학습 필요
     5: (300, 1095),  # 10개월~3년: 매우 높은 난이도, 장기 준비 필수
 }
 
@@ -31,6 +31,7 @@ def clamp_study_period(difficulty: int, study_period_days: int) -> int:
     """difficulty 기준으로 study_period_days를 허용 범위 내로 클램핑합니다."""
     min_days, max_days = DIFFICULTY_PERIOD_RANGES.get(difficulty, (1, 1095))
     return max(min_days, min(study_period_days, max_days))
+
 
 # LLM이 정보 없을 때 생성하는 placeholder 교재 제목들
 PLACEHOLDER_BOOK_TITLES: set[str] = {
@@ -190,12 +191,14 @@ class ExtractedStudyGuide(BaseModel):
             description = str(book.get("description") or "").strip()
             book_type = str(book.get("type") or "").strip()
 
-            sanitized.append({
-                "title": title,
-                "publisher": publisher,
-                "type": book_type or None,
-                "description": description or None,
-            })
+            sanitized.append(
+                {
+                    "title": title,
+                    "publisher": publisher,
+                    "type": book_type or None,
+                    "description": description or None,
+                }
+            )
 
         return sanitized
 
@@ -203,6 +206,7 @@ class ExtractedStudyGuide(BaseModel):
 # ============================================================
 # 취업준비생 관점 추출 모델 (NEW: 2026-01-28)
 # ============================================================
+
 
 class ExtractedJobMarketInfo(BaseModel):
     """추출된 채용 시장 정보 (시장 관점).
@@ -314,11 +318,21 @@ class Phase1Extraction(BaseModel):
     official_sources: ExtractedOfficialSources
     lectures: list[ExtractedLecture] = Field(default_factory=list)
     # 취업준비생 관점 필드 (NEW: 2026-01-28)
-    job_market_info: ExtractedJobMarketInfo = Field(default_factory=ExtractedJobMarketInfo)
-    cost_breakdown: ExtractedCostBreakdown = Field(default_factory=ExtractedCostBreakdown)
-    feasibility_info: ExtractedFeasibilityInfo = Field(default_factory=ExtractedFeasibilityInfo)
-    exam_schedule_detail: ExtractedExamScheduleDetail = Field(default_factory=ExtractedExamScheduleDetail)
-    similar_certificates: list[ExtractedSimilarCertificate] = Field(default_factory=list)
+    job_market_info: ExtractedJobMarketInfo = Field(
+        default_factory=ExtractedJobMarketInfo
+    )
+    cost_breakdown: ExtractedCostBreakdown = Field(
+        default_factory=ExtractedCostBreakdown
+    )
+    feasibility_info: ExtractedFeasibilityInfo = Field(
+        default_factory=ExtractedFeasibilityInfo
+    )
+    exam_schedule_detail: ExtractedExamScheduleDetail = Field(
+        default_factory=ExtractedExamScheduleDetail
+    )
+    similar_certificates: list[ExtractedSimilarCertificate] = Field(
+        default_factory=list
+    )
 
 
 # Phase 2: Refined Models
@@ -344,7 +358,9 @@ class CertificateEnrichment(BaseModel):
     user_reviews: dict
     study_guide: dict
     official_sources: dict
-    recommended_lectures: list[dict] = Field(default_factory=list)  # Optional: 덜 유명한 자격증은 추천 강의 없을 수 있음
+    recommended_lectures: list[dict] = Field(
+        default_factory=list
+    )  # Optional: 덜 유명한 자격증은 추천 강의 없을 수 있음
     # 취업준비생 관점 필드 (NEW: 2026-01-28)
     job_market_info: dict = Field(default_factory=dict)
     cost_breakdown: dict = Field(default_factory=dict)
@@ -468,11 +484,16 @@ class LLMService:
             def fix_newlines_in_strings(match):
                 content = match.group(1)
                 # 실제 줄바꿈을 \\n으로 변환
-                fixed = content.replace('\n', '\\n').replace('\r', '\\r')
+                fixed = content.replace("\n", "\\n").replace("\r", "\\r")
                 return f'"{fixed}"'
 
             # 따옴표로 둘러싸인 문자열 내용 처리
-            repaired = re.sub(r'"([^"\\]*(?:\\.[^"\\]*)*)"', fix_newlines_in_strings, repaired, flags=re.DOTALL)
+            repaired = re.sub(
+                r'"([^"\\]*(?:\\.[^"\\]*)*)"',
+                fix_newlines_in_strings,
+                repaired,
+                flags=re.DOTALL,
+            )
 
             return json.loads(repaired)
         except (json.JSONDecodeError, re.error):
@@ -480,13 +501,13 @@ class LLMService:
 
         try:
             # 3. 마지막 중괄호/대괄호가 누락된 경우 추가
-            open_braces = repaired.count('{') - repaired.count('}')
-            open_brackets = repaired.count('[') - repaired.count(']')
+            open_braces = repaired.count("{") - repaired.count("}")
+            open_brackets = repaired.count("[") - repaired.count("]")
 
             if open_braces > 0:
-                repaired += '}' * open_braces
+                repaired += "}" * open_braces
             if open_brackets > 0:
-                repaired += ']' * open_brackets
+                repaired += "]" * open_brackets
 
             return json.loads(repaired)
         except json.JSONDecodeError:
@@ -553,12 +574,14 @@ class LLMService:
             description = str(book.get("description") or "").strip()
             book_type = str(book.get("type") or "").strip()
 
-            sanitized.append({
-                "title": title,
-                "publisher": publisher,
-                "type": book_type or None,
-                "description": description or None,
-            })
+            sanitized.append(
+                {
+                    "title": title,
+                    "publisher": publisher,
+                    "type": book_type or None,
+                    "description": description or None,
+                }
+            )
 
         return sanitized
 
@@ -584,7 +607,9 @@ class LLMService:
         context_tokens_est = context_chars // 2  # 한글 기준 대략 2자당 1토큰
 
         print(f"    [LLM] provider={self.provider_name}, model={self.model}")
-        print(f"    [LLM] 입력 컨텍스트: {context_chars}자 (~{context_tokens_est} tokens)")
+        print(
+            f"    [LLM] 입력 컨텍스트: {context_chars}자 (~{context_tokens_est} tokens)"
+        )
 
         # Phase 1: Extract
         print(f"    [Phase 1] Extracting data... (model: {self.model})")
@@ -908,36 +933,48 @@ class LLMService:
                 study_guide = data.get("study_guide", {})
                 if isinstance(study_guide, dict):
                     books = study_guide.get("recommended_books", [])
-                    study_guide["recommended_books"] = self.sanitize_recommended_books(books)
+                    study_guide["recommended_books"] = self.sanitize_recommended_books(
+                        books
+                    )
                 return Phase1Extraction(**data)
 
             except BadRequestError as e:
                 last_error = e
                 # JSON 검증 실패 시 failed_generation에서 복구 시도
-                error_body = getattr(e, 'body', {}) or {}
+                error_body = getattr(e, "body", {}) or {}
                 if isinstance(error_body, dict):
-                    failed_gen = error_body.get('error', {}).get('failed_generation', '')
+                    failed_gen = error_body.get("error", {}).get(
+                        "failed_generation", ""
+                    )
                     if failed_gen:
-                        print(f"    [Phase 1] JSON 복구 시도 중... (시도 {attempt + 1}/{MAX_RETRIES + 1})")
+                        print(
+                            f"    [Phase 1] JSON 복구 시도 중... (시도 {attempt + 1}/{MAX_RETRIES + 1})"
+                        )
                         repaired_data = self._try_repair_json(failed_gen)
                         if repaired_data:
                             try:
                                 study_guide = repaired_data.get("study_guide", {})
                                 if isinstance(study_guide, dict):
                                     books = study_guide.get("recommended_books", [])
-                                    study_guide["recommended_books"] = self.sanitize_recommended_books(books)
+                                    study_guide["recommended_books"] = (
+                                        self.sanitize_recommended_books(books)
+                                    )
                                 return Phase1Extraction(**repaired_data)
                             except Exception:
                                 pass  # 복구 실패, 재시도
                 if attempt < MAX_RETRIES:
-                    print(f"    [Phase 1] 재시도 중... ({attempt + 2}/{MAX_RETRIES + 1})")
+                    print(
+                        f"    [Phase 1] 재시도 중... ({attempt + 2}/{MAX_RETRIES + 1})"
+                    )
                     continue
                 raise last_error
 
             except Exception as e:
                 last_error = e
                 if attempt < MAX_RETRIES:
-                    print(f"    [Phase 1] 오류 발생, 재시도 중... ({attempt + 2}/{MAX_RETRIES + 1}) [model: {self.model}]")
+                    print(
+                        f"    [Phase 1] 오류 발생, 재시도 중... ({attempt + 2}/{MAX_RETRIES + 1}) [model: {self.model}]"
+                    )
                     print(f"    [Phase 1] 오류 내용: {e}")
                     continue
                 print(f"    [Phase 1] 최종 오류: {e}")
@@ -1253,36 +1290,48 @@ class LLMService:
                 study_guide = data.get("study_guide", {})
                 if isinstance(study_guide, dict):
                     books = study_guide.get("recommended_books", [])
-                    study_guide["recommended_books"] = self.sanitize_recommended_books(books)
+                    study_guide["recommended_books"] = self.sanitize_recommended_books(
+                        books
+                    )
                 return CertificateEnrichment(**data)
 
             except BadRequestError as e:
                 last_error = e
                 # JSON 검증 실패 시 failed_generation에서 복구 시도
-                error_body = getattr(e, 'body', {}) or {}
+                error_body = getattr(e, "body", {}) or {}
                 if isinstance(error_body, dict):
-                    failed_gen = error_body.get('error', {}).get('failed_generation', '')
+                    failed_gen = error_body.get("error", {}).get(
+                        "failed_generation", ""
+                    )
                     if failed_gen:
-                        print(f"    [Phase 2] JSON 복구 시도 중... (시도 {attempt + 1}/{MAX_RETRIES + 1})")
+                        print(
+                            f"    [Phase 2] JSON 복구 시도 중... (시도 {attempt + 1}/{MAX_RETRIES + 1})"
+                        )
                         repaired_data = self._try_repair_json(failed_gen)
                         if repaired_data:
                             try:
                                 study_guide = repaired_data.get("study_guide", {})
                                 if isinstance(study_guide, dict):
                                     books = study_guide.get("recommended_books", [])
-                                    study_guide["recommended_books"] = self.sanitize_recommended_books(books)
+                                    study_guide["recommended_books"] = (
+                                        self.sanitize_recommended_books(books)
+                                    )
                                 return CertificateEnrichment(**repaired_data)
                             except Exception:
                                 pass  # 복구 실패, 재시도
                 if attempt < MAX_RETRIES:
-                    print(f"    [Phase 2] 재시도 중... ({attempt + 2}/{MAX_RETRIES + 1})")
+                    print(
+                        f"    [Phase 2] 재시도 중... ({attempt + 2}/{MAX_RETRIES + 1})"
+                    )
                     continue
                 raise last_error
 
             except Exception as e:
                 last_error = e
                 if attempt < MAX_RETRIES:
-                    print(f"    [Phase 2] 오류 발생, 재시도 중... ({attempt + 2}/{MAX_RETRIES + 1}) [model: {self.model}]")
+                    print(
+                        f"    [Phase 2] 오류 발생, 재시도 중... ({attempt + 2}/{MAX_RETRIES + 1}) [model: {self.model}]"
+                    )
                     print(f"    [Phase 2] 오류 내용: {e}")
                     continue
                 print(f"    [Phase 2] 최종 오류: {e}")

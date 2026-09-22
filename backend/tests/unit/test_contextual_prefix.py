@@ -1,5 +1,5 @@
 """Contextual Prefix 생성 함수 테스트."""
-import pytest
+
 from app.utils.certificate_formatter import build_contextual_prefix
 
 
@@ -55,14 +55,20 @@ class TestBuildContextualPrefix:
 
     def test_employment_purpose_when_high_demand(self):
         cert = _make_cert(
-            job_market_info={"job_posting_frequency": "매우 많음", "requirement_type": "우대"},
+            job_market_info={
+                "job_posting_frequency": "매우 많음",
+                "requirement_type": "우대",
+            },
         )
         result = build_contextual_prefix(cert)
         assert "취업" in result or "이직" in result
 
     def test_required_purpose(self):
         cert = _make_cert(
-            job_market_info={"requirement_type": "필수", "job_posting_frequency": "많음"},
+            job_market_info={
+                "requirement_type": "필수",
+                "job_posting_frequency": "많음",
+            },
         )
         result = build_contextual_prefix(cert)
         assert "필수" in result

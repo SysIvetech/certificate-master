@@ -5,6 +5,7 @@ These tests follow TDD principles:
 2. Write minimal code to pass the test (Green)
 3. Refactor if needed (Refactor)
 """
+
 import pytest
 from fastapi.testclient import TestClient
 from supabase import Client
@@ -21,17 +22,17 @@ class TestCertificatesSearch:
         Then: It should return a paginated list of certificates
         """
         response = client.get("/api/v1/certificates/search")
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         # Verify response structure
         assert "items" in data
         assert "total" in data
         assert "page" in data
         assert "page_size" in data
         assert "has_more" in data
-        
+
         # Verify pagination defaults
         assert data["page"] == 1
         assert data["page_size"] == 20
@@ -45,19 +46,21 @@ class TestCertificatesSearch:
         Then: It should return certificates matching the keyword
         """
         response = client.get("/api/v1/certificates/search?q=정보처리")
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         # Should return some results
         assert isinstance(data["items"], list)
-        
+
         # If results exist, verify they contain the keyword
         if data["items"]:
             # At least one should match
             found = any(
-                "정보처리" in item["title"] or 
-                ("series" in item and item["series"] and "정보처리" in item["series"])
+                "정보처리" in item["title"]
+                or (
+                    "series" in item and item["series"] and "정보처리" in item["series"]
+                )
                 for item in data["items"]
             )
             assert found, "Search results should contain the keyword"
@@ -90,13 +93,13 @@ class TestCertificatesSearch:
         Then: It should return exactly 5 items (if available)
         """
         response = client.get("/api/v1/certificates/search?page=1&page_size=5")
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert data["page"] == 1
         assert data["page_size"] == 5
-        
+
         # Should return at most 5 items
         assert len(data["items"]) <= 5
 
@@ -105,9 +108,7 @@ class TestCertificatesRetrieve:
     """Test suite for certificate retrieval endpoints."""
 
     def test_get_certificate_by_id_success(
-        self,
-        client: TestClient,
-        test_supabase_client: Client
+        self, client: TestClient, test_supabase_client: Client
     ):
         """Test retrieving a certificate by UUID.
 
@@ -116,7 +117,9 @@ class TestCertificatesRetrieve:
         Then: It should return the certificate details
         """
         # First, get any certificate to test with
-        certs = test_supabase_client.table("certificates").select("id").limit(1).execute()
+        certs = (
+            test_supabase_client.table("certificates").select("id").limit(1).execute()
+        )
 
         if not certs.data:
             pytest.skip("No certificates in database to test with")
@@ -142,14 +145,12 @@ class TestCertificatesRetrieve:
         """
         fake_uuid = "00000000-0000-0000-0000-000000000000"
         response = client.get(f"/api/v1/certificates/{fake_uuid}")
-        
+
         assert response.status_code == 404
         assert "detail" in response.json()
 
     def test_get_certificate_by_raw_id_success(
-        self,
-        client: TestClient,
-        test_supabase_client: Client
+        self, client: TestClient, test_supabase_client: Client
     ):
         """Test retrieving a certificate by raw_id.
 
@@ -158,17 +159,22 @@ class TestCertificatesRetrieve:
         Then: It should return the certificate details
         """
         # Get a certificate with known raw_id
-        certs = test_supabase_client.table("certificates").select("raw_id").limit(1).execute()
-        
+        certs = (
+            test_supabase_client.table("certificates")
+            .select("raw_id")
+            .limit(1)
+            .execute()
+        )
+
         if not certs.data:
             pytest.skip("No certificates in database to test with")
-        
+
         raw_id = certs.data[0]["raw_id"]
         response = client.get(f"/api/v1/certificates/raw/{raw_id}")
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert data["raw_id"] == raw_id
 
 
@@ -205,10 +211,7 @@ class TestCertificatesUpdate:
     """Test suite for certificate update endpoint."""
 
     def test_update_certificate_success(
-        self,
-        client: TestClient,
-        test_supabase_client: Client,
-        clean_test_certificates
+        self, client: TestClient, test_supabase_client: Client, clean_test_certificates
     ):
         """Test updating a certificate with enriched data.
 
@@ -221,23 +224,22 @@ class TestCertificatesUpdate:
             "categories": [{"code": "T", "name": "국가기술자격"}],
             "series": "테스트",
             "title": "테스트자격증",
-            "raw_id": "TEST_update_test"
+            "raw_id": "TEST_update_test",
         }
 
-        insert_result = test_supabase_client.table("certificates").insert(test_cert).execute()
+        insert_result = (
+            test_supabase_client.table("certificates").insert(test_cert).execute()
+        )
         cert_id = insert_result.data[0]["id"]
 
         # Update the certificate
         update_data = {
             "overview": "테스트 자격증 개요입니다.",
             "difficulty": 3,
-            "study_period_days": 90
+            "study_period_days": 90,
         }
 
-        response = client.patch(
-            f"/api/v1/certificates/{cert_id}",
-            json=update_data
-        )
+        response = client.patch(f"/api/v1/certificates/{cert_id}", json=update_data)
 
         assert response.status_code == 200
         data = response.json()
@@ -256,18 +258,13 @@ class TestCertificatesUpdate:
         """
         fake_uuid = "00000000-0000-0000-0000-000000000000"
         update_data = {"overview": "Test"}
-        
-        response = client.patch(
-            f"/api/v1/certificates/{fake_uuid}",
-            json=update_data
-        )
-        
+
+        response = client.patch(f"/api/v1/certificates/{fake_uuid}", json=update_data)
+
         assert response.status_code == 404
 
     def test_update_certificate_empty_data(
-        self,
-        client: TestClient,
-        test_supabase_client: Client
+        self, client: TestClient, test_supabase_client: Client
     ):
         """Test updating a certificate with no data.
 
@@ -276,18 +273,17 @@ class TestCertificatesUpdate:
         Then: It should return 400 Bad Request
         """
         # Get any certificate
-        certs = test_supabase_client.table("certificates").select("id").limit(1).execute()
-        
+        certs = (
+            test_supabase_client.table("certificates").select("id").limit(1).execute()
+        )
+
         if not certs.data:
             pytest.skip("No certificates in database to test with")
-        
+
         cert_id = certs.data[0]["id"]
-        
-        response = client.patch(
-            f"/api/v1/certificates/{cert_id}",
-            json={}
-        )
-        
+
+        response = client.patch(f"/api/v1/certificates/{cert_id}", json={})
+
         assert response.status_code == 400
         assert "No fields to update" in response.json()["detail"]
 
@@ -296,10 +292,7 @@ class TestCertificatesViewCount:
     """Test suite for certificate view count feature."""
 
     def test_view_count_increments_on_detail_view(
-        self,
-        client: TestClient,
-        test_supabase_client: Client,
-        clean_test_certificates
+        self, client: TestClient, test_supabase_client: Client, clean_test_certificates
     ):
         """Test that view count increments when viewing certificate details.
 
@@ -313,10 +306,12 @@ class TestCertificatesViewCount:
             "series": "테스트",
             "title": "조회수테스트자격증",
             "raw_id": "TEST_view_count_test",
-            "view_count": 0
+            "view_count": 0,
         }
 
-        insert_result = test_supabase_client.table("certificates").insert(test_cert).execute()
+        insert_result = (
+            test_supabase_client.table("certificates").insert(test_cert).execute()
+        )
         cert_id = insert_result.data[0]["id"]
 
         # First view - should increment from 0 to 1
@@ -332,10 +327,7 @@ class TestCertificatesViewCount:
         assert data["view_count"] == 2
 
     def test_view_count_increments_on_raw_id_view(
-        self,
-        client: TestClient,
-        test_supabase_client: Client,
-        clean_test_certificates
+        self, client: TestClient, test_supabase_client: Client, clean_test_certificates
     ):
         """Test that view count increments when viewing by raw_id.
 
@@ -349,10 +341,12 @@ class TestCertificatesViewCount:
             "series": "테스트",
             "title": "조회수테스트자격증2",
             "raw_id": "TEST_view_count_raw_id",
-            "view_count": 0
+            "view_count": 0,
         }
 
-        insert_result = test_supabase_client.table("certificates").insert(test_cert).execute()
+        insert_result = (
+            test_supabase_client.table("certificates").insert(test_cert).execute()
+        )
         raw_id = insert_result.data[0]["raw_id"]
 
         # View by raw_id - should increment
@@ -362,10 +356,7 @@ class TestCertificatesViewCount:
         assert data["view_count"] == 1
 
     def test_search_does_not_increment_view_count(
-        self,
-        client: TestClient,
-        test_supabase_client: Client,
-        clean_test_certificates
+        self, client: TestClient, test_supabase_client: Client, clean_test_certificates
     ):
         """Test that search does NOT increment view count.
 
@@ -379,10 +370,12 @@ class TestCertificatesViewCount:
             "series": "테스트",
             "title": "검색조회수테스트",
             "raw_id": "TEST_search_view_count",
-            "view_count": 0
+            "view_count": 0,
         }
 
-        insert_result = test_supabase_client.table("certificates").insert(test_cert).execute()
+        insert_result = (
+            test_supabase_client.table("certificates").insert(test_cert).execute()
+        )
         cert_id = insert_result.data[0]["id"]
 
         # Search for the certificate (should NOT increment view_count)
@@ -390,6 +383,10 @@ class TestCertificatesViewCount:
         assert response.status_code == 200
 
         # Check view_count in database directly
-        cert = test_supabase_client.table("certificates").select("view_count").eq("id", cert_id).execute()
+        cert = (
+            test_supabase_client.table("certificates")
+            .select("view_count")
+            .eq("id", cert_id)
+            .execute()
+        )
         assert cert.data[0]["view_count"] == 0
-

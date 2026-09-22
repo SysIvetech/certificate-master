@@ -26,10 +26,10 @@ logger = logging.getLogger(__name__)
 
 # 난이도별 허용 study_period_days 범위 (LLM 프롬프트 및 Pydantic 검증과 동기화)
 DIFFICULTY_PERIOD_RANGES: dict[int, tuple[int, int]] = {
-    1: (1, 21),      # 1~3주
-    2: (14, 90),     # 2주~3개월
-    3: (60, 210),    # 2~7개월
-    4: (150, 540),   # 5개월~1.5년
+    1: (1, 21),  # 1~3주
+    2: (14, 90),  # 2주~3개월
+    3: (60, 210),  # 2~7개월
+    4: (150, 540),  # 5개월~1.5년
     5: (300, 1095),  # 10개월~3년
 }
 
@@ -141,9 +141,9 @@ def main():
             )
 
             if args.apply:
-                session.query(Certificate).filter(
-                    Certificate.id == rec["id"]
-                ).update({"study_period_days": new_days})
+                session.query(Certificate).filter(Certificate.id == rec["id"]).update(
+                    {"study_period_days": new_days}
+                )
 
         if args.apply:
             session.commit()

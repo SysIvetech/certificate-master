@@ -8,9 +8,9 @@
 
 Supabase에서 MariaDB로 마이그레이션됨 (2026-01-21).
 """
+
 import time
-from datetime import datetime, timezone
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import chromadb
 from sqlalchemy.orm import Session
@@ -23,8 +23,8 @@ from app.services.embedding.service import EmbeddingService
 if TYPE_CHECKING:
     from app.services.embedding.protocol import EmbeddingServiceProtocol
 from app.utils.certificate_formatter import (
-    format_contextual_search_text,
     build_certificate_metadata,
+    format_contextual_search_text,
 )
 
 
@@ -79,15 +79,11 @@ class VectorStoreService:
         self._session = session  # 외부 주입 세션 저장
 
         # B2 수정: ChromaDB 연결 재시도 로직
-        self._client = chromadb.HttpClient(
-            host=self.host,
-            port=self.port
-        )
+        self._client = chromadb.HttpClient(host=self.host, port=self.port)
         self._connect_with_retry(max_retries)
 
         self._collection = self._client.get_or_create_collection(
-            name=self.collection_name,
-            metadata={"hnsw:space": "cosine"}
+            name=self.collection_name, metadata={"hnsw:space": "cosine"}
         )
 
         # 임베딩 서비스 주입 (DI 패턴)
@@ -127,15 +123,10 @@ class VectorStoreService:
                         f"ChromaDB 연결 실패 ({self.host}:{self.port}): {e}"
                     )
                 # 지수 백오프: 1초, 2초, 4초...
-                wait_time = 2 ** attempt
+                wait_time = 2**attempt
                 time.sleep(wait_time)
 
-    def upsert_certificate(
-        self,
-        cert_id: str,
-        embedding: list[float],
-        metadata: dict
-    ):
+    def upsert_certificate(self, cert_id: str, embedding: list[float], metadata: dict):
         """단일 자격증 임베딩을 upsert합니다.
 
         Args:
@@ -144,15 +135,10 @@ class VectorStoreService:
             metadata: 벡터와 함께 저장할 자격증 메타데이터.
         """
         self._collection.upsert(
-            ids=[cert_id],
-            embeddings=[embedding],
-            metadatas=[metadata]
+            ids=[cert_id], embeddings=[embedding], metadatas=[metadata]
         )
 
-    def upsert_certificates_batch(
-        self,
-        vectors: list[tuple[str, list[float], dict]]
-    ):
+    def upsert_certificates_batch(self, vectors: list[tuple[str, list[float], dict]]):
         """다수의 자격증 임베딩을 upsert합니다.
 
         Args:
@@ -165,17 +151,13 @@ class VectorStoreService:
         embeddings = [v[1] for v in vectors]
         metadatas = [v[2] for v in vectors]
 
-        self._collection.upsert(
-            ids=ids,
-            embeddings=embeddings,
-            metadatas=metadatas
-        )
+        self._collection.upsert(ids=ids, embeddings=embeddings, metadatas=metadatas)
 
     def query_similar(
         self,
         query_embedding: list[float],
         top_k: int = 10,
-        filter_dict: Optional[dict] = None
+        filter_dict: Optional[dict] = None,
     ) -> list[dict]:
         """유사한 자격증을 조회합니다.
 
@@ -188,9 +170,7 @@ class VectorStoreService:
             점수와 메타데이터를 포함한 매칭 결과 목록.
         """
         results = self._collection.query(
-            query_embeddings=[query_embedding],
-            n_results=top_k,
-            where=filter_dict
+            query_embeddings=[query_embedding], n_results=top_k, where=filter_dict
         )
 
         # ChromaDB는 distance를 반환, score로 변환 (1 - distance for cosine)
@@ -199,11 +179,13 @@ class VectorStoreService:
             for i, cert_id in enumerate(results["ids"][0]):
                 distance = results["distances"][0][i]
                 score = round(1 - distance, 2)  # cosine distance -> similarity
-                output.append({
-                    "id": cert_id,
-                    "score": score,
-                    "metadata": results["metadatas"][0][i]
-                })
+                output.append(
+                    {
+                        "id": cert_id,
+                        "score": score,
+                        "metadata": results["metadatas"][0][i],
+                    }
+                )
 
         return output
 
@@ -212,7 +194,7 @@ class VectorStoreService:
         limit: int = 20,
         offset: int = 0,
         include_embeddings: bool = False,
-        where: Optional[dict] = None
+        where: Optional[dict] = None,
     ) -> list[dict]:
         """ChromaDB 컬렉션에서 벡터 목록을 조회합니다.
 
@@ -230,11 +212,7 @@ class VectorStoreService:
             includes.append("embeddings")
 
         results = self._collection.get(
-            ids=None,
-            where=where,
-            include=includes,
-            limit=limit,
-            offset=offset
+            ids=None, where=where, include=includes, limit=limit, offset=offset
         )
 
         ids = results.get("ids")
@@ -250,7 +228,7 @@ class VectorStoreService:
         for idx, vector_id in enumerate(ids):
             vector = {
                 "id": vector_id,
-                "metadata": metadatas[idx] if idx < len(metadatas) else {}
+                "metadata": metadatas[idx] if idx < len(metadatas) else {},
             }
 
             if include_embeddings:
@@ -271,7 +249,7 @@ class VectorStoreService:
             "host": self.host,
             "port": self.port,
             "collection_name": self.collection_name,
-            "total_vectors": total_vectors
+            "total_vectors": total_vectors,
         }
 
     # ==========================================
@@ -283,7 +261,7 @@ class VectorStoreService:
         namespace: str,
         query: str,
         top_k: int = 10,
-        filter_dict: Optional[dict] = None
+        filter_dict: Optional[dict] = None,
     ) -> list[dict]:
         """텍스트 기반 검색 (임베딩 사용).
 
@@ -300,11 +278,7 @@ class VectorStoreService:
         query_embedding = self.embedding_service.create_embedding(query)
 
         # 벡터 검색 수행
-        return self.query_similar(
-            query_embedding,
-            top_k=top_k,
-            filter_dict=filter_dict
-        )
+        return self.query_similar(query_embedding, top_k=top_k, filter_dict=filter_dict)
 
     def search_by_title(self, query: str, limit: int = 20) -> list[dict]:
         """타이틀 검색 - 의미 기반 검색 사용.
@@ -321,19 +295,19 @@ class VectorStoreService:
         """
         # 의미 기반 검색 수행
         results = self.search_records(
-            namespace=self.NAMESPACE,
-            query=query,
-            top_k=limit
+            namespace=self.NAMESPACE, query=query, top_k=limit
         )
 
         # 결과를 list_vectors와 동일한 형식으로 변환
         vectors = []
         for result in results:
-            vectors.append({
-                "id": result["id"],
-                "score": result.get("score", 0),
-                "metadata": result.get("metadata", {})
-            })
+            vectors.append(
+                {
+                    "id": result["id"],
+                    "score": result.get("score", 0),
+                    "metadata": result.get("metadata", {}),
+                }
+            )
 
         return vectors
 
@@ -378,9 +352,7 @@ class VectorStoreService:
             return []
 
     def upsert_certificates_batch_integrated(
-        self,
-        certs: list[dict],
-        skip_existing: bool = False
+        self, certs: list[dict], skip_existing: bool = False
     ) -> dict:
         """배치로 자격증을 upsert합니다 (임베딩 포함).
 
@@ -407,7 +379,7 @@ class VectorStoreService:
                 "verified_count": 0,
                 "skipped_count": 0,
                 "failed_ids": [],
-                "skipped_ids": []
+                "skipped_ids": [],
             }
 
         # 중복 체크 (skip_existing=True인 경우)
@@ -431,7 +403,7 @@ class VectorStoreService:
                 "verified_count": 0,
                 "skipped_count": len(skipped_ids),
                 "failed_ids": [],
-                "skipped_ids": skipped_ids
+                "skipped_ids": skipped_ids,
             }
 
         records = [self.format_record_for_upsert(cert) for cert in certs_to_process]
@@ -448,11 +420,7 @@ class VectorStoreService:
         ]
 
         # 업로드 실행 (연결 실패 시 예외 발생)
-        self._collection.upsert(
-            ids=ids,
-            embeddings=embeddings,
-            metadatas=metadatas
-        )
+        self._collection.upsert(ids=ids, embeddings=embeddings, metadatas=metadatas)
 
         uploaded_count = len(ids)
 
@@ -470,7 +438,7 @@ class VectorStoreService:
             "verified_count": verified_count,
             "skipped_count": len(skipped_ids),
             "failed_ids": failed_ids,
-            "skipped_ids": skipped_ids
+            "skipped_ids": skipped_ids,
         }
 
     def get_by_id(self, cert_id: str) -> Optional[dict]:
@@ -484,8 +452,7 @@ class VectorStoreService:
             없으면 None을 반환합니다.
         """
         result = self._collection.get(
-            ids=[cert_id],
-            include=["embeddings", "metadatas"]
+            ids=[cert_id], include=["embeddings", "metadatas"]
         )
 
         ids = result.get("ids") or []
@@ -541,8 +508,7 @@ class VectorStoreService:
         # 컬렉션 삭제 후 재생성
         self._client.delete_collection(name=self.collection_name)
         self._collection = self._client.get_or_create_collection(
-            name=self.collection_name,
-            metadata={"hnsw:space": "cosine"}
+            name=self.collection_name, metadata={"hnsw:space": "cosine"}
         )
 
         return deleted_count
@@ -576,10 +542,7 @@ class VectorStoreService:
             if should_close:
                 session.close()
 
-    def sync_vector_ids_to_db_batch(
-        self,
-        mappings: list[tuple[str, str]]
-    ) -> dict:
+    def sync_vector_ids_to_db_batch(self, mappings: list[tuple[str, str]]) -> dict:
         """배치로 여러 자격증의 vector_id를 저장합니다.
 
         B5 수정: 상세 결과 딕셔너리 반환.
@@ -600,7 +563,9 @@ class VectorStoreService:
 
         try:
             for cert_id, vector_id in mappings:
-                cert = session.query(Certificate).filter(Certificate.id == cert_id).first()
+                cert = (
+                    session.query(Certificate).filter(Certificate.id == cert_id).first()
+                )
                 if cert:
                     cert.vector_id = vector_id
                     success_count += 1
@@ -608,23 +573,30 @@ class VectorStoreService:
                     not_found_ids.append(cert_id)
 
             if not_found_ids:
-                print(f"      [경고] DB에서 찾을 수 없는 ID: {not_found_ids[:3]}{'...' if len(not_found_ids) > 3 else ''}")
+                print(
+                    f"      [경고] DB에서 찾을 수 없는 ID: {not_found_ids[:3]}{'...' if len(not_found_ids) > 3 else ''}"
+                )
 
             session.commit()
 
             # 커밋 후 검증: 실제로 저장되었는지 확인
             if success_count > 0:
                 sample_id = mappings[0][0]
-                verify_cert = session.query(Certificate).filter(Certificate.id == sample_id).first()
+                verify_cert = (
+                    session.query(Certificate)
+                    .filter(Certificate.id == sample_id)
+                    .first()
+                )
                 if verify_cert and verify_cert.vector_id:
                     pass  # 검증 성공
                 else:
-                    print(f"      [경고] 커밋 후 검증 실패: vector_id가 저장되지 않음")
+                    print("      [경고] 커밋 후 검증 실패: vector_id가 저장되지 않음")
 
         except Exception as e:
             error_msg = str(e)
             print(f"      [오류] vector_id 동기화 실패: {error_msg}")
             import traceback
+
             traceback.print_exc()
             session.rollback()
             errors.append(error_msg)
@@ -701,10 +673,7 @@ class VectorStoreService:
                 session.close()
 
     def upsert_certificate_with_sync(
-        self,
-        cert_id: str,
-        embedding: list[float],
-        metadata: dict
+        self, cert_id: str, embedding: list[float], metadata: dict
     ):
         """ChromaDB에 업로드하고 DB에 vector_id를 동기화합니다.
 
@@ -816,7 +785,9 @@ class VectorStoreService:
 
         try:
             for cert_id in cert_ids:
-                cert = session.query(Certificate).filter(Certificate.id == cert_id).first()
+                cert = (
+                    session.query(Certificate).filter(Certificate.id == cert_id).first()
+                )
                 if cert:
                     self._reset_certificate_fields(cert)
                     success_count += 1

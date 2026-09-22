@@ -4,8 +4,8 @@
 - RecommendationService: 자격증 추천
 """
 
-from .study_plan_service import StudyPlanService
 from .recommendation_service import RecommendationService
+from .study_plan_service import StudyPlanService
 
 __all__ = [
     "StudyPlanService",

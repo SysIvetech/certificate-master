@@ -77,7 +77,16 @@ target-version = ["py311"]
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+
+[tool.ruff.lint]
 select = ["E", "F", "I", "W"]
+# 줄 길이는 black이 담당. black이 자르지 못하는 긴 문자열/주석(한글 프롬프트 등)은 허용.
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# sys.path 조작 / 환경 변수 설정 후 import 하는 스크립트·테스트
+"scripts/**" = ["E402"]
+"tests/**" = ["E402"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["scripts"]

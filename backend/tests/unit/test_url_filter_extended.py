@@ -2,7 +2,6 @@
 
 이 모듈은 Playwright 대상 사이트가 올바르게 필터링되는지 테스트합니다.
 """
-import pytest
 
 
 class TestPlaywrightDomainDetection:

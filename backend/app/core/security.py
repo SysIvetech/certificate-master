@@ -3,6 +3,7 @@
 This module provides JWT token verification and user authentication
 using Supabase Auth.
 """
+
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
@@ -41,7 +42,7 @@ class AuthenticatedUser:
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    supabase: Client = Depends(get_supabase_client)
+    supabase: Client = Depends(get_supabase_client),
 ) -> AuthenticatedUser:
     """Verify JWT token and return authenticated user.
 
@@ -86,7 +87,7 @@ async def get_current_user_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(
         HTTPBearer(auto_error=False)
     ),
-    supabase: Client = Depends(get_supabase_client)
+    supabase: Client = Depends(get_supabase_client),
 ) -> Optional[AuthenticatedUser]:
     """Optionally get authenticated user if token is provided.
 
@@ -114,4 +115,3 @@ async def get_current_user_optional(
 
     except Exception:
         return None
-

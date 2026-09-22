@@ -1,4 +1,5 @@
 """Certificate 모델의 domain 필드 테스트."""
+
 from app.models.certificate import Certificate
 
 

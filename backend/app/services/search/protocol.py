@@ -3,6 +3,7 @@
 이 모듈은 검색 서비스의 공통 인터페이스를 정의합니다.
 모든 검색 서비스 구현체(SearXNG 등)는 이 프로토콜을 따라야 합니다.
 """
+
 from typing import Optional, Protocol, runtime_checkable
 
 

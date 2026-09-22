@@ -3,8 +3,6 @@
 비슷한 이름의 필드들이 서로 다른 역할을 가지고 있음을 문서화하고 검증합니다.
 """
 
-import pytest
-
 
 class TestIndustryFieldSemantics:
     """industry/preferred_industries 필드 의미론 테스트.
@@ -92,8 +90,8 @@ class TestIndustryFieldSemantics:
         - job_market_info.preferred_industries: 시장 → 자격증 (채용 관점)
         - user_context.preferred_industries: 사용자 → 산업 (개인 선호)
         """
-        from app.services.llm.service import ExtractedCareerInfo, ExtractedJobMarketInfo
         from app.schemas.recommendation import StructuredUserContext
+        from app.services.llm.service import ExtractedCareerInfo, ExtractedJobMarketInfo
 
         # 동일한 자격증(세무사)에 대해 각 필드의 의미 차이
         certificate_career_info = ExtractedCareerInfo(
@@ -104,7 +102,11 @@ class TestIndustryFieldSemantics:
 
         certificate_job_market = ExtractedJobMarketInfo(
             job_posting_frequency="높음",
-            preferred_industries=["세무법인", "회계법인", "대기업 재무팀"],  # 채용하는 기업군
+            preferred_industries=[
+                "세무법인",
+                "회계법인",
+                "대기업 재무팀",
+            ],  # 채용하는 기업군
             requirement_type="필수",
         )
 
@@ -119,8 +121,14 @@ class TestIndustryFieldSemantics:
         )
 
         # 각 필드의 역할이 명확히 구분됨
-        assert certificate_career_info.industry != certificate_job_market.preferred_industries
-        assert certificate_job_market.preferred_industries != user_preference.preferred_industries
+        assert (
+            certificate_career_info.industry
+            != certificate_job_market.preferred_industries
+        )
+        assert (
+            certificate_job_market.preferred_industries
+            != user_preference.preferred_industries
+        )
 
 
 class TestFieldNamingConsistency:

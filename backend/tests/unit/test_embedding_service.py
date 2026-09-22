@@ -2,7 +2,7 @@
 
 OpenAI API를 사용하여 텍스트를 벡터로 변환합니다.
 """
-import pytest
+
 from unittest.mock import MagicMock, patch
 
 
@@ -324,6 +324,7 @@ class TestOpenAIEmbedding:
     def setup_method(self):
         """각 테스트 전에 싱글톤 리셋."""
         from app.services.embedding_service import EmbeddingService
+
         EmbeddingService._client = None
 
     def test_client_singleton_initialization(self):

@@ -6,9 +6,10 @@ DOMAIN_INDUSTRY_MAPPING 업데이트에 활용합니다.
 사용법:
     uv run python -m scripts.analyze_industry_keywords
 """
+
 import sys
-from pathlib import Path
 from collections import Counter
+from pathlib import Path
 
 # Add backend directory to path
 backend_dir = Path(__file__).parent.parent
@@ -105,6 +106,7 @@ def analyze_industries():
     except Exception as e:
         print(f"[오류] {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

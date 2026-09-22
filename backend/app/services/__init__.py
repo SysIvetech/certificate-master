@@ -19,26 +19,26 @@
 from .analytics.analytics_service import AnalyticsService
 from .analytics.learning_pattern_service import LearningPatternService
 from .analytics.velocity_calculator import VelocityCalculator
-
-# Study
-from .study.study_plan_service import StudyPlanService
-from .study.recommendation_service import RecommendationService
+from .embedding.factory import get_embedding_service
 
 # Embedding
 from .embedding.protocol import EmbeddingServiceProtocol
 from .embedding.service import EmbeddingService
-from .embedding.factory import get_embedding_service
 from .embedding.vector_store import VectorStoreService
-
-# Search (SearXNG only)
-from .search.protocol import SearchServiceProtocol
-from .search.factory import get_search_service
-from .search.searxng_search import SearXNGSearchService
-from .search.content_crawler import ContentCrawlerService
+from .llm.enrichment_service import CertificateEnrichmentService, get_enrichment_service
 
 # LLM
 from .llm.service import LLMService, get_llm_service
-from .llm.enrichment_service import CertificateEnrichmentService, get_enrichment_service
+from .search.content_crawler import ContentCrawlerService
+from .search.factory import get_search_service
+
+# Search (SearXNG only)
+from .search.protocol import SearchServiceProtocol
+from .search.searxng_search import SearXNGSearchService
+from .study.recommendation_service import RecommendationService
+
+# Study
+from .study.study_plan_service import StudyPlanService
 
 # Aliases for backward compatibility
 EnrichmentService = CertificateEnrichmentService

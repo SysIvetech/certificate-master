@@ -5,19 +5,18 @@
 - JS 렌더링 사이트: Playwright (headless browser)
 - Trafilatura 실패 시: Playwright fallback
 """
+
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
-from app.services.search.crawler.protocol import CrawlResult, CrawlerProtocol
-from app.services.search.crawler.trafilatura_crawler import (
-    TrafilaturaCrawler,
-    get_trafilatura_crawler,
-)
 from app.services.search.crawler.playwright_crawler import (
     PlaywrightCrawler,
-    get_playwright_crawler,
     is_playwright_required,
+)
+from app.services.search.crawler.protocol import CrawlerProtocol, CrawlResult
+from app.services.search.crawler.trafilatura_crawler import (
+    TrafilaturaCrawler,
 )
 
 logger = logging.getLogger(__name__)
@@ -58,7 +57,8 @@ class CrawlerMetrics:
             "fallback_count": self.fallback_count,
             "failed_count": self.failed_count,
             "success_rate": (
-                (self.trafilatura_success + self.playwright_success) / self.total_requests
+                (self.trafilatura_success + self.playwright_success)
+                / self.total_requests
                 if self.total_requests > 0
                 else 0.0
             ),
@@ -161,7 +161,7 @@ class SmartCrawler:
         self.metrics.total_requests += 1
 
         # 1. 적절한 크롤러 선택
-        crawler = self._select_crawler(url)
+        self._select_crawler(url)
         is_js_site = is_playwright_required(url)
 
         # 2. JS 사이트인 경우 바로 Playwright 사용
@@ -196,11 +196,15 @@ class SmartCrawler:
 
             # 4. Trafilatura 실패 시 Playwright fallback
             if self.fallback_enabled and self.playwright_enabled:
-                logger.info(f"Trafilatura failed, trying Playwright fallback: {url[:50]}")
+                logger.info(
+                    f"Trafilatura failed, trying Playwright fallback: {url[:50]}"
+                )
                 self.metrics.fallback_count += 1
 
                 try:
-                    pw_result = await self._get_playwright_crawler().extract_content(url)
+                    pw_result = await self._get_playwright_crawler().extract_content(
+                        url
+                    )
                     if pw_result.success:
                         self.metrics.playwright_success += 1
                         return pw_result

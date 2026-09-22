@@ -2,7 +2,6 @@
 
 RED phase - Tests for POST /api/v1/recommendations/ endpoint.
 """
-import pytest
 
 
 class TestRecommendationAPI:

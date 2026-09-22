@@ -1,6 +1,7 @@
 """검색 최적화 압축 텍스트 (format_search_text) 테스트."""
 
 import pytest
+
 from app.utils.certificate_formatter import format_search_text
 
 
@@ -11,7 +12,8 @@ def sample_cert():
         "title": "정보처리기사",
         "categories": [{"code": "NCS01", "name": "국가기술자격"}],
         "series": "정보처리",
-        "overview": "소프트웨어 개발 및 운용에 관한 전문 자격증으로 " + "상세내용 " * 100,
+        "overview": "소프트웨어 개발 및 운용에 관한 전문 자격증으로 "
+        + "상세내용 " * 100,
         "career_info": {
             "industry": ["IT/소프트웨어", "금융"],
             "related_jobs": ["소프트웨어 개발자", "시스템 엔지니어", "DBA"],

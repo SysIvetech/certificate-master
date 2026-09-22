@@ -3,6 +3,7 @@
 Following TDD: These tests are written FIRST before implementation.
 Expected result: Tests will FAIL until parse_csv.py is implemented.
 """
+
 import json
 import tempfile
 from pathlib import Path
@@ -97,9 +98,7 @@ T,국가기술자격,정보처리,정보처리기사
 
         certificates = parse_csv_to_json(temp_csv_file)
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             output_path = Path(f.name)
 
         try:

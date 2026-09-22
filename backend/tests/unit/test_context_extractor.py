@@ -1,7 +1,9 @@
 """ContextExtractor 통합 테스트 (상황 구조화 + 쿼리 생성)."""
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+
 import json
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from app.services.llm.context_extractor import ContextExtractorService
 

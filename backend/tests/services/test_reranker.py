@@ -2,10 +2,10 @@
 
 벡터 검색 결과를 도메인 매칭 점수로 재정렬하는 로직을 검증합니다.
 """
-import pytest
+
+from app.services.study.reranker import DomainReranker
 
 from app.models.certificate import Certificate
-from app.services.study.reranker import DomainReranker
 
 
 class TestDomainReranker:

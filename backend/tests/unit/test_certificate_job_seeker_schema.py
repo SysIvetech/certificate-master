@@ -2,8 +2,6 @@
 
 TDD: 새로운 취업준비생 관점 필드 테스트.
 """
-import pytest
-from pydantic import ValidationError
 
 
 class TestJobMarketInfoSchema:

@@ -2,6 +2,7 @@
 
 OpenAI API (GPT-4o-mini) 모델 사용.
 """
+
 import json
 from datetime import date, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -34,7 +35,12 @@ def sample_certificate_data():
         "difficulty": 3,
         "study_period_days": 90,
         "exam_info": {
-            "subjects": ["소프트웨어 설계", "데이터베이스", "프로그래밍 언어", "정보시스템 구축관리"],
+            "subjects": [
+                "소프트웨어 설계",
+                "데이터베이스",
+                "프로그래밍 언어",
+                "정보시스템 구축관리",
+            ],
             "exam_type": "필기+실기",
             "passing_criteria": "과목당 40점 이상, 평균 60점 이상",
             "total_fee": "40000",
@@ -148,7 +154,9 @@ class TestStudyPlanService:
         # Mock LLM response
         mock_response = MagicMock()
         mock_response.choices[0].message.content = json.dumps(sample_llm_response)
-        mock_openai_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        mock_openai_client.chat.completions.create = AsyncMock(
+            return_value=mock_response
+        )
 
         # Initialize service with mock client
         service = StudyPlanService(api_key="test-api-key")
@@ -223,7 +231,9 @@ class TestStudyPlanService:
         # Mock empty response
         mock_response = MagicMock()
         mock_response.choices[0].message.content = None
-        mock_openai_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        mock_openai_client.chat.completions.create = AsyncMock(
+            return_value=mock_response
+        )
 
         service = StudyPlanService(api_key="test-api-key")
         target_date = date.today() + timedelta(days=90)
@@ -243,7 +253,9 @@ class TestStudyPlanService:
         # Mock LLM response
         mock_response = MagicMock()
         mock_response.choices[0].message.content = json.dumps(sample_llm_response)
-        mock_openai_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        mock_openai_client.chat.completions.create = AsyncMock(
+            return_value=mock_response
+        )
 
         service = StudyPlanService(api_key="test-api-key")
         target_date = date.today() + timedelta(days=90)

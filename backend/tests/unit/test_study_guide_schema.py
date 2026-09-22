@@ -2,12 +2,10 @@
 
 Tests the StudyGuide Pydantic model structure and validation.
 """
-import pytest
-from pydantic import ValidationError
 
 from app.schemas.certificate import (
-    StudyGuide,
     RecommendedBook,
+    StudyGuide,
     TimeAllocation,
 )
 
@@ -21,25 +19,18 @@ class TestStudyGuideSchema:
             "study_methods": [
                 "교재 중심 학습",
                 "기출문제 위주",
-                "강의 + 문제풀이 병행"
+                "강의 + 문제풀이 병행",
             ],
-            "time_allocation": {
-                "theory": "40%",
-                "practice": "50%",
-                "review": "10%"
-            },
+            "time_allocation": {"theory": "40%", "practice": "50%", "review": "10%"},
             "recommended_books": [
                 {
                     "title": "정보처리기사 필기 교재",
                     "publisher": "시대에듀",
                     "type": "필기",
-                    "description": "기본서로 추천"
+                    "description": "기본서로 추천",
                 }
             ],
-            "success_tips": [
-                "기출문제 최소 3회 반복",
-                "오답노트 필수 작성"
-            ]
+            "success_tips": ["기출문제 최소 3회 반복", "오답노트 필수 작성"],
         }
 
         guide = StudyGuide(**data)
@@ -65,11 +56,7 @@ class TestStudyGuideSchema:
 
     def test_time_allocation_schema(self):
         """Test TimeAllocation sub-schema."""
-        data = {
-            "theory": "40%",
-            "practice": "50%",
-            "review": "10%"
-        }
+        data = {"theory": "40%", "practice": "50%", "review": "10%"}
 
         allocation = TimeAllocation(**data)
 
@@ -79,10 +66,7 @@ class TestStudyGuideSchema:
 
     def test_time_allocation_optional_fields(self):
         """Test TimeAllocation with optional fields."""
-        data = {
-            "theory": "50%",
-            "practice": "50%"
-        }
+        data = {"theory": "50%", "practice": "50%"}
 
         allocation = TimeAllocation(**data)
 
@@ -96,7 +80,7 @@ class TestStudyGuideSchema:
             "title": "정보처리기사 필기",
             "publisher": "시대에듀",
             "type": "필기",
-            "description": "기본서로 추천"
+            "description": "기본서로 추천",
         }
 
         book = RecommendedBook(**data)
@@ -121,10 +105,7 @@ class TestStudyGuideSchema:
 
     def test_study_guide_with_empty_time_allocation(self):
         """Test study_guide with null time_allocation."""
-        data = {
-            "study_methods": ["교재 중심"],
-            "time_allocation": None
-        }
+        data = {"study_methods": ["교재 중심"], "time_allocation": None}
 
         guide = StudyGuide(**data)
 
@@ -139,7 +120,7 @@ class TestStudyGuideSchema:
             "study_guide": {
                 "study_methods": ["교재 중심"],
                 "learning_sequence": ["1단계: 기초 (30일)"],
-                "success_tips": ["기출문제 반복"]
+                "success_tips": ["기출문제 반복"],
             }
         }
 
@@ -150,8 +131,9 @@ class TestStudyGuideSchema:
 
     def test_study_guide_in_certificate_response(self):
         """Test study_guide field in Certificate response schema."""
-        from app.schemas.certificate import Certificate
         from datetime import datetime
+
+        from app.schemas.certificate import Certificate
 
         data = {
             "id": "123e4567-e89b-12d3-a456-426614174000",
@@ -164,8 +146,8 @@ class TestStudyGuideSchema:
             "study_guide": {
                 "study_methods": ["교재 + 기출"],
                 "learning_sequence": ["1단계: 기초"],
-                "success_tips": ["반복 학습"]
-            }
+                "success_tips": ["반복 학습"],
+            },
         }
 
         cert = Certificate(**data)

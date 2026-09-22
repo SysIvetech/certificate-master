@@ -2,20 +2,18 @@
 
 TDD: Supabase → MariaDB 마이그레이션 테스트
 """
+
 import json
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
 from scripts.seed_certificates import (
-    load_certificates,
-    get_file_path_for_category,
     CATEGORY_FILES,
-    get_mariadb_session,
-    seed_certificates_mariadb,
     clear_certificates_mariadb,
+    get_file_path_for_category,
+    get_mariadb_session,
+    load_certificates,
+    seed_certificates_mariadb,
 )
 
 
@@ -27,13 +25,13 @@ def sample_certificates():
             "categories": [{"code": "S", "name": "국가전문자격"}],
             "series": "세무사",
             "title": "세무사",
-            "raw_id": "S_세무사"
+            "raw_id": "S_세무사",
         },
         {
             "categories": [{"code": "T", "name": "국가기술자격"}],
             "series": "정보처리",
             "title": "정보처리기사",
-            "raw_id": "T_정보처리기사"
+            "raw_id": "T_정보처리기사",
         },
     ]
 
@@ -75,7 +73,7 @@ class TestGetFilePathForCategory:
 
         # 테스트용 JSON 파일 생성
         test_file = by_cat_dir / "national_technical.json"
-        test_file.write_text('[]', encoding='utf-8')
+        test_file.write_text("[]", encoding="utf-8")
 
         result = get_file_path_for_category(tmp_path, "국가기술자격")
 
@@ -85,7 +83,7 @@ class TestGetFilePathForCategory:
         """카테고리 미지정 시 기본 경로 반환."""
         default_file = tmp_path / "processed" / "certificates_parsed.json"
         default_file.parent.mkdir(parents=True, exist_ok=True)
-        default_file.write_text('[]', encoding='utf-8')
+        default_file.write_text("[]", encoding="utf-8")
 
         result = get_file_path_for_category(tmp_path, None)
 
@@ -130,7 +128,11 @@ class TestMariaDBIntegration:
         """자격증 데이터가 MariaDB에 삽입되는지 테스트."""
         # 테스트용 데이터에 TEST_ 접두어 추가 + 유니크한 제목
         test_certs = [
-            {**cert, "raw_id": f"TEST_{cert['raw_id']}", "title": f"TEST_{cert['title']}"}
+            {
+                **cert,
+                "raw_id": f"TEST_{cert['raw_id']}",
+                "title": f"TEST_{cert['title']}",
+            }
             for cert in sample_certificates
         ]
 
@@ -140,7 +142,9 @@ class TestMariaDBIntegration:
             clear_certificates_mariadb(session, raw_id_prefix="TEST_")
 
             # 삽입 테스트 (4개 반환: inserted, category_added, skipped, failed)
-            inserted, category_added, skipped, failed = seed_certificates_mariadb(session, test_certs)
+            inserted, category_added, skipped, failed = seed_certificates_mariadb(
+                session, test_certs
+            )
 
             assert inserted == 2
             assert failed == 0
@@ -153,7 +157,11 @@ class TestMariaDBIntegration:
         """자격증 데이터가 삭제되는지 테스트."""
         # 테스트용 데이터에 TEST_ 접두어 추가 + 유니크한 제목
         test_certs = [
-            {**cert, "raw_id": f"TEST_CLR_{cert['raw_id']}", "title": f"TEST_CLR_{cert['title']}"}
+            {
+                **cert,
+                "raw_id": f"TEST_CLR_{cert['raw_id']}",
+                "title": f"TEST_CLR_{cert['title']}",
+            }
             for cert in sample_certificates
         ]
 
@@ -175,7 +183,11 @@ class TestMariaDBIntegration:
     def test_seed_handles_duplicates(self, sample_certificates):
         """중복 데이터 처리 테스트 - 같은 title이면 카테고리만 추가."""
         test_certs = [
-            {**cert, "raw_id": f"TEST_DUP_{cert['raw_id']}", "title": f"TEST_DUP_{cert['title']}"}
+            {
+                **cert,
+                "raw_id": f"TEST_DUP_{cert['raw_id']}",
+                "title": f"TEST_DUP_{cert['title']}",
+            }
             for cert in sample_certificates
         ]
 
@@ -190,7 +202,9 @@ class TestMariaDBIntegration:
             assert failed == 0
 
             # 동일 데이터 다시 삽입 (같은 title이면 건너뜀)
-            inserted2, category_added, skipped, failed2 = seed_certificates_mariadb(session, test_certs)
+            inserted2, category_added, skipped, failed2 = seed_certificates_mariadb(
+                session, test_certs
+            )
 
             # 같은 카테고리이므로 건너뜀
             assert inserted2 == 0
@@ -207,7 +221,7 @@ class TestMariaDBIntegration:
                 "categories": cert["categories"],
                 "series": cert["series"],
                 "title": f"TEST_CAT_{cert['title']}",
-                "raw_id": f"TEST_CAT_{cert['raw_id']}"
+                "raw_id": f"TEST_CAT_{cert['raw_id']}",
             }
             for cert in sample_certificates
         ]
@@ -227,11 +241,13 @@ class TestMariaDBIntegration:
                     "categories": [{"code": "C", "name": "과정평가형자격"}],
                     "series": cert["series"],
                     "title": f"TEST_CAT_{cert['title']}",
-                    "raw_id": f"TEST_CAT_C_{cert['raw_id']}"
+                    "raw_id": f"TEST_CAT_C_{cert['raw_id']}",
                 }
                 for cert in sample_certificates
             ]
-            inserted2, category_added, skipped, failed2 = seed_certificates_mariadb(session, test_certs_new_category)
+            inserted2, category_added, skipped, failed2 = seed_certificates_mariadb(
+                session, test_certs_new_category
+            )
 
             # 새 카테고리가 추가되어야 함
             assert inserted2 == 0

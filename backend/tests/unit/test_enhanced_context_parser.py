@@ -1,6 +1,7 @@
 """개선된 4단계 규칙 기반 컨텍스트 파서 테스트."""
 
 import pytest
+
 from app.schemas.recommendation import StructuredUserContext
 from app.services.search.context_parser import EnhancedContextParser
 
@@ -102,7 +103,9 @@ class TestDomainInference:
         assert any("건설" in ind or "건축" in ind for ind in ctx.preferred_industries)
 
     def test_explicit_domains_used(self, parser):
-        ctx = parser.parse("자격증 추천해주세요", domains=["IT/소프트웨어", "금융/회계"])
+        ctx = parser.parse(
+            "자격증 추천해주세요", domains=["IT/소프트웨어", "금융/회계"]
+        )
         assert len(ctx.preferred_industries) > 0
 
 

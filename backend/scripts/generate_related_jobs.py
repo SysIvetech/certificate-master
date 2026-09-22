@@ -15,6 +15,7 @@ ChromaDB 벡터 스토어에도 업데이트합니다.
     # 전체 실행
     uv run python -m scripts.generate_related_jobs --all
 """
+
 import argparse
 import asyncio
 import json
@@ -25,15 +26,14 @@ from pathlib import Path
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
+from openai import AsyncOpenAI
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
-from openai import AsyncOpenAI
 
 from app.core.config import get_settings
 from app.core.database import get_engine
 from app.models.certificate import Certificate
 from app.services.embedding.vector_store import VectorStoreService
-
 
 # LLM 프롬프트
 RELATED_JOBS_PROMPT = """당신은 자격증 정보를 분석하여 관련 직업을 추출하는 전문가입니다.
@@ -81,7 +81,9 @@ class RelatedJobsGenerator:
         self.model = self.settings.OPENAI_MODEL_NAME
         self.vector_store = VectorStoreService()
 
-    def get_empty_related_jobs_certificates(self, limit: int = None) -> list[Certificate]:
+    def get_empty_related_jobs_certificates(
+        self, limit: int = None
+    ) -> list[Certificate]:
         """related_jobs가 비어있는 자격증 조회.
 
         Args:
@@ -101,7 +103,9 @@ class RelatedJobsGenerator:
             related_jobs = career_info.get("related_jobs", [])
 
             # None, 빈 리스트, 빈 문자열 모두 처리
-            if not related_jobs or (isinstance(related_jobs, list) and len(related_jobs) == 0):
+            if not related_jobs or (
+                isinstance(related_jobs, list) and len(related_jobs) == 0
+            ):
                 empty_certs.append(cert)
 
         if limit:
@@ -117,7 +121,7 @@ class RelatedJobsGenerator:
         Returns:
             관련 직업 리스트
         """
-        print(f"  [LLM] 관련 직업 생성 시작...")
+        print("  [LLM] 관련 직업 생성 시작...")
 
         career_info = certificate.career_info or {}
         industry = career_info.get("industry", [])
@@ -128,7 +132,9 @@ class RelatedJobsGenerator:
 
         overview = certificate.overview or "정보 없음"
 
-        print(f"  [LLM] 입력 - 제목: {certificate.title}, 계열: {certificate.series}, 산업: {industry_str}")
+        print(
+            f"  [LLM] 입력 - 제목: {certificate.title}, 계열: {certificate.series}, 산업: {industry_str}"
+        )
 
         prompt = RELATED_JOBS_PROMPT.format(
             title=certificate.title,
@@ -150,7 +156,7 @@ class RelatedJobsGenerator:
 
             content = response.choices[0].message.content
             if not content:
-                print(f"  [LLM] ❌ 응답 내용 없음")
+                print("  [LLM] ❌ 응답 내용 없음")
                 return []
 
             result = json.loads(content)
@@ -188,7 +194,7 @@ class RelatedJobsGenerator:
             flag_modified(certificate, "career_info")
 
             print(f"  [DB] 변경 후 career_info: {certificate.career_info}")
-            print(f"  [DB] 커밋 중...")
+            print("  [DB] 커밋 중...")
 
             self.db.commit()
             self.db.refresh(certificate)
@@ -220,7 +226,7 @@ class RelatedJobsGenerator:
             collection = self.vector_store._collection
 
             # 벡터 스토어에서 기존 메타데이터 가져오기
-            print(f"  [Vector] 기존 메타데이터 조회 중...")
+            print("  [Vector] 기존 메타데이터 조회 중...")
             records = collection.get(
                 ids=[str(certificate.id)],
                 include=["metadatas"],
@@ -233,13 +239,15 @@ class RelatedJobsGenerator:
             # 메타데이터 업데이트
             # 쉼표로 구분된 문자열로 저장 (예: "직업1, 직업2, 직업3")
             metadata = records["metadatas"][0]
-            print(f"  [Vector] 이전 related_jobs: {metadata.get('related_jobs', 'N/A')}")
+            print(
+                f"  [Vector] 이전 related_jobs: {metadata.get('related_jobs', 'N/A')}"
+            )
 
             related_jobs_str = ", ".join(related_jobs)
             metadata["related_jobs"] = related_jobs_str
 
             print(f"  [Vector] 새 related_jobs: {related_jobs_str}")
-            print(f"  [Vector] 업데이트 중...")
+            print("  [Vector] 업데이트 중...")
 
             # 업데이트
             collection.update(
@@ -260,6 +268,7 @@ class RelatedJobsGenerator:
         except Exception as e:
             print(f"  [Vector] ❌ 업데이트 실패: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 

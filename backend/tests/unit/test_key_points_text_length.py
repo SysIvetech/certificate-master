@@ -3,9 +3,9 @@
 학습 팁 등의 텍스트가 과도하게 잘리지 않는지 검증합니다.
 """
 
-import pytest
 from datetime import datetime
-from app.schemas.certificate import Certificate, CategoryInfo
+
+from app.schemas.certificate import CategoryInfo, Certificate
 from app.schemas.recommendation import RecommendationRequest
 from app.services.study.recommendation_service import RecommendationService
 
@@ -31,17 +31,14 @@ def test_학습_팁이_40자_이상일_때_적절히_표시됨():
         categories=[CategoryInfo(name="국가기술자격", code="QT")],
         difficulty=4,
         study_period_days=180,
-        user_reviews={
-            "study_tips": [long_tip],
-            "difficulty_feedback": "중상"
-        }
+        user_reviews={"study_tips": [long_tip], "difficulty_feedback": "중상"},
     )
 
     request = RecommendationRequest(
         purpose="취업",
         interest_domains=["IT개발"],
         study_timeline="6개월 이하",
-        difficulty_preference="어려워도 상관없음"
+        difficulty_preference="어려워도 상관없음",
     )
 
     service = RecommendationService(db=None)
@@ -57,7 +54,9 @@ def test_학습_팁이_40자_이상일_때_적절히_표시됨():
     assert "기출문제를 최소 3회 이상 반복하여" in study_tip_point
 
     # 너무 짧게 잘리지 않아야 함 (최소 60자 이상)
-    assert len(study_tip_point) >= 60, f"학습 팁이 너무 짧게 잘렸습니다: {len(study_tip_point)}자"
+    assert (
+        len(study_tip_point) >= 60
+    ), f"학습 팁이 너무 짧게 잘렸습니다: {len(study_tip_point)}자"
 
     # 원본의 충분한 내용이 포함되어야 함 (최소 70% 이상)
     tip_content = study_tip_point.replace("학습 팁: ", "")
@@ -66,8 +65,9 @@ def test_학습_팁이_40자_이상일_때_적절히_표시됨():
 
     # 원본의 상당 부분이 포함되어 있는지 확인
     # 원본 텍스트의 최소 70% 이상이 포함되어야 함
-    assert len(tip_content_clean) >= len(long_tip) * 0.7, \
-        f"학습 팁 내용이 너무 많이 잘렸습니다: {len(tip_content_clean)}자 (원본: {len(long_tip)}자)"
+    assert (
+        len(tip_content_clean) >= len(long_tip) * 0.7
+    ), f"학습 팁 내용이 너무 많이 잘렸습니다: {len(tip_content_clean)}자 (원본: {len(long_tip)}자)"
 
 
 def test_학습_팁이_짧을_때는_전체_표시됨():
@@ -81,16 +81,14 @@ def test_학습_팁이_짧을_때는_전체_표시됨():
         categories=[CategoryInfo(name="국가기술자격", code="QT")],
         difficulty=2,
         study_period_days=60,
-        user_reviews={
-            "study_tips": [short_tip]
-        }
+        user_reviews={"study_tips": [short_tip]},
     )
 
     request = RecommendationRequest(
         purpose="취업",
         interest_domains=["총무/법무/사무"],
         study_timeline="3개월 이하",
-        difficulty_preference="쉬운 편"
+        difficulty_preference="쉬운 편",
     )
 
     service = RecommendationService(db=None)
@@ -111,14 +109,14 @@ def test_학습_팁이_없을_때_에러_없이_처리됨():
         title="네트워크관리사 2급",
         categories=[CategoryInfo(name="민간자격", code="PT")],
         difficulty=3,
-        study_period_days=90
+        study_period_days=90,
     )
 
     request = RecommendationRequest(
         purpose="취업",
         interest_domains=["IT개발"],
         study_timeline="6개월 이하",
-        difficulty_preference="중간"
+        difficulty_preference="중간",
     )
 
     service = RecommendationService(db=None)
@@ -138,7 +136,7 @@ def test_여러_학습_팁_중_첫_번째만_사용됨():
     tips = [
         "첫 번째 팁: 기출문제를 최소 3회 이상 반복하여 풀이하는 것이 정답률 향상에 도움이 됩니다.",
         "두 번째 팁: 이론 공부와 실습을 병행하세요.",
-        "세 번째 팁: 스터디 그룹에 참여하면 도움이 됩니다."
+        "세 번째 팁: 스터디 그룹에 참여하면 도움이 됩니다.",
     ]
 
     cert = _create_test_certificate(
@@ -147,16 +145,14 @@ def test_여러_학습_팁_중_첫_번째만_사용됨():
         categories=[CategoryInfo(name="국가기술자격", code="QT")],
         difficulty=4,
         study_period_days=180,
-        user_reviews={
-            "study_tips": tips
-        }
+        user_reviews={"study_tips": tips},
     )
 
     request = RecommendationRequest(
         purpose="이직",
         interest_domains=["IT개발"],
         study_timeline="6개월 이하",
-        difficulty_preference="어려워도 상관없음"
+        difficulty_preference="어려워도 상관없음",
     )
 
     service = RecommendationService(db=None)

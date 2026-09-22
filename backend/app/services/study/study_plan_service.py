@@ -2,9 +2,10 @@
 
 자격증 정보와 사용자 입력을 기반으로 맞춤형 학습 계획을 생성합니다.
 """
+
+import json
 from datetime import date
 from typing import Any, Optional
-import json
 
 from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
@@ -110,22 +111,45 @@ class StudyPlanService:
 
         # 핵심 출제 토픽 추출
         key_exam_topics = study_guide.get("key_exam_topics", [])
-        key_exam_topics_text = "\n".join([
-            f"- {t.get('topic', '')}: {t.get('frequency', '')} / {t.get('importance', '')} - {t.get('description', '')}"
-            for t in key_exam_topics
-        ]) if key_exam_topics else "정보 없음"
+        key_exam_topics_text = (
+            "\n".join(
+                [
+                    f"- {t.get('topic', '')}: {t.get('frequency', '')} / {t.get('importance', '')} - {t.get('description', '')}"
+                    for t in key_exam_topics
+                ]
+            )
+            if key_exam_topics
+            else "정보 없음"
+        )
 
         # 시간 배분 가이드 추출
         time_allocation = study_guide.get("time_allocation", {})
-        time_allocation_text = json.dumps(time_allocation, ensure_ascii=False, indent=2) if time_allocation else "정보 없음"
+        time_allocation_text = (
+            json.dumps(time_allocation, ensure_ascii=False, indent=2)
+            if time_allocation
+            else "정보 없음"
+        )
 
         # 추천 교재 추출
         recommended_books = study_guide.get("recommended_books", [])
-        books_text = "\n".join([f"- {book.get('title', '')} ({book.get('type', '')})" for book in recommended_books]) if recommended_books else "정보 없음"
+        books_text = (
+            "\n".join(
+                [
+                    f"- {book.get('title', '')} ({book.get('type', '')})"
+                    for book in recommended_books
+                ]
+            )
+            if recommended_books
+            else "정보 없음"
+        )
 
         # 성공 팁 추출
         success_tips = study_guide.get("success_tips", [])
-        tips_text = "\n".join([f"- {tip}" for tip in success_tips]) if success_tips else "정보 없음"
+        tips_text = (
+            "\n".join([f"- {tip}" for tip in success_tips])
+            if success_tips
+            else "정보 없음"
+        )
 
         # System Prompt
         system_prompt = f"""당신은 자격증 합격 전문가 학습 플래너 AI입니다.

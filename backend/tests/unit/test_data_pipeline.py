@@ -5,8 +5,10 @@
 2. 옵션 처리가 올바른지
 3. 단계별 건너뛰기가 동작하는지
 """
+
+from unittest.mock import AsyncMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 
 class TestDataPipelineSteps:
@@ -21,7 +23,9 @@ class TestDataPipelineSteps:
 
         # Mock 설정
         pipeline.enrich_step = AsyncMock(return_value={"processed": 5, "success": 5})
-        pipeline.embedding_step = AsyncMock(return_value={"processed": 5, "uploaded": 5})
+        pipeline.embedding_step = AsyncMock(
+            return_value={"processed": 5, "uploaded": 5}
+        )
 
         result = await pipeline.run(limit=5)
 
@@ -40,7 +44,9 @@ class TestDataPipelineSteps:
 
         pipeline = DataPipeline()
         pipeline.enrich_step = AsyncMock()
-        pipeline.embedding_step = AsyncMock(return_value={"processed": 5, "uploaded": 5})
+        pipeline.embedding_step = AsyncMock(
+            return_value={"processed": 5, "uploaded": 5}
+        )
 
         result = await pipeline.run(limit=5, skip_enrich=True)
 
@@ -82,9 +88,11 @@ class TestDataPipelineOptions:
 
         pipeline = DataPipeline()
         pipeline.enrich_step = AsyncMock(return_value={"processed": 1, "success": 1})
-        pipeline.embedding_step = AsyncMock(return_value={"processed": 1, "uploaded": 1})
+        pipeline.embedding_step = AsyncMock(
+            return_value={"processed": 1, "uploaded": 1}
+        )
 
-        result = await pipeline.run(test_mode=True)
+        await pipeline.run(test_mode=True)
 
         # test 모드는 limit=1
         enrich_call_args = pipeline.enrich_step.call_args
@@ -97,7 +105,9 @@ class TestDataPipelineOptions:
 
         pipeline = DataPipeline()
         pipeline.enrich_step = AsyncMock(return_value={"processed": 10, "success": 10})
-        pipeline.embedding_step = AsyncMock(return_value={"processed": 10, "uploaded": 10})
+        pipeline.embedding_step = AsyncMock(
+            return_value={"processed": 10, "uploaded": 10}
+        )
 
         await pipeline.run(limit=10)
 
@@ -115,7 +125,9 @@ class TestDataPipelineOptions:
 
         pipeline = DataPipeline()
         pipeline.enrich_step = AsyncMock(return_value={"processed": 5, "success": 5})
-        pipeline.embedding_step = AsyncMock(return_value={"processed": 5, "uploaded": 5})
+        pipeline.embedding_step = AsyncMock(
+            return_value={"processed": 5, "uploaded": 5}
+        )
 
         await pipeline.run(limit=5, skip_existing=True)
 
@@ -133,8 +145,12 @@ class TestDataPipelineErrorHandling:
 
         pipeline = DataPipeline()
         # enrich가 부분 성공 (5개 중 3개 성공)
-        pipeline.enrich_step = AsyncMock(return_value={"processed": 5, "success": 3, "failed": 2})
-        pipeline.embedding_step = AsyncMock(return_value={"processed": 3, "uploaded": 3})
+        pipeline.enrich_step = AsyncMock(
+            return_value={"processed": 5, "success": 3, "failed": 2}
+        )
+        pipeline.embedding_step = AsyncMock(
+            return_value={"processed": 3, "uploaded": 3}
+        )
 
         result = await pipeline.run(limit=5)
 

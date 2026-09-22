@@ -9,9 +9,8 @@ TDD: RED phase - 테스트 먼저 작성.
 
 MariaDB(SQLAlchemy)로 마이그레이션됨 (2026-01-22).
 """
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime
+
+from unittest.mock import MagicMock, patch
 
 
 class TestVectorStoreDbSync:
@@ -30,7 +29,9 @@ class TestVectorStoreDbSync:
                 mock_collection = MagicMock()
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store._get_db_session") as mock_get_session:
+                with patch(
+                    "app.services.embedding.vector_store._get_db_session"
+                ) as mock_get_session:
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
@@ -42,12 +43,13 @@ class TestVectorStoreDbSync:
                     # Mock certificate query
                     mock_cert = MagicMock()
                     mock_cert.vector_id = None
-                    mock_session.query.return_value.filter.return_value.first.return_value = mock_cert
+                    mock_session.query.return_value.filter.return_value.first.return_value = (
+                        mock_cert
+                    )
 
                     # Execute
                     result = service.sync_vector_id_to_db(
-                        cert_id="cert-123",
-                        vector_id="vec-123"
+                        cert_id="cert-123", vector_id="vec-123"
                     )
 
                     # Verify
@@ -69,7 +71,9 @@ class TestVectorStoreDbSync:
                 mock_collection = MagicMock()
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store._get_db_session") as mock_get_session:
+                with patch(
+                    "app.services.embedding.vector_store._get_db_session"
+                ) as mock_get_session:
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
@@ -82,7 +86,9 @@ class TestVectorStoreDbSync:
                     # 4개 필요: 3개 업데이트 + 1개 검증 쿼리
                     mock_certs = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
                     mock_certs[3].vector_id = "vec-1"  # 검증용 cert
-                    mock_session.query.return_value.filter.return_value.first.side_effect = mock_certs
+                    mock_session.query.return_value.filter.return_value.first.side_effect = (
+                        mock_certs
+                    )
 
                     # Execute batch sync
                     mappings = [
@@ -110,7 +116,9 @@ class TestVectorStoreDbSync:
                 mock_collection = MagicMock()
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store._get_db_session") as mock_get_session:
+                with patch(
+                    "app.services.embedding.vector_store._get_db_session"
+                ) as mock_get_session:
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
@@ -122,7 +130,9 @@ class TestVectorStoreDbSync:
                     # Mock certificate query
                     mock_cert = MagicMock()
                     mock_cert.vector_id = "vec-123"
-                    mock_session.query.return_value.filter.return_value.first.return_value = mock_cert
+                    mock_session.query.return_value.filter.return_value.first.return_value = (
+                        mock_cert
+                    )
 
                     # Execute
                     result = service.clear_vector_id_in_db("cert-123")
@@ -146,7 +156,9 @@ class TestVectorStoreDbSync:
                 mock_collection = MagicMock()
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store._get_db_session") as mock_get_session:
+                with patch(
+                    "app.services.embedding.vector_store._get_db_session"
+                ) as mock_get_session:
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
@@ -157,12 +169,21 @@ class TestVectorStoreDbSync:
 
                     # Mock certificate query results
                     mock_cert1 = MagicMock()
-                    mock_cert1.to_dict.return_value = {"id": "cert-1", "title": "자격증1", "vector_id": None}
+                    mock_cert1.to_dict.return_value = {
+                        "id": "cert-1",
+                        "title": "자격증1",
+                        "vector_id": None,
+                    }
                     mock_cert2 = MagicMock()
-                    mock_cert2.to_dict.return_value = {"id": "cert-2", "title": "자격증2", "vector_id": None}
+                    mock_cert2.to_dict.return_value = {
+                        "id": "cert-2",
+                        "title": "자격증2",
+                        "vector_id": None,
+                    }
 
                     mock_session.query.return_value.filter.return_value.filter.return_value.all.return_value = [
-                        mock_cert1, mock_cert2
+                        mock_cert1,
+                        mock_cert2,
                     ]
 
                     # Execute
@@ -186,7 +207,9 @@ class TestVectorStoreDbSync:
                 mock_collection = MagicMock()
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store._get_db_session") as mock_get_session:
+                with patch(
+                    "app.services.embedding.vector_store._get_db_session"
+                ) as mock_get_session:
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
@@ -197,12 +220,21 @@ class TestVectorStoreDbSync:
 
                     # Mock certificate query results
                     mock_cert1 = MagicMock()
-                    mock_cert1.to_dict.return_value = {"id": "cert-1", "title": "자격증1", "vector_id": "vec-1"}
+                    mock_cert1.to_dict.return_value = {
+                        "id": "cert-1",
+                        "title": "자격증1",
+                        "vector_id": "vec-1",
+                    }
                     mock_cert2 = MagicMock()
-                    mock_cert2.to_dict.return_value = {"id": "cert-2", "title": "자격증2", "vector_id": "vec-2"}
+                    mock_cert2.to_dict.return_value = {
+                        "id": "cert-2",
+                        "title": "자격증2",
+                        "vector_id": "vec-2",
+                    }
 
                     mock_session.query.return_value.filter.return_value.all.return_value = [
-                        mock_cert1, mock_cert2
+                        mock_cert1,
+                        mock_cert2,
                     ]
 
                     # Execute
@@ -226,7 +258,9 @@ class TestVectorStoreDbSync:
                 mock_collection = MagicMock()
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store._get_db_session") as mock_get_session:
+                with patch(
+                    "app.services.embedding.vector_store._get_db_session"
+                ) as mock_get_session:
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
@@ -237,7 +271,9 @@ class TestVectorStoreDbSync:
 
                     # Mock certificate query
                     mock_cert = MagicMock()
-                    mock_session.query.return_value.filter.return_value.first.return_value = mock_cert
+                    mock_session.query.return_value.filter.return_value.first.return_value = (
+                        mock_cert
+                    )
 
                     # Execute - 새로운 메서드 사용
                     cert_id = "cert-123"
@@ -266,7 +302,9 @@ class TestVectorStoreDbSync:
                 mock_collection = MagicMock()
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store._get_db_session") as mock_get_session:
+                with patch(
+                    "app.services.embedding.vector_store._get_db_session"
+                ) as mock_get_session:
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
@@ -278,15 +316,15 @@ class TestVectorStoreDbSync:
                     # Mock certificate query
                     mock_cert = MagicMock()
                     mock_cert.vector_id = "cert-123"
-                    mock_session.query.return_value.filter.return_value.first.return_value = mock_cert
+                    mock_session.query.return_value.filter.return_value.first.return_value = (
+                        mock_cert
+                    )
 
                     # Execute
                     service.delete_certificate_with_sync("cert-123")
 
                     # Verify ChromaDB delete
-                    mock_collection.delete.assert_called_once_with(
-                        ids=["cert-123"]
-                    )
+                    mock_collection.delete.assert_called_once_with(ids=["cert-123"])
 
                     # Verify DB sync (vector_id = None)
                     assert mock_cert.vector_id is None
@@ -313,7 +351,9 @@ class TestSyncResultTracking:
                 mock_client.get_or_create_collection.return_value = mock_collection
                 mock_client.heartbeat.return_value = 1234567890
 
-                with patch("app.services.embedding.vector_store._get_db_session") as mock_get_session:
+                with patch(
+                    "app.services.embedding.vector_store._get_db_session"
+                ) as mock_get_session:
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
@@ -330,7 +370,7 @@ class TestSyncResultTracking:
                     mock_session.query.return_value.filter.return_value.first.side_effect = [
                         mock_cert1,  # cert-1 found
                         mock_cert2,  # cert-2 found
-                        None,        # cert-3 not found
+                        None,  # cert-3 not found
                         mock_cert_verify,  # 검증용
                     ]
 
@@ -360,7 +400,9 @@ class TestSyncResultTracking:
                 mock_client.get_or_create_collection.return_value = mock_collection
                 mock_client.heartbeat.return_value = 1234567890
 
-                with patch("app.services.embedding.vector_store._get_db_session") as mock_get_session:
+                with patch(
+                    "app.services.embedding.vector_store._get_db_session"
+                ) as mock_get_session:
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
@@ -370,7 +412,9 @@ class TestSyncResultTracking:
 
                     # commit에서 에러 발생
                     mock_session.commit.side_effect = Exception("DB connection lost")
-                    mock_session.query.return_value.filter.return_value.first.return_value = MagicMock()
+                    mock_session.query.return_value.filter.return_value.first.return_value = (
+                        MagicMock()
+                    )
 
                     mappings = [("cert-1", "vec-1")]
                     result = service.sync_vector_ids_to_db_batch(mappings)
@@ -407,7 +451,9 @@ class TestCertificateSchemaVectorId:
         from app.schemas.certificate import CertificateUpdate
 
         fields = CertificateUpdate.model_fields
-        assert "vector_id" in fields, "CertificateUpdate 스키마에 vector_id 필드가 필요합니다"
+        assert (
+            "vector_id" in fields
+        ), "CertificateUpdate 스키마에 vector_id 필드가 필요합니다"
 
 
 class TestResetCertificateData:
@@ -431,7 +477,9 @@ class TestResetCertificateData:
                 mock_collection = MagicMock()
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store._get_db_session") as mock_get_session:
+                with patch(
+                    "app.services.embedding.vector_store._get_db_session"
+                ) as mock_get_session:
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
@@ -448,7 +496,9 @@ class TestResetCertificateData:
                     mock_cert.vector_id = "vec-123"
                     mock_cert.passing_rate = 45.5
                     mock_cert.view_count = 100
-                    mock_session.query.return_value.filter.return_value.first.return_value = mock_cert
+                    mock_session.query.return_value.filter.return_value.first.return_value = (
+                        mock_cert
+                    )
 
                     # Execute
                     result = service.reset_certificate_data_in_db("cert-123")
@@ -477,7 +527,9 @@ class TestResetCertificateData:
                 mock_collection = MagicMock()
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store._get_db_session") as mock_get_session:
+                with patch(
+                    "app.services.embedding.vector_store._get_db_session"
+                ) as mock_get_session:
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
@@ -495,7 +547,9 @@ class TestResetCertificateData:
                     mock_cert2.vector_id = "vec-2"
 
                     mock_session.query.return_value.filter.return_value.first.side_effect = [
-                        mock_cert1, mock_cert2, None  # cert-3 not found
+                        mock_cert1,
+                        mock_cert2,
+                        None,  # cert-3 not found
                     ]
 
                     # Execute
@@ -524,7 +578,9 @@ class TestResetCertificateData:
                 mock_collection = MagicMock()
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store._get_db_session") as mock_get_session:
+                with patch(
+                    "app.services.embedding.vector_store._get_db_session"
+                ) as mock_get_session:
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
@@ -537,7 +593,9 @@ class TestResetCertificateData:
                     mock_cert = MagicMock()
                     mock_cert.overview = "기존 개요"
                     mock_cert.vector_id = "cert-123"
-                    mock_session.query.return_value.filter.return_value.first.return_value = mock_cert
+                    mock_session.query.return_value.filter.return_value.first.return_value = (
+                        mock_cert
+                    )
 
                     # Execute
                     service.delete_certificate_with_reset("cert-123")
@@ -563,7 +621,9 @@ class TestResetCertificateData:
                 mock_collection = MagicMock()
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store._get_db_session") as mock_get_session:
+                with patch(
+                    "app.services.embedding.vector_store._get_db_session"
+                ) as mock_get_session:
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
@@ -579,7 +639,8 @@ class TestResetCertificateData:
                     mock_cert2.overview = "개요2"
 
                     mock_session.query.return_value.filter.return_value.first.side_effect = [
-                        mock_cert1, mock_cert2
+                        mock_cert1,
+                        mock_cert2,
                     ]
 
                     # Execute

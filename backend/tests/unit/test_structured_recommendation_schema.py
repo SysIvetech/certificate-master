@@ -1,6 +1,8 @@
 """구조화된 추천 요청 스키마 테스트."""
+
 import pytest
 from pydantic import ValidationError
+
 from app.schemas.recommendation import StructuredRecommendationRequest
 
 

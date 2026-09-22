@@ -2,6 +2,7 @@
 
 학습 계획 정보를 저장하는 테이블의 ORM 모델.
 """
+
 import uuid
 
 from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, String

@@ -2,7 +2,7 @@
 
 TDD: Write tests FIRST, then implement the config module.
 """
-import os
+
 import pytest
 
 
@@ -15,7 +15,9 @@ class TestSettings:
         monkeypatch.setenv("SUPABASE_URL", "http://localhost:54321")
         monkeypatch.setenv("SUPABASE_ANON_KEY", "test-anon-key")
         monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "test-service-key")
-        monkeypatch.setenv("SUPABASE_DB_URL", "postgresql://postgres:postgres@localhost:54322/postgres")
+        monkeypatch.setenv(
+            "SUPABASE_DB_URL", "postgresql://postgres:postgres@localhost:54322/postgres"
+        )
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
         monkeypatch.setenv("CHROMA_HOST", "test-host")
         monkeypatch.setenv("CHROMA_PORT", "38000")
@@ -82,7 +84,7 @@ class TestSettings:
 
     def test_get_settings_returns_settings_instance(self) -> None:
         """Test that get_settings returns a Settings instance."""
-        from app.core.config import get_settings, Settings
+        from app.core.config import Settings, get_settings
 
         settings = get_settings()
 

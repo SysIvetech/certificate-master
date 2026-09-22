@@ -1,5 +1,4 @@
 """하이브리드 검색 테스트 (키워드 + 벡터)."""
-import pytest
 
 
 class TestHybridSearch:

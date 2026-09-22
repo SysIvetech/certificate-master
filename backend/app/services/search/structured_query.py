@@ -4,8 +4,8 @@ Contextual Retrieval 전략의 핵심:
 - 구조화된 사용자 입력 -> Contextual Prefix와 동일한 어휘의 쿼리 생성
 - 쿼리와 문서가 같은 "언어"를 사용하여 유사도 향상
 """
-from typing import Optional
 
+from typing import Optional
 
 # 상황 -> 대상 사용자 매핑 (Contextual Prefix와 동일한 어휘 사용)
 _STATUS_TARGET_MAP: dict[str, str] = {

@@ -2,10 +2,11 @@
 
 This module defines request/response schemas for study plan endpoints.
 """
+
 from datetime import date, datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Milestone(BaseModel):
@@ -30,9 +31,7 @@ class StudyPlanCreate(StudyPlanBase):
     """Schema for creating a new study plan."""
 
     certificate_id: str = Field(..., description="자격증 UUID")
-    topics: Optional[list[dict[str, Any]]] = Field(
-        None, description="학습 주제 목록"
-    )
+    topics: Optional[list[dict[str, Any]]] = Field(None, description="학습 주제 목록")
     milestones: Optional[list[dict[str, Any]]] = Field(
         None, description="AI 생성 마일스톤 (없으면 자동 생성)"
     )
@@ -46,9 +45,7 @@ class StudyPlanUpdate(BaseModel):
     daily_study_hours: Optional[float] = Field(
         None, ge=0.5, le=12.0, description="하루 학습 시간"
     )
-    topics: Optional[list[dict[str, Any]]] = Field(
-        None, description="학습 주제 목록"
-    )
+    topics: Optional[list[dict[str, Any]]] = Field(None, description="학습 주제 목록")
     milestones: Optional[list[dict[str, Any]]] = Field(
         None, description="마일스톤 업데이트"
     )
@@ -66,6 +63,7 @@ class StudyPlanUpdate(BaseModel):
 
 class StudyPlan(StudyPlanBase):
     """Schema for study plan response."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: str = Field(..., description="UUID")
@@ -94,4 +92,3 @@ class StudyPlanList(BaseModel):
 
     items: list[StudyPlan]
     total: int
-

@@ -2,6 +2,7 @@
 
 자격증 정보를 저장하는 테이블의 ORM 모델.
 """
+
 import json
 import uuid
 
@@ -68,98 +69,82 @@ class Certificate(Base):
         String(36),
         primary_key=True,
         default=lambda: str(uuid.uuid4()),
-        comment="고유 식별자 (UUID)"
+        comment="고유 식별자 (UUID)",
     )
     categories = Column(
-        UnicodeJSON,
-        nullable=False,
-        comment="자격증 분류 목록 [{code, name}]"
+        UnicodeJSON, nullable=False, comment="자격증 분류 목록 [{code, name}]"
     )
     series = Column(
         String(200),
         nullable=True,
-        comment="자격증 시리즈/계열 (예: 정보처리, 전기, 건축 등)"
+        comment="자격증 시리즈/계열 (예: 정보처리, 전기, 건축 등)",
     )
     title = Column(
-        String(300),
-        nullable=False,
-        comment="자격증명 (예: 정보처리기사, 세무사)"
+        String(300), nullable=False, comment="자격증명 (예: 정보처리기사, 세무사)"
     )
     raw_id = Column(
         String(500),
         unique=True,
         nullable=False,
-        comment="원본 식별자 (코드_자격증명, 중복 방지용)"
+        comment="원본 식별자 (코드_자격증명, 중복 방지용)",
     )
     slug = Column(
         String(500),
         unique=True,
         nullable=True,
-        comment="URL용 슬러그 (예: 정보처리기사, 소방설비기사-전기분야)"
+        comment="URL용 슬러그 (예: 정보처리기사, 소방설비기사-전기분야)",
     )
 
     # 보강 데이터 (LLM으로 생성)
     overview = Column(
-        Text,
-        nullable=True,
-        comment="자격증 개요 (LLM 생성, 자격증 소개/설명)"
+        Text, nullable=True, comment="자격증 개요 (LLM 생성, 자격증 소개/설명)"
     )
     difficulty = Column(
-        Integer,
-        nullable=True,
-        comment="난이도 (1-5, 1: 매우 쉬움, 5: 매우 어려움)"
+        Integer, nullable=True, comment="난이도 (1-5, 1: 매우 쉬움, 5: 매우 어려움)"
     )
     study_period_days = Column(
-        Integer,
-        nullable=True,
-        comment="권장 학습 기간 (일 단위)"
+        Integer, nullable=True, comment="권장 학습 기간 (일 단위)"
     )
     recommended_lectures = Column(
         UnicodeJSON,
         nullable=True,
         default=list,
-        comment="추천 강의 목록 [{platform, title, url, instructor, price, relevance_score}]"
+        comment="추천 강의 목록 [{platform, title, url, instructor, price, relevance_score}]",
     )
     exam_info = Column(
         UnicodeJSON,
         nullable=True,
         default=dict,
-        comment="시험 정보 {subjects, exam_type, passing_criteria, total_fee, schedule_link}"
+        comment="시험 정보 {subjects, exam_type, passing_criteria, total_fee, schedule_link}",
     )
     career_info = Column(
         UnicodeJSON,
         nullable=True,
         default=dict,
-        comment="취업/진로 정보 {use_cases, related_jobs, average_salary, job_prospects, industry}"
+        comment="취업/진로 정보 {use_cases, related_jobs, average_salary, job_prospects, industry}",
     )
     user_reviews = Column(
         UnicodeJSON,
         nullable=True,
         default=dict,
-        comment="사용자 후기 요약 {summary, difficulty_feedback, study_tips}"
+        comment="사용자 후기 요약 {summary, difficulty_feedback, study_tips}",
     )
     official_sources = Column(
         UnicodeJSON,
         nullable=True,
         default=dict,
-        comment="공식 출처 {official_site, issuing_organization, schedule_page}"
+        comment="공식 출처 {official_site, issuing_organization, schedule_page}",
     )
     study_guide = Column(
         UnicodeJSON,
         nullable=True,
         default=dict,
-        comment="학습 가이드 {study_methods, learning_sequence, time_allocation, success_tips, recommended_books}"
+        comment="학습 가이드 {study_methods, learning_sequence, time_allocation, success_tips, recommended_books}",
     )
     vector_id = Column(
-        String(100),
-        nullable=True,
-        comment="ChromaDB 벡터 ID (임베딩 동기화용)"
+        String(100), nullable=True, comment="ChromaDB 벡터 ID (임베딩 동기화용)"
     )
-    passing_rate = Column(
-        Float,
-        nullable=True,
-        comment="합격률 (%, 0.0-100.0)"
-    )
+    passing_rate = Column(Float, nullable=True, comment="합격률 (%, 0.0-100.0)")
 
     # ============================================================
     # 취업준비생 관점 필드 (NEW: 2026-01-28)
@@ -168,31 +153,31 @@ class Certificate(Base):
         UnicodeJSON,
         nullable=True,
         default=dict,
-        comment="채용 시장 정보 {job_posting_frequency, preferred_industries, preferred_companies, requirement_type, public_sector_points, salary_premium}"
+        comment="채용 시장 정보 {job_posting_frequency, preferred_industries, preferred_companies, requirement_type, public_sector_points, salary_premium}",
     )
     cost_breakdown = Column(
         UnicodeJSON,
         nullable=True,
         default=dict,
-        comment="비용 상세 {exam_fee, exam_fee_refund, textbook_cost, lecture_cost, total_estimated_cost, free_resources}"
+        comment="비용 상세 {exam_fee, exam_fee_refund, textbook_cost, lecture_cost, total_estimated_cost, free_resources}",
     )
     feasibility_info = Column(
         UnicodeJSON,
         nullable=True,
         default=dict,
-        comment="합격 가능성 정보 {non_major_pass_rate, working_adult_tips, self_study_possible, minimum_study_period, first_attempt_pass_rate}"
+        comment="합격 가능성 정보 {non_major_pass_rate, working_adult_tips, self_study_possible, minimum_study_period, first_attempt_pass_rate}",
     )
     exam_schedule_detail = Column(
         UnicodeJSON,
         nullable=True,
         default=dict,
-        comment="시험 일정 상세 {annual_exam_count, exam_type, cbt_available, next_exam_date, registration_period, result_announcement}"
+        comment="시험 일정 상세 {annual_exam_count, exam_type, cbt_available, next_exam_date, registration_period, result_announcement}",
     )
     similar_certificates = Column(
         UnicodeJSON,
         nullable=True,
         default=list,
-        comment="유사 자격증 비교 [{certificate_id, title, comparison}]"
+        comment="유사 자격증 비교 [{certificate_id, title, comparison}]",
     )
     domain = Column(
         String(100),
@@ -201,24 +186,12 @@ class Certificate(Base):
     )
 
     # 조회수
-    view_count = Column(
-        Integer,
-        nullable=False,
-        default=0,
-        comment="조회수"
-    )
+    view_count = Column(Integer, nullable=False, default=0, comment="조회수")
 
     # 타임스탬프
-    created_at = Column(
-        DateTime,
-        server_default=func.now(),
-        comment="생성 시간"
-    )
+    created_at = Column(DateTime, server_default=func.now(), comment="생성 시간")
     updated_at = Column(
-        DateTime,
-        server_default=func.now(),
-        onupdate=func.now(),
-        comment="수정 시간"
+        DateTime, server_default=func.now(), onupdate=func.now(), comment="수정 시간"
     )
 
     # Relationships

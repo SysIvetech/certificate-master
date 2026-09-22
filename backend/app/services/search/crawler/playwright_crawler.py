@@ -3,13 +3,13 @@
 이 모듈은 JavaScript 렌더링이 필요한 페이지에서 본문을 추출하는 크롤러를 구현합니다.
 채용 사이트(jobkorea, saramin 등) 및 SPA 기반 사이트를 지원합니다.
 """
-import asyncio
+
 import logging
 import re
 from typing import Optional
 from urllib.parse import urlparse
 
-from app.services.search.crawler.protocol import CrawlResult, CrawlerProtocol
+from app.services.search.crawler.protocol import CrawlResult
 
 logger = logging.getLogger(__name__)
 
@@ -115,10 +115,26 @@ class PlaywrightCrawler:
 
             # 비-HTML 파일 확장자 체크
             non_html_extensions = {
-                ".pdf", ".hwp", ".doc", ".docx", ".xls", ".xlsx",
-                ".zip", ".rar", ".7z", ".tar", ".gz",
-                ".jpg", ".jpeg", ".png", ".gif", ".bmp",
-                ".mp3", ".mp4", ".avi", ".mov",
+                ".pdf",
+                ".hwp",
+                ".doc",
+                ".docx",
+                ".xls",
+                ".xlsx",
+                ".zip",
+                ".rar",
+                ".7z",
+                ".tar",
+                ".gz",
+                ".jpg",
+                ".jpeg",
+                ".png",
+                ".gif",
+                ".bmp",
+                ".mp3",
+                ".mp4",
+                ".avi",
+                ".mov",
             }
 
             for ext in non_html_extensions:
@@ -141,7 +157,9 @@ class PlaywrightCrawler:
                     headless=self.headless
                 )
             except ImportError:
-                logger.warning("Playwright not installed. Install with: pip install playwright && playwright install chromium")
+                logger.warning(
+                    "Playwright not installed. Install with: pip install playwright && playwright install chromium"
+                )
                 raise ImportError("Playwright is not installed")
 
     async def _cleanup(self):
@@ -256,7 +274,7 @@ class PlaywrightCrawler:
             finally:
                 await page.close()
 
-        except ImportError as e:
+        except ImportError:
             error_msg = "Playwright not installed"
             print(f"    ❌ [ERROR] {error_msg}", flush=True)
             return CrawlResult(

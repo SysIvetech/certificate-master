@@ -3,11 +3,11 @@
 ChromaDB의 where 필터는 $contains를 지원하지 않으므로,
 모든 벡터를 가져온 후 Python에서 타이틀 필터링을 수행합니다.
 """
-import pytest
+
 from fastapi.testclient import TestClient
 
-from app.main import app
 from app.api.chroma import get_vector_store_service
+from app.main import app
 
 
 class FakeVectorStoreServiceWithSearch:
@@ -25,30 +25,69 @@ class FakeVectorStoreServiceWithSearch:
             "total_vectors": 100,
         }
 
-    def list_vectors(self, limit: int, offset: int, include_embeddings: bool = False, where: dict = None):
+    def list_vectors(
+        self,
+        limit: int,
+        offset: int,
+        include_embeddings: bool = False,
+        where: dict = None,
+    ):
         """벡터 목록 조회."""
         self.list_called = True
         self.list_limit = limit
         # 전체 데이터 시뮬레이션 (검색용 큰 limit일 때)
         if limit >= 1000:
             return [
-                {"id": "vec-1", "metadata": {"title": "정보처리기사", "category": "국가기술자격"}},
-                {"id": "vec-2", "metadata": {"title": "네트워크관리사", "category": "민간자격"}},
-                {"id": "vec-food-1", "metadata": {"title": "식육가공기사", "category": "국가기술자격"}},
-                {"id": "vec-food-2", "metadata": {"title": "식육처리기능사", "category": "국가기술자격"}},
-                {"id": "vec-food-3", "metadata": {"title": "식육가공기능사", "category": "국가기술자격"}},
+                {
+                    "id": "vec-1",
+                    "metadata": {"title": "정보처리기사", "category": "국가기술자격"},
+                },
+                {
+                    "id": "vec-2",
+                    "metadata": {"title": "네트워크관리사", "category": "민간자격"},
+                },
+                {
+                    "id": "vec-food-1",
+                    "metadata": {"title": "식육가공기사", "category": "국가기술자격"},
+                },
+                {
+                    "id": "vec-food-2",
+                    "metadata": {"title": "식육처리기능사", "category": "국가기술자격"},
+                },
+                {
+                    "id": "vec-food-3",
+                    "metadata": {"title": "식육가공기능사", "category": "국가기술자격"},
+                },
             ]
         # 일반 페이지네이션
         return [
-            {"id": "vec-1", "metadata": {"title": "정보처리기사", "category": "국가기술자격"}},
-            {"id": "vec-2", "metadata": {"title": "네트워크관리사", "category": "민간자격"}},
+            {
+                "id": "vec-1",
+                "metadata": {"title": "정보처리기사", "category": "국가기술자격"},
+            },
+            {
+                "id": "vec-2",
+                "metadata": {"title": "네트워크관리사", "category": "민간자격"},
+            },
         ]
 
     def get_by_id(self, vector_id: str):
         data = {
-            "vec-food-1": {"id": "vec-food-1", "values": [0.1, 0.2], "metadata": {"title": "식육가공기사", "category": "국가기술자격"}},
-            "vec-food-2": {"id": "vec-food-2", "values": [0.3, 0.4], "metadata": {"title": "식육처리기능사", "category": "국가기술자격"}},
-            "vec-food-3": {"id": "vec-food-3", "values": [0.5, 0.6], "metadata": {"title": "식육가공기능사", "category": "국가기술자격"}},
+            "vec-food-1": {
+                "id": "vec-food-1",
+                "values": [0.1, 0.2],
+                "metadata": {"title": "식육가공기사", "category": "국가기술자격"},
+            },
+            "vec-food-2": {
+                "id": "vec-food-2",
+                "values": [0.3, 0.4],
+                "metadata": {"title": "식육처리기능사", "category": "국가기술자격"},
+            },
+            "vec-food-3": {
+                "id": "vec-food-3",
+                "values": [0.5, 0.6],
+                "metadata": {"title": "식육가공기능사", "category": "국가기술자격"},
+            },
         }
         return data.get(vector_id)
 

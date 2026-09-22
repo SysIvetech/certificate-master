@@ -2,11 +2,12 @@
 
 임베딩에 사용자 매칭 정보가 포함되는지 테스트.
 """
+
 import pytest
 
 from app.utils.certificate_formatter import (
-    format_certificate_text,
     build_certificate_metadata,
+    format_certificate_text,
 )
 
 

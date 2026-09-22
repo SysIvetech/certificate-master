@@ -3,15 +3,16 @@
 복합 진행도 지표, 학습 패턴 분석, 이탈 위험 감지 기능을 제공합니다.
 MariaDB (SQLAlchemy)로 마이그레이션됨.
 """
+
 import logging
-from datetime import date, timedelta
+from datetime import date
 
 from fastapi import APIRouter, HTTPException, status
 
 from app.api.deps import CurrentUser, DBSession
 from app.models.checkin import Checkin as CheckinModel
 from app.models.study_plan import StudyPlan as StudyPlanModel
-from app.schemas.analytics import ProgressAnalytics, LearningPattern
+from app.schemas.analytics import LearningPattern, ProgressAnalytics
 from app.services.analytics_service import AnalyticsService
 from app.services.learning_pattern_service import LearningPatternService
 
@@ -74,7 +75,9 @@ async def get_progress_analytics(
 
     # 시간 이행률
     daily_planned_hours = plan.get("daily_study_hours", 2.0)
-    total_planned_hours = daily_planned_hours * len(checkins) if checkins else daily_planned_hours
+    total_planned_hours = (
+        daily_planned_hours * len(checkins) if checkins else daily_planned_hours
+    )
     total_actual_hours = sum(c.get("hours_studied", 0) for c in checkins)
     time_adherence_rate = analytics_service.calculate_time_adherence_rate(
         total_planned_hours, total_actual_hours
@@ -91,7 +94,9 @@ async def get_progress_analytics(
     if isinstance(created_at_str, str):
         start_date = date.fromisoformat(created_at_str.split("T")[0])
     else:
-        start_date = created_at_str.date() if hasattr(created_at_str, 'date') else created_at_str
+        start_date = (
+            created_at_str.date() if hasattr(created_at_str, "date") else created_at_str
+        )
 
     current_progress = plan.get("progress_percentage", completion_rate)
     schedule_adherence_rate = analytics_service.calculate_schedule_adherence_rate(
@@ -122,12 +127,15 @@ async def get_progress_analytics(
         # 최근 7일 평균 학습 시간
         recent_checkins = checkins[-7:] if len(checkins) >= 7 else checkins
         recent_avg_hours = (
-            sum(c.get("hours_studied", 0) for c in recent_checkins) / len(recent_checkins)
+            sum(c.get("hours_studied", 0) for c in recent_checkins)
+            / len(recent_checkins)
             if recent_checkins
             else 0
         )
         risk_signals.extend(
-            analytics_service.detect_time_decreased(daily_planned_hours, recent_avg_hours)
+            analytics_service.detect_time_decreased(
+                daily_planned_hours, recent_avg_hours
+            )
         )
 
         # 기분 추이

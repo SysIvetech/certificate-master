@@ -3,10 +3,8 @@
 TDD: LLM 호출 없이 user_input + domains에서 StructuredUserContext를 생성합니다.
 """
 
-import pytest
-
 from app.schemas.recommendation import StructuredUserContext
-from app.services.study.context_parser import parse_user_context, build_search_query
+from app.services.study.context_parser import build_search_query, parse_user_context
 
 
 class TestParseUserContext:
@@ -106,7 +104,9 @@ class TestParseUserContext:
             "자격증 추천해주세요",
             domains=["IT/소프트웨어", "금융/회계"],
         )
-        assert "IT" in ctx.preferred_industries or "소프트웨어" in ctx.preferred_industries
+        assert (
+            "IT" in ctx.preferred_industries or "소프트웨어" in ctx.preferred_industries
+        )
 
     def test_returns_valid_structured_context(self):
         """반환값이 유효한 StructuredUserContext여야 함."""

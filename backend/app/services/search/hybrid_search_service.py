@@ -88,9 +88,9 @@ class HybridSearchService:
             rrf_scores[cert_id] += sparse_weight / (self.RRF_K + rank)
 
         # RRF 점수 내림차순 정렬 후 top_k 제한
-        sorted_results = sorted(
-            rrf_scores.items(), key=lambda x: x[1], reverse=True
-        )[:top_k]
+        sorted_results = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)[
+            :top_k
+        ]
 
         elapsed = (time.monotonic() - start) * 1000
 
@@ -111,6 +111,5 @@ class HybridSearchService:
         )
 
         return [
-            {"id": cert_id, "rrf_score": score}
-            for cert_id, score in sorted_results
+            {"id": cert_id, "rrf_score": score} for cert_id, score in sorted_results
         ]

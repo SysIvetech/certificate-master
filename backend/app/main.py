@@ -2,6 +2,7 @@
 
 This module creates and configures the FastAPI application instance.
 """
+
 import logging
 import logging.handlers
 import os
@@ -78,17 +79,13 @@ async def lifespan(app: FastAPI):
 
     # BM25 인덱스 빌드 (하이브리드 검색용)
     try:
-        from app.services.search.bm25_service import get_bm25_service
         from app.core.database import get_db
         from app.models.certificate import Certificate
+        from app.services.search.bm25_service import get_bm25_service
 
         db = next(get_db())
         try:
-            certs = (
-                db.query(Certificate)
-                .filter(Certificate.overview.isnot(None))
-                .all()
-            )
+            certs = db.query(Certificate).filter(Certificate.overview.isnot(None)).all()
 
             cert_dicts = []
             for cert in certs:
@@ -124,12 +121,12 @@ app = FastAPI(
 # Always use explicit origins from config to support credentials
 cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",")]
 
-logger.info(f"📋 CORS Configuration:")
+logger.info("📋 CORS Configuration:")
 logger.info(f"  - Environment: {settings.ENVIRONMENT}")
 logger.info(f"  - Origins: {cors_origins}")
-logger.info(f"  - Credentials: True")
-logger.info(f"  - Methods: *")
-logger.info(f"  - Headers: *")
+logger.info("  - Credentials: True")
+logger.info("  - Methods: *")
+logger.info("  - Headers: *")
 
 app.add_middleware(
     CORSMiddleware,
@@ -148,14 +145,16 @@ async def log_requests(request: Request, call_next):
     logger.info("=" * 80)
     logger.info(f"🌍 Incoming Request: {request.method} {request.url.path}")
     logger.info(f"📍 Origin: {request.headers.get('origin', 'N/A')}")
-    logger.info(f"🔑 Authorization: {request.headers.get('authorization', 'N/A')[:30]}...")
+    logger.info(
+        f"🔑 Authorization: {request.headers.get('authorization', 'N/A')[:30]}..."
+    )
     logger.info(f"📦 Content-Type: {request.headers.get('content-type', 'N/A')}")
-    
+
     response = await call_next(request)
-    
+
     logger.info(f"📤 Response Status: {response.status_code}")
     logger.info("=" * 80)
-    
+
     return response
 
 

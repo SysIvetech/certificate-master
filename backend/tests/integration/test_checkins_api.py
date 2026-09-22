@@ -3,13 +3,12 @@
 Tests all CRUD operations for checkins with authentication.
 MariaDB (SQLAlchemy) 기반으로 마이그레이션됨.
 """
+
 from datetime import date, timedelta
 from uuid import uuid4
 
 import pytest
-from fastapi.testclient import TestClient
 
-from app.main import app
 from app.models.certificate import Certificate as CertificateModel
 from app.models.study_plan import StudyPlan as StudyPlanModel
 
@@ -38,7 +37,15 @@ def test_study_plan_id(test_db_session):
         title="Test Study Plan",
         target_date=date.today() + timedelta(days=90),
         daily_study_hours=2.0,
-        milestones=[{"week": 1, "title": "Week 1", "description": "Basic", "hours": 10.0, "completed": False}],
+        milestones=[
+            {
+                "week": 1,
+                "title": "Week 1",
+                "description": "Basic",
+                "hours": 10.0,
+                "completed": False,
+            }
+        ],
     )
     test_db_session.add(plan)
     test_db_session.commit()
@@ -186,7 +193,9 @@ class TestCheckinsAPI:
 
         # When
         update_payload = {"hours_studied": 4.0, "mood": "great"}
-        response = authenticated_client.patch(f"/api/v1/checkins/{checkin_id}", json=update_payload)
+        response = authenticated_client.patch(
+            f"/api/v1/checkins/{checkin_id}", json=update_payload
+        )
 
         # Then
         assert response.status_code == 200
@@ -219,7 +228,9 @@ class TestCheckinsAPI:
         """Test updating a non-existent checkin."""
         # When
         fake_id = str(uuid4())
-        response = authenticated_client.patch(f"/api/v1/checkins/{fake_id}", json={"hours_studied": 3.0})
+        response = authenticated_client.patch(
+            f"/api/v1/checkins/{fake_id}", json={"hours_studied": 3.0}
+        )
 
         # Then
         assert response.status_code == 404
@@ -285,7 +296,9 @@ class TestCheckinsAPI:
         assert "current_streak" in data
         assert "longest_streak" in data
 
-    def test_filter_checkins_by_date_range(self, authenticated_client, test_study_plan_id):
+    def test_filter_checkins_by_date_range(
+        self, authenticated_client, test_study_plan_id
+    ):
         """Test filtering checkins by date range."""
         # Create checkins (240+ days ago)
         for i in range(5):

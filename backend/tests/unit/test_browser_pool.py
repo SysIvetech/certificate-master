@@ -2,8 +2,8 @@
 
 이 모듈은 Playwright 브라우저 인스턴스 풀 관리를 테스트합니다.
 """
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 
 class TestBrowserPoolBasic:

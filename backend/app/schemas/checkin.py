@@ -2,10 +2,11 @@
 
 This module defines request/response schemas for checkin endpoints.
 """
+
 from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 MoodType = Literal["great", "good", "okay", "tired", "stressed"]
 
@@ -22,9 +23,7 @@ class CheckinCreate(CheckinBase):
     """Schema for creating a new checkin."""
 
     study_plan_id: str = Field(..., description="학습 계획 UUID")
-    checkin_date: Optional[date] = Field(
-        None, description="체크인 날짜 (기본값: 오늘)"
-    )
+    checkin_date: Optional[date] = Field(None, description="체크인 날짜 (기본값: 오늘)")
 
 
 class CheckinUpdate(BaseModel):
@@ -37,6 +36,7 @@ class CheckinUpdate(BaseModel):
 
 class Checkin(CheckinBase):
     """Schema for checkin response."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: str = Field(..., description="UUID")
@@ -62,4 +62,3 @@ class CheckinStats(BaseModel):
     average_hours_per_day: float = Field(..., description="일평균 학습 시간")
     current_streak: int = Field(..., description="현재 연속 학습일")
     longest_streak: int = Field(..., description="최장 연속 학습일")
-

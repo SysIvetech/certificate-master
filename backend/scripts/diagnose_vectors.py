@@ -5,6 +5,7 @@ ChromaDB에 저장된 자격증 벡터의 품질과 메타데이터를 분석합
 사용법:
     uv run python -m scripts.diagnose_vectors
 """
+
 import sys
 from pathlib import Path
 
@@ -58,8 +59,14 @@ def diagnose_vectors():
             print(f"  study_period_days: {metadata.get('study_period_days', 'N/A')}")
 
             # 필드 존재 여부 집계
-            for field in ["title", "series", "difficulty", "study_period_days",
-                          "industry", "related_jobs"]:
+            for field in [
+                "title",
+                "series",
+                "difficulty",
+                "study_period_days",
+                "industry",
+                "related_jobs",
+            ]:
                 if field not in field_presence:
                     field_presence[field] = 0
                 if metadata.get(field):
@@ -69,7 +76,9 @@ def diagnose_vectors():
         print()
         print("[3] 메타데이터 필드 완전성 (상위 10개 샘플 기준)")
         print("-" * 80)
-        for field, count in sorted(field_presence.items(), key=lambda x: x[1], reverse=True):
+        for field, count in sorted(
+            field_presence.items(), key=lambda x: x[1], reverse=True
+        ):
             percentage = (count / len(vectors)) * 100
             print(f"  {field}: {count}/{len(vectors)} ({percentage:.0f}%)")
 
@@ -87,9 +96,7 @@ def diagnose_vectors():
 
         for query, expected_domain in test_queries:
             results = vector_store.search_records(
-                namespace=VectorStoreService.NAMESPACE,
-                query=query,
-                top_k=5
+                namespace=VectorStoreService.NAMESPACE, query=query, top_k=5
             )
 
             print(f"\n쿼리: '{query}' (기대 도메인: {expected_domain})")
@@ -111,7 +118,7 @@ def diagnose_vectors():
         it_results = vector_store.search_records(
             namespace=VectorStoreService.NAMESPACE,
             query="IT 소프트웨어 개발 프로그래밍 정보처리 취업",
-            top_k=20
+            top_k=20,
         )
 
         if it_results:
@@ -136,6 +143,7 @@ def diagnose_vectors():
     except Exception as e:
         print(f"[오류] 진단 실패: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

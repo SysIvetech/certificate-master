@@ -2,7 +2,7 @@
 
 TDD Red Phase: 기본 검색 정렬이 조회수 내림차순으로 동작하는지 검증.
 """
-import pytest
+
 from fastapi.testclient import TestClient
 
 
@@ -50,9 +50,7 @@ class TestSearchSortByViewCount:
             test_supabase_client.table("certificates").insert(cert).execute()
 
         # 검색 (기본 정렬)
-        response = client.get(
-            "/api/v1/certificates/search?q=정렬테스트&page_size=100"
-        )
+        response = client.get("/api/v1/certificates/search?q=정렬테스트&page_size=100")
         assert response.status_code == 200
 
         data = response.json()
@@ -65,8 +63,7 @@ class TestSearchSortByViewCount:
         # view_count 내림차순 확인: B(100) > C(50) > A(10)
         view_counts = [i["view_count"] for i in test_items]
         assert view_counts == sorted(view_counts, reverse=True), (
-            f"기본 정렬이 view_count 내림차순이어야 합니다. "
-            f"실제: {view_counts}"
+            f"기본 정렬이 view_count 내림차순이어야 합니다. " f"실제: {view_counts}"
         )
 
     def test_sort_by_view_count_explicit(
@@ -164,6 +161,6 @@ class TestSearchSortByViewCount:
 
         # 제목 오름차순: 가나다 → 다라마 → 바사아
         titles = [i["title"] for i in test_items]
-        assert titles == sorted(titles), (
-            f"sort_by=title은 제목 오름차순이어야 합니다. 실제: {titles}"
-        )
+        assert titles == sorted(
+            titles
+        ), f"sort_by=title은 제목 오름차순이어야 합니다. 실제: {titles}"

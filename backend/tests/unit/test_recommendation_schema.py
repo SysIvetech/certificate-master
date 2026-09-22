@@ -3,8 +3,10 @@
 비활성 RecommendationRequest/RecommendationResponse 테스트 제거 (2026-02-20).
 Contextual Retrieval 전환으로 구 위자드 플로우 비활성화.
 """
-import pytest
+
 from datetime import datetime
+
+import pytest
 from pydantic import ValidationError
 
 
@@ -45,8 +47,7 @@ class TestRecommendedCertificateSchema:
 
     def test_recommended_certificate_all_fields(self):
         """Test RecommendedCertificate with all fields."""
-        from app.schemas.recommendation import RecommendedCertificate, Feasibility
-        from app.schemas.certificate import Certificate
+        from app.schemas.recommendation import RecommendedCertificate
 
         cert_data = {
             "id": "123e4567-e89b-12d3-a456-426614174000",

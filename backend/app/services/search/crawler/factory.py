@@ -3,18 +3,16 @@
 이 모듈은 URL에 따라 적절한 크롤러를 반환하는 팩토리 함수를 제공합니다.
 의존성 역전 패턴을 사용하여 크롤러 구현체를 선택합니다.
 """
-import logging
-from typing import Optional, Union
 
-from app.services.search.crawler.protocol import CrawlerProtocol
-from app.services.search.crawler.trafilatura_crawler import (
-    TrafilaturaCrawler,
-    get_trafilatura_crawler,
-)
+import logging
+
 from app.services.search.crawler.playwright_crawler import (
-    PlaywrightCrawler,
     get_playwright_crawler,
     is_playwright_required,
+)
+from app.services.search.crawler.protocol import CrawlerProtocol
+from app.services.search.crawler.trafilatura_crawler import (
+    get_trafilatura_crawler,
 )
 
 logger = logging.getLogger(__name__)

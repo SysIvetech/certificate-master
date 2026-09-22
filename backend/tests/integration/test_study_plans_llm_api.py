@@ -2,7 +2,7 @@
 
 Tests the full flow: API → StudyPlanService → LLM → Database
 """
-import json
+
 from datetime import date, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -102,17 +102,27 @@ class TestStudyPlansLLMAPI:
                     "1단계: 기초 이론 학습 (30일)",
                     "2단계: 기출문제 풀이 (40일)",
                 ],
-                "time_allocation": {"theory": "40%", "practice": "50%", "review": "10%"},
+                "time_allocation": {
+                    "theory": "40%",
+                    "practice": "50%",
+                    "review": "10%",
+                },
             },
         }
 
-        cert_response = test_supabase_client.table("certificates").insert(cert_data).execute()
+        cert_response = (
+            test_supabase_client.table("certificates").insert(cert_data).execute()
+        )
         certificate_id = cert_response.data[0]["id"]
 
         # Step 2: Mock LLM service
-        with patch("app.api.v1.study_plans.get_study_plan_service") as mock_service_getter:
+        with patch(
+            "app.api.v1.study_plans.get_study_plan_service"
+        ) as mock_service_getter:
             mock_service = MagicMock()
-            mock_service.generate_study_plan = AsyncMock(return_value=sample_generated_plan)
+            mock_service.generate_study_plan = AsyncMock(
+                return_value=sample_generated_plan
+            )
             mock_service_getter.return_value = mock_service
 
             # Step 3: Create study plan (milestones not provided → LLM generates)
@@ -128,7 +138,9 @@ class TestStudyPlansLLMAPI:
             response = authenticated_client.post("/api/v1/study-plans/", json=plan_data)
 
             # Assertions
-            assert response.status_code == 201, f"Expected 201, got {response.status_code}: {response.text}"
+            assert (
+                response.status_code == 201
+            ), f"Expected 201, got {response.status_code}: {response.text}"
             data = response.json()
 
             assert data["title"] == plan_data["title"]
@@ -155,8 +167,12 @@ class TestStudyPlansLLMAPI:
             mock_service.generate_study_plan.assert_called_once()
 
         # Cleanup: delete test certificate and study plan
-        test_supabase_client.table("study_plans").delete().eq("id", data["id"]).execute()
-        test_supabase_client.table("certificates").delete().eq("id", certificate_id).execute()
+        test_supabase_client.table("study_plans").delete().eq(
+            "id", data["id"]
+        ).execute()
+        test_supabase_client.table("certificates").delete().eq(
+            "id", certificate_id
+        ).execute()
 
     @pytest.mark.integration
     def test_create_study_plan_manual_milestones(
@@ -174,11 +190,15 @@ class TestStudyPlansLLMAPI:
             "study_period_days": 90,
         }
 
-        cert_response = test_supabase_client.table("certificates").insert(cert_data).execute()
+        cert_response = (
+            test_supabase_client.table("certificates").insert(cert_data).execute()
+        )
         certificate_id = cert_response.data[0]["id"]
 
         # Step 2: Mock LLM service (should NOT be called)
-        with patch("app.api.v1.study_plans.get_study_plan_service") as mock_service_getter:
+        with patch(
+            "app.api.v1.study_plans.get_study_plan_service"
+        ) as mock_service_getter:
             mock_service = MagicMock()
             mock_service.generate_study_plan = AsyncMock()
             mock_service_getter.return_value = mock_service
@@ -213,7 +233,9 @@ class TestStudyPlansLLMAPI:
             response = authenticated_client.post("/api/v1/study-plans/", json=plan_data)
 
             # Assertions
-            assert response.status_code == 201, f"Expected 201, got {response.status_code}: {response.text}"
+            assert (
+                response.status_code == 201
+            ), f"Expected 201, got {response.status_code}: {response.text}"
             data = response.json()
 
             assert len(data["milestones"]) == 1
@@ -226,8 +248,12 @@ class TestStudyPlansLLMAPI:
             mock_service.generate_study_plan.assert_not_called()
 
         # Cleanup
-        test_supabase_client.table("study_plans").delete().eq("id", data["id"]).execute()
-        test_supabase_client.table("certificates").delete().eq("id", certificate_id).execute()
+        test_supabase_client.table("study_plans").delete().eq(
+            "id", data["id"]
+        ).execute()
+        test_supabase_client.table("certificates").delete().eq(
+            "id", certificate_id
+        ).execute()
 
     @pytest.mark.integration
     def test_create_study_plan_llm_error_handling(
@@ -245,11 +271,15 @@ class TestStudyPlansLLMAPI:
             "study_period_days": 90,
         }
 
-        cert_response = test_supabase_client.table("certificates").insert(cert_data).execute()
+        cert_response = (
+            test_supabase_client.table("certificates").insert(cert_data).execute()
+        )
         certificate_id = cert_response.data[0]["id"]
 
         # Step 2: Mock LLM service to raise error
-        with patch("app.api.v1.study_plans.get_study_plan_service") as mock_service_getter:
+        with patch(
+            "app.api.v1.study_plans.get_study_plan_service"
+        ) as mock_service_getter:
             mock_service = MagicMock()
             mock_service.generate_study_plan = AsyncMock(
                 side_effect=ValueError("OPENAI_API_KEY not configured")
@@ -274,4 +304,6 @@ class TestStudyPlansLLMAPI:
             assert "Failed to generate study plan" in data["detail"]
 
         # Cleanup
-        test_supabase_client.table("certificates").delete().eq("id", certificate_id).execute()
+        test_supabase_client.table("certificates").delete().eq(
+            "id", certificate_id
+        ).execute()

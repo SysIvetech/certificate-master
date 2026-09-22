@@ -2,7 +2,6 @@
 
 이 모듈은 자격증 유형별 최적화된 검색 쿼리 생성을 테스트합니다.
 """
-import pytest
 
 
 class TestQueryGeneratorBasic:
@@ -101,7 +100,10 @@ class TestBuildQueries:
         queries = generator.build_queries()
 
         official_query = queries["official"]
-        assert "site:q-net.or.kr" in official_query.query or "site:hrdkorea.or.kr" in official_query.query
+        assert (
+            "site:q-net.or.kr" in official_query.query
+            or "site:hrdkorea.or.kr" in official_query.query
+        )
 
     def test_official_query_is_required(self):
         """official 쿼리는 required=True여야 합니다."""
@@ -131,7 +133,13 @@ class TestBuildQueries:
         queries = generator.build_queries()
 
         # 계획에 명시된 카테고리들
-        expected_categories = ["general", "statistics", "career", "reviews", "study_methods"]
+        expected_categories = [
+            "general",
+            "statistics",
+            "career",
+            "reviews",
+            "study_methods",
+        ]
 
         for category in expected_categories:
             assert category in queries, f"'{category}' category should exist"

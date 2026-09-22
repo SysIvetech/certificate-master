@@ -1,11 +1,9 @@
 """기존 DB 데이터의 difficulty-study_period_days 비일관성 보정 스크립트 테스트."""
 
-import pytest
-
 from scripts.fix_inconsistent_difficulty import (
-    find_inconsistent_records,
-    compute_fix,
     DIFFICULTY_PERIOD_RANGES,
+    compute_fix,
+    find_inconsistent_records,
 )
 
 

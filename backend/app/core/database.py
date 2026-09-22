@@ -3,6 +3,7 @@
 SQLAlchemy를 사용한 MariaDB 연결 관리.
 환경 변수를 통해 설정을 관리합니다.
 """
+
 import json
 from functools import lru_cache
 from typing import Generator
@@ -49,8 +50,8 @@ def get_engine():
     return create_engine(
         get_mariadb_url(),
         pool_pre_ping=True,  # 연결 상태 확인
-        pool_recycle=3600,   # 1시간마다 연결 재활용
-        echo=False,          # SQL 로깅 비활성화
+        pool_recycle=3600,  # 1시간마다 연결 재활용
+        echo=False,  # SQL 로깅 비활성화
         json_serializer=_json_serializer,  # 한글 유니코드 이스케이프 방지
         json_deserializer=_json_deserializer,
     )

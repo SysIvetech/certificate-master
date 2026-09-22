@@ -3,8 +3,6 @@
 서비스 코드가 아닌 Pydantic 모델에서 데이터 정제가 이루어지는지 검증합니다.
 """
 
-import pytest
-
 
 class TestExtractedStudyGuideValidator:
     """ExtractedStudyGuide 모델의 recommended_books 자동 정제 테스트."""
@@ -145,6 +143,6 @@ class TestPlaceholderTitlesList:
 
             guide = ExtractedStudyGuide(**data)
 
-            assert len(guide.recommended_books) == 0, (
-                f"Placeholder '{placeholder}' should be filtered"
-            )
+            assert (
+                len(guide.recommended_books) == 0
+            ), f"Placeholder '{placeholder}' should be filtered"

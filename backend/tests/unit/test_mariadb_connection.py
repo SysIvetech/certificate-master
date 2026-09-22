@@ -2,7 +2,6 @@
 
 TDD Step 1: 데이터베이스 연결 테스트
 """
-import pytest
 
 
 class TestMariaDBConnection:
@@ -46,6 +45,7 @@ class TestMariaDBConnection:
     def test_mariadb_connection_works(self):
         """실제 MariaDB 연결이 동작하는지 테스트."""
         from sqlalchemy import text
+
         from app.core.database import get_engine
 
         engine = get_engine()

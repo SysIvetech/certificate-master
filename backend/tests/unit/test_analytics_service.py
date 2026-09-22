@@ -2,15 +2,11 @@
 
 복합 진행도 계산, 이탈 위험 감지 등의 비즈니스 로직을 테스트합니다.
 """
-from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock
 
-import pytest
+from datetime import date, timedelta
 
 from app.schemas.analytics import (
     LearnerStatus,
-    ProgressAnalytics,
-    ReviewUrgency,
     RiskSignalType,
 )
 
@@ -86,9 +82,7 @@ class TestTimeAdherenceRate:
         from app.services.analytics_service import AnalyticsService
 
         service = AnalyticsService()
-        adherence = service.calculate_time_adherence_rate(
-            planned_hours, actual_hours
-        )
+        adherence = service.calculate_time_adherence_rate(planned_hours, actual_hours)
 
         # Then: 100.0
         assert adherence == 100.0
@@ -103,9 +97,7 @@ class TestTimeAdherenceRate:
         from app.services.analytics_service import AnalyticsService
 
         service = AnalyticsService()
-        adherence = service.calculate_time_adherence_rate(
-            planned_hours, actual_hours
-        )
+        adherence = service.calculate_time_adherence_rate(planned_hours, actual_hours)
 
         # Then: 150.0
         assert adherence == 150.0
@@ -120,9 +112,7 @@ class TestTimeAdherenceRate:
         from app.services.analytics_service import AnalyticsService
 
         service = AnalyticsService()
-        adherence = service.calculate_time_adherence_rate(
-            planned_hours, actual_hours
-        )
+        adherence = service.calculate_time_adherence_rate(planned_hours, actual_hours)
 
         # Then: 0.0
         assert adherence == 0.0

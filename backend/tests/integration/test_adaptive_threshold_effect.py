@@ -1,4 +1,5 @@
 """적응형 임계값 효과 테스트."""
+
 import sys
 from pathlib import Path
 
@@ -44,7 +45,7 @@ def test_adaptive_threshold():
         print(f"Original scores: {len(scores)} results")
         print(f"  Range: {min(scores):.2f} - {max(scores):.2f}")
         print(f"\nAdaptive threshold: {threshold:.2f}")
-        print(f"  (Default would be: 0.30)")
+        print("  (Default would be: 0.30)")
         print(f"\nFiltered scores: {len(filtered)} results")
         print(f"  Kept: {', '.join(f'{s:.2f}' for s in filtered[:5])}...")
         print(f"  Removed: {', '.join(f'{s:.2f}' for s in scores if s < threshold)}")
@@ -53,7 +54,7 @@ def test_adaptive_threshold():
         default_threshold = 0.30
         default_filtered = [s for s in scores if s >= default_threshold]
 
-        print(f"\nComparison with default threshold (0.30):")
+        print("\nComparison with default threshold (0.30):")
         print(f"  Default: {len(default_filtered)} results")
         print(f"  Adaptive: {len(filtered)} results")
 
@@ -63,7 +64,7 @@ def test_adaptive_threshold():
         elif diff < 0:
             print(f"  Effect: {diff} fewer results (more strict)")
         else:
-            print(f"  Effect: No change (same as default)")
+            print("  Effect: No change (same as default)")
 
     print("\n" + "=" * 80)
     print("Summary:")

@@ -5,20 +5,22 @@ ChromaDB와 OpenAI 임베딩을 활용한 벡터 유사도 검색.
 
 MariaDB(SQLAlchemy)로 마이그레이션됨 (2026-01-22).
 """
+
 import hashlib
 import logging
 from typing import Any, Optional
 
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.models.certificate import Certificate as CertificateModel
 from app.schemas.certificate import Certificate
 from app.schemas.recommendation import (
-    RecommendationRequest,
-    RecommendedCertificate,
-    RecommendationResponse,
     Feasibility,
     QuickStats,
+    RecommendationRequest,
+    RecommendationResponse,
+    RecommendedCertificate,
     StudyInsights,
 )
 from app.services.embedding.service import EmbeddingService
@@ -31,8 +33,8 @@ STUDY_TIMELINE_DAYS: dict[str, int | None] = {
     "3개월 이하": 90,
     "6개월 이하": 180,
     "1년 이하": 365,
-    "1년 이상": None,     # no upper bound
-    "상관없음": None,      # no constraint
+    "1년 이상": None,  # no upper bound
+    "상관없음": None,  # no constraint
 }
 
 AVAILABLE_DAYS: dict[str, int] = {
@@ -61,22 +63,53 @@ DOMAIN_INDUSTRY_MAPPING: dict[str, list[str]] = {
     "총무/법무/사무": ["총무", "법무", "사무", "행정", "비서", "문서관리"],
     "IT개발": [
         # 핵심 키워드
-        "IT", "소프트웨어", "정보기술", "ICT", "정보통신", "컴퓨터",
+        "IT",
+        "소프트웨어",
+        "정보기술",
+        "ICT",
+        "정보통신",
+        "컴퓨터",
         # 확장 키워드 (2026-02-06)
-        "프로그래밍", "전자계산", "네트워크", "보안", "웹", "앱",
-        "데이터베이스", "서버", "클라우드", "리눅스", "정보처리", "전산",
+        "프로그래밍",
+        "전자계산",
+        "네트워크",
+        "보안",
+        "웹",
+        "앱",
+        "데이터베이스",
+        "서버",
+        "클라우드",
+        "리눅스",
+        "정보처리",
+        "전산",
         # compound 키워드 (2026-02-08): "개발"/"시스템" 단독 → false positive 방지
         # "개발" → "해양플랜트 개발"(조선), "농촌 개발" 등에 매칭됨
         # "시스템" → "조선 시스템", "기계 시스템" 등에 매칭됨
-        "소프트웨어개발", "시스템개발", "정보시스템", "웹개발", "앱개발",
+        "소프트웨어개발",
+        "시스템개발",
+        "정보시스템",
+        "웹개발",
+        "앱개발",
     ],
     "데이터": ["데이터", "AI", "빅데이터", "분석", "인공지능", "머신러닝"],
     "디자인": [
         # 기존 키워드
-        "디자인", "UX", "UI", "그래픽", "웹디자인", "시각디자인",
+        "디자인",
+        "UX",
+        "UI",
+        "그래픽",
+        "웹디자인",
+        "시각디자인",
         # 확장 키워드 (2026-02-06)
-        "편집디자인", "광고디자인", "제품디자인", "색채", "컬러리스트",
-        "일러스트", "영상편집", "3D", "CAD",
+        "편집디자인",
+        "광고디자인",
+        "제품디자인",
+        "색채",
+        "컬러리스트",
+        "일러스트",
+        "영상편집",
+        "3D",
+        "CAD",
     ],
     "영업/판매/무역": ["영업", "판매", "무역", "수출", "수입", "영업관리"],
     "고객상담/TM": ["고객상담", "TM", "CS", "콜센터", "상담", "고객서비스"],
@@ -88,14 +121,35 @@ DOMAIN_INDUSTRY_MAPPING: dict[str, list[str]] = {
     "건설/건축": ["건설", "건축", "토목", "시공", "설계", "인테리어"],
     "의료": [
         # 핵심 키워드
-        "의료", "병원", "의약", "간호", "헬스케어", "의약품",
+        "의료",
+        "병원",
+        "의약",
+        "간호",
+        "헬스케어",
+        "의약품",
         # compound 키워드 (2026-02-08): "보건" 단독 → "안전보건"(산업안전) 등에 매칭됨
-        "보건의료", "공중보건", "보건소", "의료기관", "약사", "약국",
-        "치과", "한의", "임상", "의사",
+        "보건의료",
+        "공중보건",
+        "보건소",
+        "의료기관",
+        "약사",
+        "약국",
+        "치과",
+        "한의",
+        "임상",
+        "의사",
     ],
     "연구/R&D": ["연구", "R&D", "개발", "연구소", "실험", "기술개발"],
     "교육": ["교육", "학원", "강사", "교사", "학습", "연수원", "훈련"],
-    "미디어/문화/스포츠": ["미디어", "문화", "스포츠", "방송", "영상", "콘텐츠", "체육"],
+    "미디어/문화/스포츠": [
+        "미디어",
+        "문화",
+        "스포츠",
+        "방송",
+        "영상",
+        "콘텐츠",
+        "체육",
+    ],
     "금융/보험": ["금융", "은행", "보험", "증권", "투자", "자산관리"],
     "공공/복지": ["공공", "복지", "사회복지", "정부", "지자체", "NGO"],
 }
@@ -105,31 +159,85 @@ DOMAIN_INDUSTRY_MAPPING: dict[str, list[str]] = {
 DOMAIN_EXCLUSION_KEYWORDS: dict[str, list[str]] = {
     "의료": [
         # 기존 키워드
-        "미용", "피부관리", "헤어", "네일", "메이크업",
+        "미용",
+        "피부관리",
+        "헤어",
+        "네일",
+        "메이크업",
         # 추가 제외 (2026-02-08): false positive 방지
-        "안전보건", "산업안전", "농작업", "농업", "농촌", "축산",
-        "조선", "선박", "토목", "건설현장",
+        "안전보건",
+        "산업안전",
+        "농작업",
+        "농업",
+        "농촌",
+        "축산",
+        "조선",
+        "선박",
+        "토목",
+        "건설현장",
     ],
     "IT개발": [
         # 기존 키워드
-        "가공", "용접", "기계",
+        "가공",
+        "용접",
+        "기계",
         # 확장 키워드 (2026-02-06)
-        "금속", "목공", "제과", "조리", "미용",
-        "관광", "수산", "기상", "호텔",
+        "금속",
+        "목공",
+        "제과",
+        "조리",
+        "미용",
+        "관광",
+        "수산",
+        "기상",
+        "호텔",
         # 추가 제외 (2026-02-08): false positive 방지
-        "조선", "선박", "해양", "농업", "농작업", "농촌", "축산",
-        "토목", "섬유", "피부", "네일", "양식",
+        "조선",
+        "선박",
+        "해양",
+        "농업",
+        "농작업",
+        "농촌",
+        "축산",
+        "토목",
+        "섬유",
+        "피부",
+        "네일",
+        "양식",
         # 제조업 자격증 제외 (2026-02-11): "전기전자" industry 혼란 방지
-        "전자부품", "전기기기", "전기설비", "전기공사", "전기철도",
-        "금속재료", "금속가공", "기계가공", "기계설계", "기계조립",
-        "산업안전", "건설안전", "화학분석", "세라믹", "플라스틱",
-        "품질관리", "생산관리", "공조냉동", "용접", "주조",
+        "전자부품",
+        "전기기기",
+        "전기설비",
+        "전기공사",
+        "전기철도",
+        "금속재료",
+        "금속가공",
+        "기계가공",
+        "기계설계",
+        "기계조립",
+        "산업안전",
+        "건설안전",
+        "화학분석",
+        "세라믹",
+        "플라스틱",
+        "품질관리",
+        "생산관리",
+        "공조냉동",
+        "용접",
+        "주조",
     ],
     # 신규 분야 (2026-02-06)
     "데이터": ["가공", "용접", "기계가공", "금속", "제조", "수산", "기상"],
     "디자인": [
-        "기계", "전기", "화학", "건설", "용접",
-        "의료", "수산", "기상", "양식",
+        "기계",
+        "전기",
+        "화학",
+        "건설",
+        "용접",
+        "의료",
+        "수산",
+        "기상",
+        "양식",
     ],
 }
 
@@ -144,27 +252,25 @@ TIMELINE_DISPLAY_TEXT: dict[str, str] = {
 
 # 현재 상황별 적합 난이도 매핑
 STATUS_DIFFICULTY_MAPPING: dict[str, tuple[int, int]] = {
-    "student": (1, 3),           # 학생: 입문~중급
-    "entry_jobseeker": (1, 3),   # 신입 구직자: 입문~중급
-    "junior_worker": (2, 4),     # 1-3년차: 중하~중상
-    "senior_worker": (3, 5),     # 4년차 이상: 중급~고급
-    "career_break": (1, 3),      # 휴직/전업준비: 입문~중급
+    "student": (1, 3),  # 학생: 입문~중급
+    "entry_jobseeker": (1, 3),  # 신입 구직자: 입문~중급
+    "junior_worker": (2, 4),  # 1-3년차: 중하~중상
+    "senior_worker": (3, 5),  # 4년차 이상: 중급~고급
+    "career_break": (1, 3),  # 휴직/전업준비: 입문~중급
 }
 
 # 투자 시간별 적합 준비 기간 매핑 (일 기준)
 COMMITMENT_DAYS_MAPPING: dict[str, tuple[int, int]] = {
-    "relaxed": (0, 90),          # 여유 있게: ~3개월
-    "moderate": (0, 180),        # 적당히: ~6개월
-    "intensive": (0, 365),       # 집중해서: ~1년
-    "unsure": (0, 365 * 2),      # 잘 모르겠어요: 제한 없음
+    "relaxed": (0, 90),  # 여유 있게: ~3개월
+    "moderate": (0, 180),  # 적당히: ~6개월
+    "intensive": (0, 365),  # 집중해서: ~1년
+    "unsure": (0, 365 * 2),  # 잘 모르겠어요: 제한 없음
 }
 
 # 폴백 시 반환할 기본 결과 수
 FALLBACK_COUNT = 5
 
 # B7: config에서 로드 (하드코딩 제거)
-from app.core.config import get_settings
-
 _settings = get_settings()
 MIN_SIMILARITY_SCORE = _settings.RECOMMENDATION_MIN_SIMILARITY_SCORE
 RECOMMENDATION_TOP_K = _settings.RECOMMENDATION_TOP_K
@@ -177,7 +283,7 @@ class RecommendationService:
         self,
         db: Session,
         embedding_service: Optional[EmbeddingService] = None,
-        vector_store: Optional[VectorStoreService] = None
+        vector_store: Optional[VectorStoreService] = None,
     ):
         """SQLAlchemy 세션과 RAG 서비스로 초기화합니다.
 
@@ -219,7 +325,9 @@ class RecommendationService:
             top_k=RECOMMENDATION_TOP_K,  # B7: config에서 로드
             filter_dict=self._build_vector_filter(request),
         )
-        logger.info(f"[RAG] Found {len(similar_results)} similar certificates (Integrated Embedding)")
+        logger.info(
+            f"[RAG] Found {len(similar_results)} similar certificates (Integrated Embedding)"
+        )
 
         similarity_results = self._filter_by_similarity(similar_results)
 
@@ -298,8 +406,7 @@ class RecommendationService:
         ABSOLUTE_MIN_SCORE = 0.2
 
         filtered_results = [
-            result for result in results
-            if result["score"] >= MIN_SIMILARITY_SCORE
+            result for result in results if result["score"] >= MIN_SIMILARITY_SCORE
         ]
 
         if filtered_results:
@@ -688,7 +795,9 @@ class RecommendationService:
         # 4순위: 산업 분야
         industry = career_info.get("industry", [])
         if industry:
-            industry_text = ", ".join(industry[:2]) if isinstance(industry, list) else industry
+            industry_text = (
+                ", ".join(industry[:2]) if isinstance(industry, list) else industry
+            )
             return f"{industry_text} 산업에서 경쟁력을 높일 수 있는 자격증입니다."
 
         # 기본값
@@ -727,7 +836,9 @@ class RecommendationService:
         working_tips = feasibility.get("working_adult_tips", [])
 
         if len(points) < 2 and self_study and non_major_rate:
-            points.append(f"비전공자도 독학으로 도전 가능하며 합격률은 {non_major_rate}입니다.")
+            points.append(
+                f"비전공자도 독학으로 도전 가능하며 합격률은 {non_major_rate}입니다."
+            )
         elif len(points) < 2 and self_study:
             points.append("독학으로 충분히 합격 가능한 자격증입니다.")
 
@@ -739,18 +850,27 @@ class RecommendationService:
         avg_salary = career_info.get("average_salary", "")
 
         if salary_premium and len(points) < 2:
-            points.append(f"취득 시 {salary_premium}의 연봉 상승 효과를 기대할 수 있습니다.")
+            points.append(
+                f"취득 시 {salary_premium}의 연봉 상승 효과를 기대할 수 있습니다."
+            )
         elif avg_salary and len(points) < 2:
             points.append(f"관련 직종 평균 연봉은 {avg_salary}입니다.")
 
         # 3. 준비 기간 상세 (타임라인 문구가 없을 때만)
-        if not timeline_phrase and cert.study_period_days and request.study_timeline and len(points) < 2:
+        if (
+            not timeline_phrase
+            and cert.study_period_days
+            and request.study_timeline
+            and len(points) < 2
+        ):
             available_days = AVAILABLE_DAYS.get(request.study_timeline, 365)
             study_days = cert.study_period_days
             months = max(1, study_days // 30)
 
             if study_days <= available_days * 0.5:
-                points.append(f"약 {months}개월 준비로 여유 있게 합격을 노릴 수 있습니다.")
+                points.append(
+                    f"약 {months}개월 준비로 여유 있게 합격을 노릴 수 있습니다."
+                )
             elif study_days <= available_days:
                 points.append(f"약 {months}개월 준비 기간이 필요합니다.")
 
@@ -1212,9 +1332,7 @@ class RecommendationService:
 
         return {"$and": filters}
 
-    def _fetch_certificates_by_ids(
-        self, cert_ids: list[str]
-    ) -> list[dict[str, Any]]:
+    def _fetch_certificates_by_ids(self, cert_ids: list[str]) -> list[dict[str, Any]]:
         """ID 리스트로 자격증 전체 데이터를 조회합니다.
 
         SQLAlchemy를 사용하여 MariaDB에서 동기적으로 조회합니다.
@@ -1276,9 +1394,17 @@ class RecommendationService:
             if constraints:
                 max_diff = constraints.get("max_difficulty")
                 max_days = constraints.get("max_study_days")
-                if max_diff is not None and cert.difficulty and cert.difficulty <= max_diff:
+                if (
+                    max_diff is not None
+                    and cert.difficulty
+                    and cert.difficulty <= max_diff
+                ):
                     match_score = min(100, match_score + 5)
-                if max_days is not None and cert.study_period_days and cert.study_period_days <= max_days:
+                if (
+                    max_days is not None
+                    and cert.study_period_days
+                    and cert.study_period_days <= max_days
+                ):
                     match_score = min(100, match_score + 5)
 
             # user_summary 키워드 매칭 보너스 적용
@@ -1562,7 +1688,9 @@ class RecommendationService:
                 f"{domain} 분야 {purpose} 준비에 도움이 되는 자격증입니다.",
                 f"{domain} 직무 {purpose}에서 경쟁력을 높여줍니다.",
             ]
-            return self._select_template(domain_templates, cert_id, f"purpose_domain_{purpose}")
+            return self._select_template(
+                domain_templates, cert_id, f"purpose_domain_{purpose}"
+            )
 
         # 직업 정보가 있으면 특화된 멘트 (모든 템플릿에 purpose 키워드 포함)
         if job_text and purpose in ["취업", "이직"]:
@@ -1570,9 +1698,13 @@ class RecommendationService:
                 f"{job_text} 분야 {purpose}에 유리한 자격증입니다.",
                 f"{job_text} 직무 {purpose} 준비에 도움이 되는 자격증입니다.",
             ]
-            return self._select_template(job_templates, cert_id, f"purpose_job_{purpose}")
+            return self._select_template(
+                job_templates, cert_id, f"purpose_job_{purpose}"
+            )
 
-        return self._select_template(templates.get(purpose, []), cert_id, f"purpose_{purpose}")
+        return self._select_template(
+            templates.get(purpose, []), cert_id, f"purpose_{purpose}"
+        )
 
     def _build_status_based_intro(
         self, cert: Certificate, request: RecommendationRequest

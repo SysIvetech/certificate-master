@@ -2,11 +2,13 @@
 
 추천 서비스에서 리랭킹이 제대로 작동하는지 검증합니다.
 """
-import pytest
+
 from unittest.mock import MagicMock
 
-from app.services.study.natural_recommendation_service import NaturalRecommendationService
 from app.schemas.recommendation import StructuredUserContext
+from app.services.study.natural_recommendation_service import (
+    NaturalRecommendationService,
+)
 
 
 class TestRerankingIntegration:

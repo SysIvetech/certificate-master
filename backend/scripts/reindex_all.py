@@ -13,6 +13,7 @@
 사용법:
     cd backend && uv run python -m scripts.reindex_all
 """
+
 import logging
 import sys
 from pathlib import Path
@@ -73,9 +74,7 @@ def main():
     try:
         # Step 1: MariaDB에서 enriched 자격증 조회
         results = (
-            session.query(Certificate)
-            .filter(Certificate.overview.isnot(None))
-            .all()
+            session.query(Certificate).filter(Certificate.overview.isnot(None)).all()
         )
         certificates = [cert.to_dict() for cert in results]
         logger.info(f"[Step 1] enriched 자격증 {len(certificates)}개 조회 완료")
@@ -104,7 +103,9 @@ def main():
         total_failed = 0
         total_batches = (len(certificates) + BATCH_SIZE - 1) // BATCH_SIZE
 
-        logger.info(f"[Step 3] {len(certificates)}개 자격증을 {total_batches}개 배치로 처리")
+        logger.info(
+            f"[Step 3] {len(certificates)}개 자격증을 {total_batches}개 배치로 처리"
+        )
 
         for i in range(0, len(certificates), BATCH_SIZE):
             batch = certificates[i : i + BATCH_SIZE]
@@ -126,9 +127,7 @@ def main():
 
                 # DB에 vector_id 동기화
                 failed_set = set(failed_ids)
-                certs_to_sync = [
-                    cert for cert in batch if cert["id"] not in failed_set
-                ]
+                certs_to_sync = [cert for cert in batch if cert["id"] not in failed_set]
 
                 if certs_to_sync:
                     mappings = [(cert["id"], cert["id"]) for cert in certs_to_sync]

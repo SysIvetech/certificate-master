@@ -3,10 +3,9 @@
 매월 1일 크래시 버그(B-01) 수정을 검증하는 테스트.
 streak 계산 로직이 월 경계를 올바르게 처리하는지 확인합니다.
 """
+
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 
 def make_mock_checkin(checkin_date: date, hours: float = 1.0) -> MagicMock:

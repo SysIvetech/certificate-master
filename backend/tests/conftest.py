@@ -3,12 +3,12 @@
 This module provides shared fixtures for all tests.
 MariaDB (SQLAlchemy) 기반으로 마이그레이션됨.
 """
+
 import uuid
 from pathlib import Path
 from typing import Generator
 
 import pytest
-import pytest_asyncio
 from dotenv import load_dotenv
 
 # pytest-asyncio 설정: auto 모드로 모든 async 테스트 자동 처리
@@ -16,11 +16,9 @@ pytest_plugins = ("pytest_asyncio",)
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db, get_engine
+from app.core.database import get_engine
 from app.main import app
 from app.models.certificate import Certificate as CertificateModel
-from app.models.study_plan import StudyPlan as StudyPlanModel
-from app.models.checkin import Checkin as CheckinModel
 
 # Load environment variables from .env file
 env_path = Path(__file__).parent.parent / ".env"
@@ -206,9 +204,7 @@ def test_supabase_client(test_db_engine):
                 if self.table_name == "certificates":
                     query = session.query(CertificateModel)
                     for col, val in self._filters:
-                        query = query.filter(
-                            getattr(CertificateModel, col) == val
-                        )
+                        query = query.filter(getattr(CertificateModel, col) == val)
                     if self._limit:
                         query = query.limit(self._limit)
                     results = query.all()

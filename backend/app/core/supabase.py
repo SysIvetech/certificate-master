@@ -3,8 +3,8 @@
 This module provides Supabase client instances for backend services.
 Uses singleton pattern for efficient connection management.
 """
+
 from functools import lru_cache
-from typing import Optional
 
 from supabase import Client, create_client
 
@@ -22,10 +22,7 @@ def get_supabase_client() -> Client:
         Supabase client instance with service role privileges.
     """
     settings = get_settings()
-    return create_client(
-        settings.SUPABASE_URL,
-        settings.SUPABASE_SERVICE_ROLE_KEY
-    )
+    return create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
 
 
 def get_supabase_anon_client() -> Client:
@@ -38,10 +35,7 @@ def get_supabase_anon_client() -> Client:
         Supabase client instance with anonymous privileges.
     """
     settings = get_settings()
-    return create_client(
-        settings.SUPABASE_URL,
-        settings.SUPABASE_ANON_KEY
-    )
+    return create_client(settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY)
 
 
 def get_supabase_user_client(access_token: str) -> Client:
@@ -57,10 +51,7 @@ def get_supabase_user_client(access_token: str) -> Client:
         Supabase client instance with user's privileges.
     """
     settings = get_settings()
-    client = create_client(
-        settings.SUPABASE_URL,
-        settings.SUPABASE_ANON_KEY
-    )
+    client = create_client(settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY)
     # Set the user's session
     client.auth.set_session(access_token, "")
     return client
@@ -68,4 +59,3 @@ def get_supabase_user_client(access_token: str) -> Client:
 
 # Type alias for dependency injection
 SupabaseClient = Client
-

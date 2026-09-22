@@ -21,6 +21,7 @@ Supabase에서 MariaDB로 마이그레이션됨 (2026-01-21).
     # 모든 미보강 자격증 보강
     uv run python -m scripts.enrich_certificates --all
 """
+
 import argparse
 import asyncio
 import sys
@@ -124,7 +125,7 @@ async def test_single_certificate():
             print(f"\n난이도: {enrichment['difficulty']}/5")
             print(f"준비 기간: {enrichment['study_period_days']}일")
 
-            print(f"\n시험 정보:")
+            print("\n시험 정보:")
             exam_info = enrichment.get("exam_info", {})
             if exam_info.get("subjects"):
                 print(f"  과목: {', '.join(exam_info['subjects'][:3])}")
@@ -132,7 +133,7 @@ async def test_single_certificate():
             print(f"  합격 기준: {exam_info.get('passing_criteria', 'N/A')}")
             print(f"  응시료: {exam_info.get('total_fee', 'N/A')}")
 
-            print(f"\n커리어/후기 정보:")
+            print("\n커리어/후기 정보:")
             print(
                 f"  커리어 활용 사례: {len(enrichment.get('career_info', {}).get('use_cases', []))}개"
             )

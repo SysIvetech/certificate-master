@@ -2,7 +2,6 @@
 
 이 모듈은 Playwright 관련 설정이 올바르게 정의되어 있는지 테스트합니다.
 """
-import pytest
 
 
 class TestPlaywrightConfig:

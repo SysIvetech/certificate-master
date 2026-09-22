@@ -7,41 +7,39 @@
 """
 
 import logging
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.models.certificate import Certificate as CertificateModel
 from app.schemas.certificate import Certificate
 from app.schemas.recommendation import (
+    Feasibility,
     NaturalLanguageRequest,
     NaturalLanguageResponse,
+    QuickStats,
     RecommendedCertificate,
+    SearchStats,
     StructuredRecommendationRequest,
     StructuredUserContext,
+    StudyInsights,
     UnifiedRecommendationRequest,
     UnifiedRecommendationResponse,
-    Feasibility,
-    QuickStats,
-    StudyInsights,
-)
-from app.services.search.structured_query import (
-    build_structured_query,
-    build_structured_metadata_filter,
 )
 from app.services.embedding.vector_store import VectorStoreService
 from app.services.llm.context_extractor import ContextExtractorService
-from app.services.study.context_parser import parse_user_context, build_search_query
-from app.services.study.reason_generator import ReasonGeneratorService
-from app.services.search.context_parser import EnhancedContextParser
 from app.services.search.bm25_service import get_bm25_service
+from app.services.search.context_parser import EnhancedContextParser
 from app.services.search.hybrid_search_service import HybridSearchService
 from app.services.search.reason_template import ReasonTemplateEngine
-from app.schemas.recommendation import SearchStats
+from app.services.search.structured_query import (
+    build_structured_metadata_filter,
+    build_structured_query,
+)
+from app.services.study.reason_generator import ReasonGeneratorService
 
 logger = logging.getLogger(__name__)
-
-from app.core.config import get_settings
 
 _settings = get_settings()
 RECOMMENDATION_TOP_K = _settings.RECOMMENDATION_TOP_K
@@ -98,8 +96,10 @@ class NaturalRecommendationService:
         structured_context = await self.context_extractor.extract_context(
             request.user_input
         )
-        logger.info(f"[Step 1] Context: goal={structured_context.goal}, "
-                   f"background={structured_context.major_background}")
+        logger.info(
+            f"[Step 1] Context: goal={structured_context.goal}, "
+            f"background={structured_context.major_background}"
+        )
 
         # Step 3: 벡터 검색 (자연어 입력을 쿼리로 사용)
         query = request.user_input
@@ -114,7 +114,9 @@ class NaturalRecommendationService:
         logger.info(f"[Step 3] Found {len(raw_results)} raw candidates")
 
         # 고정 임계값 필터링
-        similar_results = [r for r in raw_results if r.get("score", 0) >= MIN_SIMILARITY_SCORE]
+        similar_results = [
+            r for r in raw_results if r.get("score", 0) >= MIN_SIMILARITY_SCORE
+        ]
         logger.info(f"[Step 3] After threshold: {len(similar_results)} candidates")
 
         if not similar_results:
@@ -133,8 +135,12 @@ class NaturalRecommendationService:
 
         # Step 2: 하드 필터링
         logger.info("[Step 2] Applying hard filters...")
-        filtered_certificates = self._apply_hard_filters(certificates, structured_context)
-        logger.info(f"[Step 2] After filtering: {len(filtered_certificates)} certificates")
+        filtered_certificates = self._apply_hard_filters(
+            certificates, structured_context
+        )
+        logger.info(
+            f"[Step 2] After filtering: {len(filtered_certificates)} certificates"
+        )
 
         if not filtered_certificates:
             return NaturalLanguageResponse(
@@ -154,13 +160,17 @@ class NaturalRecommendationService:
 
         for cert in filtered_certificates:
             similarity = score_map.get(cert["id"], 0.0)
-            final_score = self._calculate_final_score(cert, similarity, structured_context)
+            final_score = self._calculate_final_score(
+                cert, similarity, structured_context
+            )
 
-            scored_certificates.append({
-                **cert,
-                "similarity": similarity,
-                "final_score": final_score,
-            })
+            scored_certificates.append(
+                {
+                    **cert,
+                    "similarity": similarity,
+                    "final_score": final_score,
+                }
+            )
 
         # 점수 기준 정렬 및 상위 N개 선택
         scored_certificates.sort(key=lambda x: x["final_score"], reverse=True)
@@ -282,9 +292,7 @@ class NaturalRecommendationService:
 
         return min(100, int(score))
 
-    def _fetch_certificates_by_ids(
-        self, cert_ids: list[str]
-    ) -> list[dict[str, Any]]:
+    def _fetch_certificates_by_ids(self, cert_ids: list[str]) -> list[dict[str, Any]]:
         """ID로 자격증 상세 정보를 조회합니다.
 
         Args:
@@ -330,7 +338,9 @@ class NaturalRecommendationService:
             }
             for cert in certificates
         ]
-        reasons = await self.reason_generator.generate_reasons_batch(context, cert_infos)
+        reasons = await self.reason_generator.generate_reasons_batch(
+            context, cert_infos
+        )
 
         for cert, reason in zip(certificates, reasons):
             # Certificate 스키마 변환
@@ -432,7 +442,9 @@ class NaturalRecommendationService:
 
         # 비전공자 친화
         feasibility = cert.get("feasibility_info") or {}
-        if context.major_background == "비전공자" and feasibility.get("self_study_possible"):
+        if context.major_background == "비전공자" and feasibility.get(
+            "self_study_possible"
+        ):
             points.append("비전공자 독학 가능")
 
         return points[:5]
@@ -491,7 +503,9 @@ class NaturalRecommendationService:
         LLM 호출 없이 Dense+Sparse 하이브리드 검색과
         데이터 기반 동적 템플릿으로 추천을 생성합니다.
         """
-        logger.info(f"[Unified] Processing: domains={request.domains}, input={request.user_input[:50]}...")
+        logger.info(
+            f"[Unified] Processing: domains={request.domains}, input={request.user_input[:50]}..."
+        )
 
         # Step 1: 키워드 기반 상황 파싱 (개선된 4단계 파서)
         parser = EnhancedContextParser()
@@ -642,7 +656,9 @@ class NaturalRecommendationService:
         구조화된 사용자 입력에서 Contextual Prefix와 동일한 어휘의 쿼리를 생성하여
         검색 정확도를 높입니다.
         """
-        logger.info(f"[Structured] domains={request.domains}, purpose={request.purpose}")
+        logger.info(
+            f"[Structured] domains={request.domains}, purpose={request.purpose}"
+        )
 
         # Step 1: 구조화된 쿼리 + 메타데이터 필터 생성
         query = build_structured_query(
@@ -761,16 +777,18 @@ class NaturalRecommendationService:
                 )
                 key_points = self._generate_key_points(cert, context)
 
-                recommendations.append(RecommendedCertificate(
-                    certificate=cert_schema,
-                    qualification_category=primary_category,
-                    match_score=match_score,
-                    recommendation_reason=reason,
-                    key_points=key_points,
-                    feasibility=feasibility,
-                    quick_stats=quick_stats,
-                    study_insights=StudyInsights(),
-                ))
+                recommendations.append(
+                    RecommendedCertificate(
+                        certificate=cert_schema,
+                        qualification_category=primary_category,
+                        match_score=match_score,
+                        recommendation_reason=reason,
+                        key_points=key_points,
+                        feasibility=feasibility,
+                        quick_stats=quick_stats,
+                        study_insights=StudyInsights(),
+                    )
+                )
             except Exception as e:
                 logger.error(f"[Structured] Failed for {cert.get('title')}: {e}")
                 continue
@@ -843,7 +861,9 @@ class NaturalRecommendationService:
                     )
                 )
             except Exception as e:
-                logger.error(f"[Fallback] Failed to build recommendation for {cert.get('title')}: {e}")
+                logger.error(
+                    f"[Fallback] Failed to build recommendation for {cert.get('title')}: {e}"
+                )
                 continue
 
         return recommendations

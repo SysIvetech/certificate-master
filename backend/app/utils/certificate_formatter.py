@@ -18,8 +18,10 @@ def format_certificate_text(cert: dict) -> str:
         임베딩용으로 포맷된 텍스트 문자열.
     """
     # categories 배열에서 이름 추출
-    categories = cert.get('categories', [])
-    category_display = ", ".join([cat.get('name', '') for cat in categories]) if categories else ""
+    categories = cert.get("categories", [])
+    category_display = (
+        ", ".join([cat.get("name", "") for cat in categories]) if categories else ""
+    )
 
     parts = [
         f"자격증: {cert.get('title', '')}",
@@ -121,9 +123,13 @@ def format_certificate_text(cert: dict) -> str:
     if job_market.get("job_posting_frequency"):
         job_market_parts.append(f"채용공고빈도: {job_market['job_posting_frequency']}")
     if job_market.get("preferred_industries"):
-        job_market_parts.append(f"선호산업군: {', '.join(job_market['preferred_industries'][:5])}")
+        job_market_parts.append(
+            f"선호산업군: {', '.join(job_market['preferred_industries'][:5])}"
+        )
     if job_market.get("preferred_companies"):
-        job_market_parts.append(f"우대기업: {', '.join(job_market['preferred_companies'][:5])}")
+        job_market_parts.append(
+            f"우대기업: {', '.join(job_market['preferred_companies'][:5])}"
+        )
     if job_market.get("requirement_type"):
         job_market_parts.append(f"채용요건유형: {job_market['requirement_type']}")
     if job_market.get("public_sector_points"):
@@ -155,11 +161,17 @@ def format_certificate_text(cert: dict) -> str:
     feasibility = cert.get("feasibility_info", {}) or {}
     feasibility_parts = []
     if feasibility.get("non_major_pass_rate"):
-        feasibility_parts.append(f"비전공자합격률: {feasibility['non_major_pass_rate']}")
+        feasibility_parts.append(
+            f"비전공자합격률: {feasibility['non_major_pass_rate']}"
+        )
     if feasibility.get("self_study_possible") is not None:
-        feasibility_parts.append(f"독학가능: {'가능' if feasibility['self_study_possible'] else '어려움'}")
+        feasibility_parts.append(
+            f"독학가능: {'가능' if feasibility['self_study_possible'] else '어려움'}"
+        )
     if feasibility.get("minimum_study_period"):
-        feasibility_parts.append(f"최소준비기간: {feasibility['minimum_study_period']}일")
+        feasibility_parts.append(
+            f"최소준비기간: {feasibility['minimum_study_period']}일"
+        )
     if feasibility.get("working_adult_tips"):
         tips = feasibility["working_adult_tips"][:2]
         feasibility_parts.append(f"직장인팁: {' / '.join(tips)}")
@@ -244,7 +256,9 @@ def build_certificate_metadata(cert: dict) -> dict:
 
     # categories 배열에서 이름 추출
     categories = cert.get("categories", [])
-    categories_str = ", ".join([cat.get("name", "") for cat in categories]) if categories else ""
+    categories_str = (
+        ", ".join([cat.get("name", "") for cat in categories]) if categories else ""
+    )
 
     # 취업준비생 관점 필드 처리 (NEW: 2026-01-28)
     job_market = cert.get("job_market_info", {}) or {}
@@ -274,7 +288,9 @@ def build_certificate_metadata(cert: dict) -> dict:
     # 목표 직종/기업 타입 (사용자 매칭용)
     related_jobs = career.get("related_jobs", [])
     target_job_types = ", ".join(related_jobs[:5]) if related_jobs else ""
-    target_company_types = ", ".join(preferred_industries[:5]) if preferred_industries else ""
+    target_company_types = (
+        ", ".join(preferred_industries[:5]) if preferred_industries else ""
+    )
 
     return {
         "title": cert.get("title", ""),
@@ -291,7 +307,9 @@ def build_certificate_metadata(cert: dict) -> dict:
         "preferred_industries": preferred_industries_str[:200],
         "preferred_companies": preferred_companies_str[:200],
         "requirement_type": job_market.get("requirement_type", "") or "",
-        "public_sector_points": (job_market.get("public_sector_points", "") or "")[:100],
+        "public_sector_points": (job_market.get("public_sector_points", "") or "")[
+            :100
+        ],
         "salary_premium": (job_market.get("salary_premium", "") or "")[:100],
         "total_estimated_cost": (cost.get("total_estimated_cost", "") or "")[:100],
         "self_study_possible": feasibility.get("self_study_possible"),
@@ -373,7 +391,7 @@ def _calculate_budget_category(cert: dict) -> str:
     # 숫자 추출 (예: "30-50만원" -> 50)
     import re
 
-    numbers = re.findall(r'\d+', total_cost_str)
+    numbers = re.findall(r"\d+", total_cost_str)
     if numbers:
         max_cost = max(int(n) for n in numbers)
         # 단위가 만원인 경우
@@ -408,7 +426,7 @@ def _is_non_major_friendly(cert: dict) -> bool:
     if non_major_rate:
         import re
 
-        numbers = re.findall(r'\d+', non_major_rate)
+        numbers = re.findall(r"\d+", non_major_rate)
         if numbers:
             rate = int(numbers[0])
             if rate >= 30:  # 30% 이상이면 비전공자 친화적
@@ -570,9 +588,13 @@ def format_user_matching_text(cert: dict) -> str:
     # 기업/취업 정보
     # ============================================================
     if job_market.get("preferred_industries"):
-        parts.append(f"선호 기업 유형: {', '.join(job_market['preferred_industries'][:5])}")
+        parts.append(
+            f"선호 기업 유형: {', '.join(job_market['preferred_industries'][:5])}"
+        )
     if job_market.get("preferred_companies"):
-        parts.append(f"우대 기업 예시: {', '.join(job_market['preferred_companies'][:5])}")
+        parts.append(
+            f"우대 기업 예시: {', '.join(job_market['preferred_companies'][:5])}"
+        )
     if job_market.get("requirement_type"):
         parts.append(f"채용 시 요구 수준: {job_market['requirement_type']}")
     if job_market.get("public_sector_points"):
@@ -602,20 +624,19 @@ def build_user_matching_metadata(cert: dict) -> dict:
 
     # 목표 기업 타입 (문자열로 결합)
     preferred_industries = job_market.get("preferred_industries", [])
-    target_company_types = ", ".join(preferred_industries[:5]) if preferred_industries else ""
+    target_company_types = (
+        ", ".join(preferred_industries[:5]) if preferred_industries else ""
+    )
 
     return {
         # 사용자 프로필 매칭
         "non_major_friendly": _is_non_major_friendly(cert),
         "working_adult_friendly": _is_working_adult_friendly(cert),
-
         # 예산/시간 제약
         "budget_category": _calculate_budget_category(cert),
         "weekly_hours_required": _calculate_weekly_hours_required(cert),
-
         # 시험 형태
         "cbt_available": schedule.get("cbt_available"),
-
         # 목표 직종/기업
         "target_job_types": target_job_types[:200],
         "target_company_types": target_company_types[:200],
@@ -666,7 +687,9 @@ def format_search_text(cert: dict) -> str:
     if isinstance(preferred_industries, list):
         preferred_industries_str = ", ".join(preferred_industries[:5])
     else:
-        preferred_industries_str = str(preferred_industries) if preferred_industries else ""
+        preferred_industries_str = (
+            str(preferred_industries) if preferred_industries else ""
+        )
 
     parts = [
         cert.get("title", ""),

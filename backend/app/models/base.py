@@ -2,6 +2,7 @@
 
 모든 모델의 기반이 되는 DeclarativeBase 정의.
 """
+
 from sqlalchemy.orm import DeclarativeBase
 
 

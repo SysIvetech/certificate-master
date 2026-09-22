@@ -8,6 +8,7 @@ OpenAI text-embedding-3-small: 1024차원, 빠르고 저렴
 
 이 서비스는 EmbeddingServiceProtocol을 구현합니다.
 """
+
 import logging
 from typing import Optional
 

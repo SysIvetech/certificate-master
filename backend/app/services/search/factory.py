@@ -11,6 +11,7 @@ SearXNG은 오픈소스 메타 검색 엔진으로, 무료로 사용할 수 있�
     service = get_search_service()
     results = await service.search_certificate_comprehensive("정보처리기사")
 """
+
 import logging
 
 from app.services.search.protocol import SearchServiceProtocol

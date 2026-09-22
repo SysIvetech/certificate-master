@@ -2,6 +2,7 @@
 
 This module exports all schema classes for request/response validation.
 """
+
 from .certificate import (
     Certificate,
     CertificateCreate,
@@ -30,4 +31,3 @@ __all__ = [
     "CheckinUpdate",
     "CheckinList",
 ]
-

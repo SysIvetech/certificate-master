@@ -11,8 +11,8 @@
     - 연속 하이픈 축소
     - 중복 시 첫 번째 카테고리 코드 접미사 (예: 정보처리기사-t)
 """
+
 import re
-import sys
 
 
 def generate_slug(title: str) -> str:
@@ -27,20 +27,20 @@ def generate_slug(title: str) -> str:
     slug = title.strip()
 
     # 괄호를 하이픈으로 변환: "소방설비기사(전기분야)" → "소방설비기사-전기분야"
-    slug = re.sub(r'\(', '-', slug)
-    slug = re.sub(r'\)', '', slug)
+    slug = re.sub(r"\(", "-", slug)
+    slug = re.sub(r"\)", "", slug)
 
     # 특수문자를 하이픈으로 변환 (한글, 영문, 숫자, 하이픈만 남김)
-    slug = re.sub(r'[^\w가-힣a-zA-Z0-9\-]', '-', slug)
+    slug = re.sub(r"[^\w가-힣a-zA-Z0-9\-]", "-", slug)
 
     # 언더스코어를 하이픈으로
-    slug = slug.replace('_', '-')
+    slug = slug.replace("_", "-")
 
     # 연속 하이픈 축소
-    slug = re.sub(r'-+', '-', slug)
+    slug = re.sub(r"-+", "-", slug)
 
     # 앞뒤 하이픈 제거
-    slug = slug.strip('-')
+    slug = slug.strip("-")
 
     return slug
 
@@ -50,14 +50,18 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Generate slugs for certificates")
-    parser.add_argument("--dry-run", action="store_true", help="미리보기만 (DB 수정 안 함)")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="미리보기만 (DB 수정 안 함)"
+    )
     args = parser.parse_args()
 
     # 환경 변수 로드
     from dotenv import load_dotenv
+
     load_dotenv()
 
     from sqlalchemy.orm import sessionmaker
+
     from app.core.database import get_engine
     from app.models.certificate import Certificate
 

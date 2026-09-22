@@ -5,7 +5,6 @@
 2. 프로덕션 데이터와 테스트 데이터 분리
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
 
@@ -28,13 +27,15 @@ class TestVectorStoreCollectionIsolation:
                 from app.services.embedding.vector_store import VectorStoreService
 
                 # 커스텀 컬렉션 이름 전달
-                service = VectorStoreService(collection_name="test-collection")
+                VectorStoreService(collection_name="test-collection")
 
                 # 커스텀 컬렉션 이름으로 생성되어야 함
                 mock_client.get_or_create_collection.assert_called_once()
                 call_args = mock_client.get_or_create_collection.call_args
-                assert call_args.kwargs.get("name") == "test-collection" or \
-                       call_args[1].get("name") == "test-collection"
+                assert (
+                    call_args.kwargs.get("name") == "test-collection"
+                    or call_args[1].get("name") == "test-collection"
+                )
 
     def test_vector_store_uses_default_collection_when_not_specified(self):
         """컬렉션 이름을 지정하지 않으면 설정값을 사용해야 합니다."""
@@ -52,14 +53,15 @@ class TestVectorStoreCollectionIsolation:
                 from app.services.embedding.vector_store import VectorStoreService
 
                 # 컬렉션 이름 미지정
-                service = VectorStoreService()
+                VectorStoreService()
 
                 # 설정값 컬렉션 이름으로 생성되어야 함
                 mock_client.get_or_create_collection.assert_called_once()
                 call_args = mock_client.get_or_create_collection.call_args
-                assert call_args.kwargs.get("name") == "default-collection" or \
-                       call_args[1].get("name") == "default-collection"
-
+                assert (
+                    call_args.kwargs.get("name") == "default-collection"
+                    or call_args[1].get("name") == "default-collection"
+                )
 
 
 class TestVectorStoreClearAll:
@@ -105,4 +107,6 @@ class TestVectorStoreClearAll:
                 service.clear_all()
 
                 # 컬렉션 삭제 호출 확인
-                mock_client.delete_collection.assert_called_once_with(name="test-collection")
+                mock_client.delete_collection.assert_called_once_with(
+                    name="test-collection"
+                )

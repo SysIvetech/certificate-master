@@ -2,7 +2,9 @@
 
 벡터 검색 결과가 리랭킹으로 어떻게 재정렬되는지 확인합니다.
 """
+
 from app.services.study.reranker import DomainReranker
+
 from app.models.certificate import Certificate
 
 

@@ -205,9 +205,7 @@ class EnhancedContextParser:
             text, self.EMPLOYMENT_PATTERNS, default="구직 중"
         )
         major = self._match_first(text, self.MAJOR_PATTERNS, default="비전공자")
-        difficulty = self._match_first(
-            text, self.DIFFICULTY_PATTERNS, default="중"
-        )
+        difficulty = self._match_first(text, self.DIFFICULTY_PATTERNS, default="중")
 
         # 2단계: 동시 출현어 분석
         if self.WEEKEND_PATTERN.search(text) and employment == "재직 중":
@@ -217,9 +215,7 @@ class EnhancedContextParser:
             weekly_hours_hint = None
 
         # 3단계: 수치 추출
-        weekly_hours = self._extract_weekly_hours(
-            text, employment, weekly_hours_hint
-        )
+        weekly_hours = self._extract_weekly_hours(text, employment, weekly_hours_hint)
         study_period = self._extract_study_period(text)
 
         # 4단계: 도메인 자동 추론

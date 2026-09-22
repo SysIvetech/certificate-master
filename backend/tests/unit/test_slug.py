@@ -2,13 +2,12 @@
 
 slug 필드 추가 및 slug 기반 조회 기능을 검증합니다.
 """
+
 import uuid
 from datetime import datetime, timezone
 
-import pytest
-
-from app.schemas.certificate import Certificate
 from app.models.certificate import Certificate as CertificateModel
+from app.schemas.certificate import Certificate
 
 
 class TestSlugInSchema:
@@ -47,7 +46,7 @@ class TestSlugInModel:
 
     def test_certificate_model_has_slug_column(self):
         """Certificate ORM 모델에 slug 컬럼이 있어야 한다."""
-        assert hasattr(CertificateModel, 'slug')
+        assert hasattr(CertificateModel, "slug")
 
     def test_certificate_model_to_dict_includes_slug(self):
         """to_dict()에 slug 필드가 포함되어야 한다."""
@@ -71,26 +70,31 @@ class TestSlugGeneration:
     def test_simple_title(self):
         """단순 한글 제목은 그대로 slug가 된다."""
         from scripts.generate_slugs import generate_slug
+
         assert generate_slug("정보처리기사") == "정보처리기사"
 
     def test_title_with_parentheses(self):
         """괄호가 포함된 제목은 괄호를 제거하고 하이픈으로 연결."""
         from scripts.generate_slugs import generate_slug
+
         assert generate_slug("소방설비기사(전기분야)") == "소방설비기사-전기분야"
 
     def test_title_with_spaces(self):
         """공백은 하이픈으로 변환."""
         from scripts.generate_slugs import generate_slug
+
         assert generate_slug("사회 조사 분석사") == "사회-조사-분석사"
 
     def test_title_with_special_chars(self):
         """특수문자 제거."""
         from scripts.generate_slugs import generate_slug
+
         assert generate_slug("자격증/테스트!") == "자격증-테스트"
 
     def test_title_with_consecutive_hyphens(self):
         """연속 하이픈은 하나로 축소."""
         from scripts.generate_slugs import generate_slug
+
         assert generate_slug("자격증 (전기)") == "자격증-전기"
 
 

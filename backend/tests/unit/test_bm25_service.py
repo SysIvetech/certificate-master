@@ -1,6 +1,7 @@
 """BM25 키워드 기반 검색 서비스 테스트."""
 
 import pytest
+
 from app.services.search.bm25_service import BM25SearchService
 
 

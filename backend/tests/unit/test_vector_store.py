@@ -2,8 +2,10 @@
 
 TDD: RED phase - Writing tests first.
 """
-import pytest
+
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestVectorStoreService:
@@ -27,8 +29,7 @@ class TestVectorStoreService:
                 service = VectorStoreService()
 
                 mock_chromadb.HttpClient.assert_called_once_with(
-                    host="test-host",
-                    port=8000
+                    host="test-host", port=8000
                 )
                 mock_client.get_or_create_collection.assert_called_once()
                 assert service.NAMESPACE == "certificates"
@@ -61,9 +62,7 @@ class TestVectorStoreService:
                 service.upsert_certificate(cert_id, embedding, metadata)
 
                 mock_collection.upsert.assert_called_once_with(
-                    ids=[cert_id],
-                    embeddings=[embedding],
-                    metadatas=[metadata]
+                    ids=[cert_id], embeddings=[embedding], metadatas=[metadata]
                 )
 
     def test_upsert_certificates_batch(self):
@@ -94,7 +93,11 @@ class TestVectorStoreService:
                 mock_collection.upsert.assert_called_once_with(
                     ids=["cert-1", "cert-2", "cert-3"],
                     embeddings=[[0.1] * 1024, [0.2] * 1024, [0.3] * 1024],
-                    metadatas=[{"title": "자격증1"}, {"title": "자격증2"}, {"title": "자격증3"}]
+                    metadatas=[
+                        {"title": "자격증1"},
+                        {"title": "자격증2"},
+                        {"title": "자격증3"},
+                    ],
                 )
 
     def test_query_similar_basic(self):
@@ -114,7 +117,9 @@ class TestVectorStoreService:
                 mock_collection.query.return_value = {
                     "ids": [["cert-1", "cert-2"]],
                     "distances": [[0.05, 0.12]],
-                    "metadatas": [[{"title": "정보처리기사"}, {"title": "리눅스마스터"}]]
+                    "metadatas": [
+                        [{"title": "정보처리기사"}, {"title": "리눅스마스터"}]
+                    ],
                 }
 
                 from app.services.vector_store import VectorStoreService
@@ -122,16 +127,11 @@ class TestVectorStoreService:
                 service = VectorStoreService()
 
                 query_embedding = [0.15] * 1024
-                results = service.query_similar(
-                    query_embedding,
-                    top_k=10
-                )
+                results = service.query_similar(query_embedding, top_k=10)
 
                 # Verify query was called correctly
                 mock_collection.query.assert_called_once_with(
-                    query_embeddings=[query_embedding],
-                    n_results=10,
-                    where=None
+                    query_embeddings=[query_embedding], n_results=10, where=None
                 )
 
                 # Verify results (distance -> score 변환: 1 - distance)
@@ -158,7 +158,7 @@ class TestVectorStoreService:
                 mock_collection.query.return_value = {
                     "ids": [[]],
                     "distances": [[]],
-                    "metadatas": [[]]
+                    "metadatas": [[]],
                 }
 
                 from app.services.vector_store import VectorStoreService
@@ -168,17 +168,11 @@ class TestVectorStoreService:
                 query_embedding = [0.15] * 1024
                 filter_dict = {"difficulty": {"$lte": 3}}
 
-                service.query_similar(
-                    query_embedding,
-                    top_k=5,
-                    filter_dict=filter_dict
-                )
+                service.query_similar(query_embedding, top_k=5, filter_dict=filter_dict)
 
                 # Verify filter was passed correctly
                 mock_collection.query.assert_called_once_with(
-                    query_embeddings=[query_embedding],
-                    n_results=5,
-                    where=filter_dict
+                    query_embeddings=[query_embedding], n_results=5, where=filter_dict
                 )
 
     def test_query_similar_empty_results(self):
@@ -197,7 +191,7 @@ class TestVectorStoreService:
                 mock_collection.query.return_value = {
                     "ids": [[]],
                     "distances": [[]],
-                    "metadatas": [[]]
+                    "metadatas": [[]],
                 }
 
                 from app.services.vector_store import VectorStoreService
@@ -226,7 +220,7 @@ class TestVectorStoreService:
                 mock_collection.get.return_value = {
                     "ids": ["cert-123"],
                     "embeddings": [[0.1] * 1024],
-                    "metadatas": [{"title": "정보처리기사"}]
+                    "metadatas": [{"title": "정보처리기사"}],
                 }
 
                 from app.services.vector_store import VectorStoreService
@@ -236,8 +230,7 @@ class TestVectorStoreService:
                 result = service.get_by_id("cert-123")
 
                 mock_collection.get.assert_called_once_with(
-                    ids=["cert-123"],
-                    include=["embeddings", "metadatas"]
+                    ids=["cert-123"], include=["embeddings", "metadatas"]
                 )
                 assert result is not None
                 assert result["id"] == "cert-123"
@@ -259,7 +252,7 @@ class TestVectorStoreService:
                 mock_collection.get.return_value = {
                     "ids": [],
                     "embeddings": [],
-                    "metadatas": []
+                    "metadatas": [],
                 }
 
                 from app.services.vector_store import VectorStoreService
@@ -330,7 +323,9 @@ class TestVectorStoreService:
 
                 service = VectorStoreService()
 
-                results = service.list_vectors(limit=2, offset=1, include_embeddings=False)
+                results = service.list_vectors(
+                    limit=2, offset=1, include_embeddings=False
+                )
 
                 mock_collection.get.assert_called_once_with(
                     ids=None,
@@ -367,7 +362,9 @@ class TestVectorStoreService:
 
                 service = VectorStoreService()
 
-                results = service.list_vectors(limit=1, offset=0, include_embeddings=True)
+                results = service.list_vectors(
+                    limit=1, offset=0, include_embeddings=True
+                )
 
                 mock_collection.get.assert_called_once_with(
                     ids=None,
@@ -423,9 +420,7 @@ class TestVectorStoreService:
 
                 service.delete_certificate("cert-123")
 
-                mock_collection.delete.assert_called_once_with(
-                    ids=["cert-123"]
-                )
+                mock_collection.delete.assert_called_once_with(ids=["cert-123"])
 
     def test_delete_certificates_batch(self):
         """Test batch deleting certificates."""
@@ -447,9 +442,7 @@ class TestVectorStoreService:
                 cert_ids = ["cert-1", "cert-2", "cert-3"]
                 service.delete_certificates_batch(cert_ids)
 
-                mock_collection.delete.assert_called_once_with(
-                    ids=cert_ids
-                )
+                mock_collection.delete.assert_called_once_with(ids=cert_ids)
 
 
 class TestVectorStoreServiceSearchRecords:
@@ -471,10 +464,12 @@ class TestVectorStoreServiceSearchRecords:
                 mock_collection.query.return_value = {
                     "ids": [["cert-1"]],
                     "distances": [[0.1]],
-                    "metadatas": [[{"title": "정보처리기사"}]]
+                    "metadatas": [[{"title": "정보처리기사"}]],
                 }
 
-                with patch("app.services.embedding.vector_store.EmbeddingService") as mock_embed:
+                with patch(
+                    "app.services.embedding.vector_store.EmbeddingService"
+                ) as mock_embed:
                     mock_embed_instance = MagicMock()
                     mock_embed.return_value = mock_embed_instance
                     mock_embed_instance.create_embedding.return_value = [0.1] * 1024
@@ -484,13 +479,13 @@ class TestVectorStoreServiceSearchRecords:
                     service = VectorStoreService()
 
                     results = service.search_records(
-                        namespace="certificates",
-                        query="IT 자격증",
-                        top_k=5
+                        namespace="certificates", query="IT 자격증", top_k=5
                     )
 
                     # EmbeddingService가 호출되어야 함
-                    mock_embed_instance.create_embedding.assert_called_once_with("IT 자격증")
+                    mock_embed_instance.create_embedding.assert_called_once_with(
+                        "IT 자격증"
+                    )
                     assert len(results) == 1
                     assert results[0]["id"] == "cert-1"
 
@@ -525,11 +520,9 @@ class TestVectorStoreServiceFormatRecord:
                     "study_period_days": 90,
                     "career_info": {
                         "industry": ["IT", "소프트웨어"],
-                        "average_salary": "연 4,000만원"
+                        "average_salary": "연 4,000만원",
                     },
-                    "exam_info": {
-                        "exam_type": "필기+실기"
-                    }
+                    "exam_info": {"exam_type": "필기+실기"},
                 }
 
                 record = service.format_record_for_upsert(cert)
@@ -557,34 +550,40 @@ class TestVectorStoreUpsertVerification:
                 mock_collection = MagicMock()
                 mock_collection.upsert.return_value = None
                 mock_collection.get.return_value = {
-                    'ids': ['test-id-1'],
-                    'embeddings': [[0.1] * 1024],
-                    'metadatas': [{'title': 'Test'}]
+                    "ids": ["test-id-1"],
+                    "embeddings": [[0.1] * 1024],
+                    "metadatas": [{"title": "Test"}],
                 }
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store.EmbeddingService") as mock_embed:
+                with patch(
+                    "app.services.embedding.vector_store.EmbeddingService"
+                ) as mock_embed:
                     mock_embed_instance = MagicMock()
                     mock_embed.return_value = mock_embed_instance
-                    mock_embed_instance.create_embeddings_batch.return_value = [[0.1] * 1024]
+                    mock_embed_instance.create_embeddings_batch.return_value = [
+                        [0.1] * 1024
+                    ]
 
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
 
-                    test_certs = [{
-                        'id': 'test-id-1',
-                        'title': '테스트 자격증',
-                        'category': '국가기술자격',
-                        'series': 'IT',
-                        'overview': '테스트 개요',
-                        'difficulty': 3,
-                        'study_period_days': 90,
-                        'career_info': {},
-                        'exam_info': {},
-                        'user_reviews': {},
-                        'study_guide': {}
-                    }]
+                    test_certs = [
+                        {
+                            "id": "test-id-1",
+                            "title": "테스트 자격증",
+                            "category": "국가기술자격",
+                            "series": "IT",
+                            "overview": "테스트 개요",
+                            "difficulty": 3,
+                            "study_period_days": 90,
+                            "career_info": {},
+                            "exam_info": {},
+                            "user_reviews": {},
+                            "study_guide": {},
+                        }
+                    ]
 
                     # 결과를 반환해야 함
                     result = service.upsert_certificates_batch_integrated(test_certs)
@@ -592,11 +591,11 @@ class TestVectorStoreUpsertVerification:
                     # 결과가 dict여야 함
                     assert isinstance(result, dict)
                     # 업로드된 개수
-                    assert 'uploaded_count' in result
-                    assert result['uploaded_count'] == 1
+                    assert "uploaded_count" in result
+                    assert result["uploaded_count"] == 1
                     # 검증된 개수
-                    assert 'verified_count' in result
-                    assert result['verified_count'] == 1
+                    assert "verified_count" in result
+                    assert result["verified_count"] == 1
 
     def test_upsert_certificates_batch_integrated_verifies_upload(self):
         """업로드 후 실제로 ChromaDB에 저장되었는지 검증하는지 테스트."""
@@ -611,18 +610,20 @@ class TestVectorStoreUpsertVerification:
                 mock_collection = MagicMock()
                 mock_collection.upsert.return_value = None
                 mock_collection.get.return_value = {
-                    'ids': ['test-id-1', 'test-id-2'],
-                    'embeddings': [[0.1] * 1024, [0.2] * 1024],
-                    'metadatas': [{'title': 'Test1'}, {'title': 'Test2'}]
+                    "ids": ["test-id-1", "test-id-2"],
+                    "embeddings": [[0.1] * 1024, [0.2] * 1024],
+                    "metadatas": [{"title": "Test1"}, {"title": "Test2"}],
                 }
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store.EmbeddingService") as mock_embed:
+                with patch(
+                    "app.services.embedding.vector_store.EmbeddingService"
+                ) as mock_embed:
                     mock_embed_instance = MagicMock()
                     mock_embed.return_value = mock_embed_instance
                     mock_embed_instance.create_embeddings_batch.return_value = [
                         [0.1] * 1024,
-                        [0.2] * 1024
+                        [0.2] * 1024,
                     ]
 
                     from app.services.vector_store import VectorStoreService
@@ -630,8 +631,32 @@ class TestVectorStoreUpsertVerification:
                     service = VectorStoreService()
 
                     test_certs = [
-                        {'id': 'test-id-1', 'title': '자격증1', 'category': '국가', 'series': '', 'overview': '', 'difficulty': None, 'study_period_days': None, 'career_info': {}, 'exam_info': {}, 'user_reviews': {}, 'study_guide': {}},
-                        {'id': 'test-id-2', 'title': '자격증2', 'category': '국가', 'series': '', 'overview': '', 'difficulty': None, 'study_period_days': None, 'career_info': {}, 'exam_info': {}, 'user_reviews': {}, 'study_guide': {}}
+                        {
+                            "id": "test-id-1",
+                            "title": "자격증1",
+                            "category": "국가",
+                            "series": "",
+                            "overview": "",
+                            "difficulty": None,
+                            "study_period_days": None,
+                            "career_info": {},
+                            "exam_info": {},
+                            "user_reviews": {},
+                            "study_guide": {},
+                        },
+                        {
+                            "id": "test-id-2",
+                            "title": "자격증2",
+                            "category": "국가",
+                            "series": "",
+                            "overview": "",
+                            "difficulty": None,
+                            "study_period_days": None,
+                            "career_info": {},
+                            "exam_info": {},
+                            "user_reviews": {},
+                            "study_guide": {},
+                        },
                     ]
 
                     result = service.upsert_certificates_batch_integrated(test_certs)
@@ -639,7 +664,7 @@ class TestVectorStoreUpsertVerification:
                     # upsert 후 get이 호출되어야 함 (검증)
                     mock_collection.get.assert_called()
                     # 2개 모두 검증됨
-                    assert result['verified_count'] == 2
+                    assert result["verified_count"] == 2
 
     def test_upsert_certificates_batch_integrated_handles_partial_upload(self):
         """일부만 업로드된 경우 처리 테스트."""
@@ -654,18 +679,20 @@ class TestVectorStoreUpsertVerification:
                 mock_collection = MagicMock()
                 mock_collection.upsert.return_value = None
                 mock_collection.get.return_value = {
-                    'ids': ['test-id-1'],  # 1개만 저장됨
-                    'embeddings': [[0.1] * 1024],
-                    'metadatas': [{'title': 'Test1'}]
+                    "ids": ["test-id-1"],  # 1개만 저장됨
+                    "embeddings": [[0.1] * 1024],
+                    "metadatas": [{"title": "Test1"}],
                 }
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store.EmbeddingService") as mock_embed:
+                with patch(
+                    "app.services.embedding.vector_store.EmbeddingService"
+                ) as mock_embed:
                     mock_embed_instance = MagicMock()
                     mock_embed.return_value = mock_embed_instance
                     mock_embed_instance.create_embeddings_batch.return_value = [
                         [0.1] * 1024,
-                        [0.2] * 1024
+                        [0.2] * 1024,
                     ]
 
                     from app.services.vector_store import VectorStoreService
@@ -673,18 +700,42 @@ class TestVectorStoreUpsertVerification:
                     service = VectorStoreService()
 
                     test_certs = [
-                        {'id': 'test-id-1', 'title': '자격증1', 'category': '국가', 'series': '', 'overview': '', 'difficulty': None, 'study_period_days': None, 'career_info': {}, 'exam_info': {}, 'user_reviews': {}, 'study_guide': {}},
-                        {'id': 'test-id-2', 'title': '자격증2', 'category': '국가', 'series': '', 'overview': '', 'difficulty': None, 'study_period_days': None, 'career_info': {}, 'exam_info': {}, 'user_reviews': {}, 'study_guide': {}}
+                        {
+                            "id": "test-id-1",
+                            "title": "자격증1",
+                            "category": "국가",
+                            "series": "",
+                            "overview": "",
+                            "difficulty": None,
+                            "study_period_days": None,
+                            "career_info": {},
+                            "exam_info": {},
+                            "user_reviews": {},
+                            "study_guide": {},
+                        },
+                        {
+                            "id": "test-id-2",
+                            "title": "자격증2",
+                            "category": "국가",
+                            "series": "",
+                            "overview": "",
+                            "difficulty": None,
+                            "study_period_days": None,
+                            "career_info": {},
+                            "exam_info": {},
+                            "user_reviews": {},
+                            "study_guide": {},
+                        },
                     ]
 
                     result = service.upsert_certificates_batch_integrated(test_certs)
 
                     # 2개 업로드 시도, 1개만 검증됨
-                    assert result['uploaded_count'] == 2
-                    assert result['verified_count'] == 1
+                    assert result["uploaded_count"] == 2
+                    assert result["verified_count"] == 1
                     # 실패한 ID 목록
-                    assert 'failed_ids' in result
-                    assert 'test-id-2' in result['failed_ids']
+                    assert "failed_ids" in result
+                    assert "test-id-2" in result["failed_ids"]
 
     def test_upsert_certificates_batch_integrated_raises_on_connection_error(self):
         """ChromaDB 연결 실패 시 예외 발생 테스트."""
@@ -700,17 +751,33 @@ class TestVectorStoreUpsertVerification:
                 mock_collection.upsert.side_effect = Exception("Connection refused")
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store.EmbeddingService") as mock_embed:
+                with patch(
+                    "app.services.embedding.vector_store.EmbeddingService"
+                ) as mock_embed:
                     mock_embed_instance = MagicMock()
                     mock_embed.return_value = mock_embed_instance
-                    mock_embed_instance.create_embeddings_batch.return_value = [[0.1] * 1024]
+                    mock_embed_instance.create_embeddings_batch.return_value = [
+                        [0.1] * 1024
+                    ]
 
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
 
                     test_certs = [
-                        {'id': 'test-id-1', 'title': '자격증1', 'category': '국가', 'series': '', 'overview': '', 'difficulty': None, 'study_period_days': None, 'career_info': {}, 'exam_info': {}, 'user_reviews': {}, 'study_guide': {}}
+                        {
+                            "id": "test-id-1",
+                            "title": "자격증1",
+                            "category": "국가",
+                            "series": "",
+                            "overview": "",
+                            "difficulty": None,
+                            "study_period_days": None,
+                            "career_info": {},
+                            "exam_info": {},
+                            "user_reviews": {},
+                            "study_guide": {},
+                        }
                     ]
 
                     # 예외가 발생해야 함
@@ -736,9 +803,9 @@ class TestVectorStoreDuplicateCheck:
                 mock_collection = MagicMock()
                 # id-1, id-3는 존재, id-2는 없음
                 mock_collection.get.return_value = {
-                    'ids': ['id-1', 'id-3'],
-                    'embeddings': None,
-                    'metadatas': None
+                    "ids": ["id-1", "id-3"],
+                    "embeddings": None,
+                    "metadatas": None,
                 }
                 mock_client.get_or_create_collection.return_value = mock_collection
 
@@ -746,11 +813,11 @@ class TestVectorStoreDuplicateCheck:
 
                 service = VectorStoreService()
 
-                ids_to_check = ['id-1', 'id-2', 'id-3']
+                ids_to_check = ["id-1", "id-2", "id-3"]
                 existing_ids = service.check_existing_vectors(ids_to_check)
 
                 mock_collection.get.assert_called_once_with(ids=ids_to_check)
-                assert set(existing_ids) == {'id-1', 'id-3'}
+                assert set(existing_ids) == {"id-1", "id-3"}
 
     def test_check_existing_vectors_empty_result(self):
         """ChromaDB에 아무것도 없을 때 빈 리스트 반환 테스트."""
@@ -764,9 +831,9 @@ class TestVectorStoreDuplicateCheck:
                 mock_chromadb.HttpClient.return_value = mock_client
                 mock_collection = MagicMock()
                 mock_collection.get.return_value = {
-                    'ids': [],
-                    'embeddings': None,
-                    'metadatas': None
+                    "ids": [],
+                    "embeddings": None,
+                    "metadatas": None,
                 }
                 mock_client.get_or_create_collection.return_value = mock_collection
 
@@ -774,7 +841,7 @@ class TestVectorStoreDuplicateCheck:
 
                 service = VectorStoreService()
 
-                existing_ids = service.check_existing_vectors(['id-1', 'id-2'])
+                existing_ids = service.check_existing_vectors(["id-1", "id-2"])
 
                 assert existing_ids == []
 
@@ -792,36 +859,70 @@ class TestVectorStoreDuplicateCheck:
 
                 # check_existing_vectors: id-1은 이미 존재
                 def mock_get(ids=None, **kwargs):
-                    if ids == ['id-1', 'id-2']:
-                        return {'ids': ['id-1'], 'embeddings': None, 'metadatas': None}
-                    elif ids == ['id-2']:  # 검증용
-                        return {'ids': ['id-2'], 'embeddings': [[0.1]*1024], 'metadatas': [{}]}
-                    return {'ids': [], 'embeddings': None, 'metadatas': None}
+                    if ids == ["id-1", "id-2"]:
+                        return {"ids": ["id-1"], "embeddings": None, "metadatas": None}
+                    elif ids == ["id-2"]:  # 검증용
+                        return {
+                            "ids": ["id-2"],
+                            "embeddings": [[0.1] * 1024],
+                            "metadatas": [{}],
+                        }
+                    return {"ids": [], "embeddings": None, "metadatas": None}
 
                 mock_collection.get.side_effect = mock_get
                 mock_collection.upsert.return_value = None
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store.EmbeddingService") as mock_embed:
+                with patch(
+                    "app.services.embedding.vector_store.EmbeddingService"
+                ) as mock_embed:
                     mock_embed_instance = MagicMock()
                     mock_embed.return_value = mock_embed_instance
                     # id-2만 임베딩 생성 (1개)
-                    mock_embed_instance.create_embeddings_batch.return_value = [[0.1] * 1024]
+                    mock_embed_instance.create_embeddings_batch.return_value = [
+                        [0.1] * 1024
+                    ]
 
                     from app.services.vector_store import VectorStoreService
 
                     service = VectorStoreService()
 
                     test_certs = [
-                        {'id': 'id-1', 'title': '자격증1', 'category': '국가', 'series': '', 'overview': '', 'difficulty': None, 'study_period_days': None, 'career_info': {}, 'exam_info': {}, 'user_reviews': {}, 'study_guide': {}},
-                        {'id': 'id-2', 'title': '자격증2', 'category': '국가', 'series': '', 'overview': '', 'difficulty': None, 'study_period_days': None, 'career_info': {}, 'exam_info': {}, 'user_reviews': {}, 'study_guide': {}}
+                        {
+                            "id": "id-1",
+                            "title": "자격증1",
+                            "category": "국가",
+                            "series": "",
+                            "overview": "",
+                            "difficulty": None,
+                            "study_period_days": None,
+                            "career_info": {},
+                            "exam_info": {},
+                            "user_reviews": {},
+                            "study_guide": {},
+                        },
+                        {
+                            "id": "id-2",
+                            "title": "자격증2",
+                            "category": "국가",
+                            "series": "",
+                            "overview": "",
+                            "difficulty": None,
+                            "study_period_days": None,
+                            "career_info": {},
+                            "exam_info": {},
+                            "user_reviews": {},
+                            "study_guide": {},
+                        },
                     ]
 
-                    result = service.upsert_certificates_batch_integrated(test_certs, skip_existing=True)
+                    result = service.upsert_certificates_batch_integrated(
+                        test_certs, skip_existing=True
+                    )
 
                     # id-1은 스킵, id-2만 업로드
-                    assert result['skipped_count'] == 1
-                    assert result['uploaded_count'] == 1
+                    assert result["skipped_count"] == 1
+                    assert result["uploaded_count"] == 1
 
 
 class TestVectorStoreConnectionRetry:
@@ -966,8 +1067,7 @@ class TestVectorStorePartialFailure:
                 # 예외가 발생해야 함 (KeyError 또는 Embedding 에러)
                 with pytest.raises(Exception):
                     service.upsert_certificates_batch_integrated(
-                        records,
-                        skip_existing=False
+                        records, skip_existing=False
                     )
 
     def test_search_handles_none_metadata(self):
@@ -996,10 +1096,7 @@ class TestVectorStorePartialFailure:
 
                 service = VectorStoreService()
 
-                results = service.query_similar(
-                    query_embedding=[0.1] * 1024,
-                    top_k=5
-                )
+                results = service.query_similar(query_embedding=[0.1] * 1024, top_k=5)
 
                 # None 메타데이터도 빈 딕셔너리로 처리
                 assert len(results) == 2
@@ -1024,9 +1121,9 @@ class TestVectorStoreSyncOrphanedVectorIds:
 
                 # cert-1, cert-2는 ChromaDB에 존재, cert-3는 없음
                 mock_collection.get.return_value = {
-                    'ids': ['cert-1', 'cert-2'],
-                    'embeddings': None,
-                    'metadatas': None
+                    "ids": ["cert-1", "cert-2"],
+                    "embeddings": None,
+                    "metadatas": None,
                 }
                 mock_client.get_or_create_collection.return_value = mock_collection
 
@@ -1035,16 +1132,18 @@ class TestVectorStoreSyncOrphanedVectorIds:
                 service = VectorStoreService()
 
                 # vector_id가 없는 자격증 ID 목록
-                cert_ids_without_vector_id = ['cert-1', 'cert-2', 'cert-3']
+                cert_ids_without_vector_id = ["cert-1", "cert-2", "cert-3"]
 
                 # ChromaDB에 이미 존재하는 ID 확인
-                existing_ids = service.check_existing_vectors(cert_ids_without_vector_id)
+                existing_ids = service.check_existing_vectors(
+                    cert_ids_without_vector_id
+                )
 
                 # cert-1, cert-2는 ChromaDB에 있음
-                assert set(existing_ids) == {'cert-1', 'cert-2'}
+                assert set(existing_ids) == {"cert-1", "cert-2"}
                 # cert-3는 ChromaDB에 없음 → 새로 생성 필요
                 missing_ids = set(cert_ids_without_vector_id) - set(existing_ids)
-                assert missing_ids == {'cert-3'}
+                assert missing_ids == {"cert-3"}
 
     def test_sync_vector_ids_for_existing_chroma_records(self):
         """ChromaDB에 존재하는 자격증의 vector_id를 MariaDB에 동기화하는 테스트."""
@@ -1059,7 +1158,9 @@ class TestVectorStoreSyncOrphanedVectorIds:
                 mock_collection = MagicMock()
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                with patch("app.services.embedding.vector_store._get_db_session") as mock_get_session:
+                with patch(
+                    "app.services.embedding.vector_store._get_db_session"
+                ) as mock_get_session:
                     mock_session = MagicMock()
                     mock_get_session.return_value = mock_session
 
@@ -1071,9 +1172,9 @@ class TestVectorStoreSyncOrphanedVectorIds:
 
                     def mock_filter_first(cert_id):
                         mock_query = MagicMock()
-                        if cert_id == 'cert-1':
+                        if cert_id == "cert-1":
                             mock_query.first.return_value = mock_cert1
-                        elif cert_id == 'cert-2':
+                        elif cert_id == "cert-2":
                             mock_query.first.return_value = mock_cert2
                         else:
                             mock_query.first.return_value = None
@@ -1081,7 +1182,7 @@ class TestVectorStoreSyncOrphanedVectorIds:
 
                     mock_filter = MagicMock()
                     mock_filter.filter.side_effect = lambda x: mock_filter_first(
-                        str(x.right.value) if hasattr(x.right, 'value') else 'unknown'
+                        str(x.right.value) if hasattr(x.right, "value") else "unknown"
                     )
                     mock_session.query.return_value = mock_filter
 
@@ -1090,8 +1191,8 @@ class TestVectorStoreSyncOrphanedVectorIds:
                     service = VectorStoreService()
 
                     # ChromaDB에 존재하는 ID로 동기화
-                    mappings = [('cert-1', 'cert-1'), ('cert-2', 'cert-2')]
-                    result = service.sync_vector_ids_to_db_batch(mappings)
+                    mappings = [("cert-1", "cert-1"), ("cert-2", "cert-2")]
+                    service.sync_vector_ids_to_db_batch(mappings)
 
                     # 커밋이 호출되어야 함
                     mock_session.commit.assert_called_once()
@@ -1110,9 +1211,9 @@ class TestVectorStoreSyncOrphanedVectorIds:
 
                 # cert-1은 ChromaDB에 이미 존재, cert-2는 없음
                 mock_collection.get.return_value = {
-                    'ids': ['cert-1'],
-                    'embeddings': None,
-                    'metadatas': None
+                    "ids": ["cert-1"],
+                    "embeddings": None,
+                    "metadatas": None,
                 }
                 mock_client.get_or_create_collection.return_value = mock_collection
 
@@ -1122,29 +1223,29 @@ class TestVectorStoreSyncOrphanedVectorIds:
 
                 # vector_id가 없는 자격증 목록 (실제 시나리오)
                 certs_without_vector_id = [
-                    {'id': 'cert-1', 'title': '정보처리기사', 'vector_id': None},
-                    {'id': 'cert-2', 'title': '리눅스마스터', 'vector_id': None},
+                    {"id": "cert-1", "title": "정보처리기사", "vector_id": None},
+                    {"id": "cert-2", "title": "리눅스마스터", "vector_id": None},
                 ]
 
-                cert_ids = [c['id'] for c in certs_without_vector_id]
+                cert_ids = [c["id"] for c in certs_without_vector_id]
                 existing_in_chroma = set(service.check_existing_vectors(cert_ids))
 
                 # 동기화만 필요한 자격증 (ChromaDB에 이미 있음)
                 certs_to_sync_only = [
-                    c for c in certs_without_vector_id
-                    if c['id'] in existing_in_chroma
+                    c for c in certs_without_vector_id if c["id"] in existing_in_chroma
                 ]
 
                 # 새로 생성이 필요한 자격증 (ChromaDB에 없음)
                 certs_to_create = [
-                    c for c in certs_without_vector_id
-                    if c['id'] not in existing_in_chroma
+                    c
+                    for c in certs_without_vector_id
+                    if c["id"] not in existing_in_chroma
                 ]
 
                 # cert-1은 동기화만 필요
                 assert len(certs_to_sync_only) == 1
-                assert certs_to_sync_only[0]['id'] == 'cert-1'
+                assert certs_to_sync_only[0]["id"] == "cert-1"
 
                 # cert-2는 새로 생성 필요
                 assert len(certs_to_create) == 1
-                assert certs_to_create[0]['id'] == 'cert-2'
+                assert certs_to_create[0]["id"] == "cert-2"

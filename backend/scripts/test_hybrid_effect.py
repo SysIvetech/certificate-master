@@ -1,11 +1,12 @@
 """하이브리드 검색 효과 테스트."""
+
 import sys
 from pathlib import Path
 
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from app.services.study.hybrid_search import HybridSearcher, calculate_keyword_score
+from app.services.study.hybrid_search import HybridSearcher
 
 
 def test_hybrid_effect():
@@ -75,22 +76,18 @@ def test_hybrid_effect():
     it_cert_ids = ["1", "3"]
 
     # 벡터만
-    vector_ranks = {
-        cert["id"]: idx + 1 for idx, cert in enumerate(sorted_by_vector)
-    }
-    it_avg_rank_vector = sum(
-        vector_ranks[cid] for cid in it_cert_ids
-    ) / len(it_cert_ids)
+    vector_ranks = {cert["id"]: idx + 1 for idx, cert in enumerate(sorted_by_vector)}
+    it_avg_rank_vector = sum(vector_ranks[cid] for cid in it_cert_ids) / len(
+        it_cert_ids
+    )
 
     # 하이브리드
-    hybrid_ranks = {
-        cert["id"]: idx + 1 for idx, cert in enumerate(results)
-    }
-    it_avg_rank_hybrid = sum(
-        hybrid_ranks[cid] for cid in it_cert_ids
-    ) / len(it_cert_ids)
+    hybrid_ranks = {cert["id"]: idx + 1 for idx, cert in enumerate(results)}
+    it_avg_rank_hybrid = sum(hybrid_ranks[cid] for cid in it_cert_ids) / len(
+        it_cert_ids
+    )
 
-    print(f"IT 자격증 평균 순위:")
+    print("IT 자격증 평균 순위:")
     print(f"  Vector only: {it_avg_rank_vector:.1f}")
     print(f"  Hybrid:      {it_avg_rank_hybrid:.1f}")
     print(f"  Improvement: {it_avg_rank_vector - it_avg_rank_hybrid:+.1f}")

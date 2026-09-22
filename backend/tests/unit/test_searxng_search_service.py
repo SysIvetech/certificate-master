@@ -2,6 +2,7 @@
 
 TDD: 검색 서비스 테스트 (SearXNG 전용).
 """
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -79,18 +80,22 @@ class TestSearXNGSearchService:
 
         service = SearXNGSearchService()
 
-        with patch.object(
-            service,
-            "search",
-            new_callable=AsyncMock,
-            return_value={"web": {"results": []}},
-        ) as mock_search, patch.object(
-            service,
-            "_extract_results",
-            return_value=[],
-        ), patch(
-            "app.services.search.searxng_search.asyncio.sleep",
-            new_callable=AsyncMock,
+        with (
+            patch.object(
+                service,
+                "search",
+                new_callable=AsyncMock,
+                return_value={"web": {"results": []}},
+            ) as mock_search,
+            patch.object(
+                service,
+                "_extract_results",
+                return_value=[],
+            ),
+            patch(
+                "app.services.search.searxng_search.asyncio.sleep",
+                new_callable=AsyncMock,
+            ),
         ):
             results = await service.search_study_plan_context(
                 "정보처리기사",
@@ -111,12 +116,12 @@ class TestSearXNGSearchService:
 
         # 취업준비생 필수 카테고리 확인
         job_seeker_categories = [
-            "job_postings",      # 채용공고 우대/필수
-            "public_sector",     # 공무원/공기업 가산점
-            "cost_breakdown",    # 총 비용 (교재+인강+응시료)
-            "non_major_reviews", # 비전공자/직장인 합격기
-            "free_resources",    # 기출문제/무료 자료
-            "comparison",        # 유사 자격증 비교
+            "job_postings",  # 채용공고 우대/필수
+            "public_sector",  # 공무원/공기업 가산점
+            "cost_breakdown",  # 총 비용 (교재+인강+응시료)
+            "non_major_reviews",  # 비전공자/직장인 합격기
+            "free_resources",  # 기출문제/무료 자료
+            "comparison",  # 유사 자격증 비교
         ]
 
         for category in job_seeker_categories:
@@ -134,8 +139,7 @@ class TestSearXNGSearchService:
         job_query = queries["job_postings"]
         assert "채용" in job_query["query"] or "우대" in job_query["query"]
         assert any(
-            kw in job_query["keywords"]
-            for kw in ["채용", "우대", "필수", "가산점"]
+            kw in job_query["keywords"] for kw in ["채용", "우대", "필수", "가산점"]
         )
 
     def test_public_sector_query_includes_government_keywords(self):
@@ -146,13 +150,9 @@ class TestSearXNGSearchService:
         queries = service._build_comprehensive_queries("정보처리기사")
 
         public_query = queries["public_sector"]
+        assert any(kw in public_query["query"] for kw in ["공무원", "공기업", "가산점"])
         assert any(
-            kw in public_query["query"]
-            for kw in ["공무원", "공기업", "가산점"]
-        )
-        assert any(
-            kw in public_query["keywords"]
-            for kw in ["공무원", "공기업", "가산점"]
+            kw in public_query["keywords"] for kw in ["공무원", "공기업", "가산점"]
         )
 
     def test_cost_breakdown_query_includes_expense_keywords(self):
@@ -163,13 +163,9 @@ class TestSearXNGSearchService:
         queries = service._build_comprehensive_queries("정보처리기사")
 
         cost_query = queries["cost_breakdown"]
+        assert any(kw in cost_query["query"] for kw in ["비용", "가격", "응시료"])
         assert any(
-            kw in cost_query["query"]
-            for kw in ["비용", "가격", "응시료"]
-        )
-        assert any(
-            kw in cost_query["keywords"]
-            for kw in ["비용", "가격", "교재", "인강"]
+            kw in cost_query["keywords"] for kw in ["비용", "가격", "교재", "인강"]
         )
 
     def test_url_quality_prioritizes_job_sites(self):
@@ -253,8 +249,9 @@ class TestSequentialCrawlWithFallback:
     async def test_crawl_stops_after_target_success_count(self):
         """목표 성공 수(3개)에 도달하면 크롤링 중단."""
         from unittest.mock import AsyncMock, MagicMock
-        from app.services.search.searxng_search import SearXNGSearchService
+
         from app.services.search.content_crawler import CrawlResult
+        from app.services.search.searxng_search import SearXNGSearchService
 
         service = SearXNGSearchService(crawl_enabled=True, crawl_target_success=3)
 
@@ -275,7 +272,11 @@ class TestSequentialCrawlWithFallback:
         search_response = {
             "web": {
                 "results": [
-                    {"title": f"결과 {i}", "url": f"https://example{i}.com/page", "description": f"설명 {i}"}
+                    {
+                        "title": f"결과 {i}",
+                        "url": f"https://example{i}.com/page",
+                        "description": f"설명 {i}",
+                    }
                     for i in range(10)
                 ]
             }
@@ -293,8 +294,9 @@ class TestSequentialCrawlWithFallback:
     async def test_crawl_uses_snippet_fallback_on_failure(self):
         """크롤링 실패 시 검색 snippet을 fallback으로 사용."""
         from unittest.mock import AsyncMock, MagicMock
-        from app.services.search.searxng_search import SearXNGSearchService
+
         from app.services.search.content_crawler import CrawlResult
+        from app.services.search.searxng_search import SearXNGSearchService
 
         service = SearXNGSearchService(crawl_enabled=True, crawl_target_success=3)
 
@@ -335,8 +337,9 @@ class TestSequentialCrawlWithFallback:
     async def test_crawl_skips_pdf_tries_next(self):
         """PDF는 후순위로 정렬되어 웹페이지 먼저 크롤링."""
         from unittest.mock import AsyncMock, MagicMock
-        from app.services.search.searxng_search import SearXNGSearchService
+
         from app.services.search.content_crawler import CrawlResult
+        from app.services.search.searxng_search import SearXNGSearchService
 
         service = SearXNGSearchService(crawl_enabled=True, crawl_target_success=2)
 
@@ -357,17 +360,31 @@ class TestSequentialCrawlWithFallback:
         search_response = {
             "web": {
                 "results": [
-                    {"title": "PDF 문서", "url": "https://example.com/doc.pdf", "description": "PDF"},
-                    {"title": "웹페이지 1", "url": "https://example.com/page1", "description": "웹1"},
-                    {"title": "웹페이지 2", "url": "https://example.com/page2", "description": "웹2"},
+                    {
+                        "title": "PDF 문서",
+                        "url": "https://example.com/doc.pdf",
+                        "description": "PDF",
+                    },
+                    {
+                        "title": "웹페이지 1",
+                        "url": "https://example.com/page1",
+                        "description": "웹1",
+                    },
+                    {
+                        "title": "웹페이지 2",
+                        "url": "https://example.com/page2",
+                        "description": "웹2",
+                    },
                 ]
             }
         }
 
-        results = await service._extract_results_with_crawl(search_response)
+        await service._extract_results_with_crawl(search_response)
 
         # 웹페이지만 크롤링 시도 (PDF는 후순위)
-        crawled_urls = [call.args[0] for call in mock_crawler.extract_content.call_args_list]
+        crawled_urls = [
+            call.args[0] for call in mock_crawler.extract_content.call_args_list
+        ]
         assert "https://example.com/doc.pdf" not in crawled_urls
         assert "https://example.com/page1" in crawled_urls
         assert "https://example.com/page2" in crawled_urls
@@ -376,19 +393,33 @@ class TestSequentialCrawlWithFallback:
     async def test_crawl_continues_on_failure_without_snippet_until_target(self):
         """snippet 없이 실패하면 목표 성공 수까지 계속 시도."""
         from unittest.mock import AsyncMock, MagicMock
-        from app.services.search.searxng_search import SearXNGSearchService
+
         from app.services.search.content_crawler import CrawlResult
+        from app.services.search.searxng_search import SearXNGSearchService
 
         service = SearXNGSearchService(crawl_enabled=True, crawl_target_success=2)
 
         # Mock crawler - 1,2번 실패, 3,4번 성공
         call_count = 0
+
         async def mock_extract(url):
             nonlocal call_count
             call_count += 1
             if call_count <= 2:
-                return CrawlResult(content="", title="", success=False, method="trafilatura", error="Failed")
-            return CrawlResult(content=f"콘텐츠 {call_count}", title="제목", success=True, method="trafilatura", error=None)
+                return CrawlResult(
+                    content="",
+                    title="",
+                    success=False,
+                    method="trafilatura",
+                    error="Failed",
+                )
+            return CrawlResult(
+                content=f"콘텐츠 {call_count}",
+                title="제목",
+                success=True,
+                method="trafilatura",
+                error=None,
+            )
 
         mock_crawler = MagicMock()
         mock_crawler.extract_content = AsyncMock(side_effect=mock_extract)
@@ -398,13 +429,17 @@ class TestSequentialCrawlWithFallback:
         search_response = {
             "web": {
                 "results": [
-                    {"title": f"결과 {i}", "url": f"https://example{i}.com/page", "description": ""}
+                    {
+                        "title": f"결과 {i}",
+                        "url": f"https://example{i}.com/page",
+                        "description": "",
+                    }
                     for i in range(6)
                 ]
             }
         }
 
-        results = await service._extract_results_with_crawl(search_response)
+        await service._extract_results_with_crawl(search_response)
 
         # 1,2번 실패 (snippet 없음) + 3,4번 성공 = 4번 호출
         # 목표 2개 달성 후 중단
@@ -414,15 +449,22 @@ class TestSequentialCrawlWithFallback:
     async def test_snippet_fallback_counts_as_success(self):
         """snippet fallback도 성공으로 카운트됨."""
         from unittest.mock import AsyncMock, MagicMock
-        from app.services.search.searxng_search import SearXNGSearchService
+
         from app.services.search.content_crawler import CrawlResult
+        from app.services.search.searxng_search import SearXNGSearchService
 
         service = SearXNGSearchService(crawl_enabled=True, crawl_target_success=2)
 
         # Mock crawler - 모두 실패
         mock_crawler = MagicMock()
         mock_crawler.extract_content = AsyncMock(
-            return_value=CrawlResult(content="", title="", success=False, method="trafilatura", error="Failed")
+            return_value=CrawlResult(
+                content="",
+                title="",
+                success=False,
+                method="trafilatura",
+                error="Failed",
+            )
         )
         service._crawler = mock_crawler
 
@@ -430,7 +472,11 @@ class TestSequentialCrawlWithFallback:
         search_response = {
             "web": {
                 "results": [
-                    {"title": f"결과 {i}", "url": f"https://example{i}.com/page", "description": f"snippet {i}"}
+                    {
+                        "title": f"결과 {i}",
+                        "url": f"https://example{i}.com/page",
+                        "description": f"snippet {i}",
+                    }
                     for i in range(6)
                 ]
             }

@@ -1,4 +1,5 @@
 """Unit tests for LLMService helpers."""
+
 from app.services.llm_service import LLMService
 
 
@@ -30,7 +31,11 @@ def test_sanitize_recommended_books_requires_details():
 def test_sanitize_recommended_books_deduplicates():
     books = [
         {"title": "정보처리기사 필기", "publisher": "시대에듀"},
-        {"title": "정보처리기사 필기", "publisher": "시대에듀", "description": "개정판"},
+        {
+            "title": "정보처리기사 필기",
+            "publisher": "시대에듀",
+            "description": "개정판",
+        },
         {"title": "정보처리기사 필기", "publisher": "다른출판사"},
     ]
 

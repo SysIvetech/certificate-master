@@ -1,4 +1,5 @@
 """BM25 Contextual Prefix 적용 테스트."""
+
 from app.services.search.bm25_service import BM25SearchService
 
 

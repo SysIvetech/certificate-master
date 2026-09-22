@@ -1,5 +1,4 @@
 """적응형 유사도 임계값 테스트."""
-import pytest
 
 
 class TestAdaptiveThreshold:

@@ -5,12 +5,13 @@
 - PlaywrightCrawler: JS 렌더링 페이지용 (채용사이트 등)
 - SmartCrawler: 지능적 크롤러 선택 (권장)
 """
-from app.services.search.crawler.protocol import CrawlerProtocol, CrawlResult
+
 from app.services.search.crawler.factory import get_crawler, get_crawler_for_url
+from app.services.search.crawler.protocol import CrawlerProtocol, CrawlResult
 from app.services.search.crawler.smart_crawler import (
+    CrawlerMetrics,
     SmartCrawler,
     get_smart_crawler,
-    CrawlerMetrics,
 )
 
 __all__ = [

@@ -1,6 +1,5 @@
 """공백 분할 + character 2-gram 토큰화 테스트."""
 
-import pytest
 from app.services.search.tokenizer import tokenize
 
 

@@ -2,6 +2,7 @@
 
 학습 체크인 정보를 저장하는 테이블의 ORM 모델.
 """
+
 import uuid
 
 from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, String, Text
@@ -57,7 +58,9 @@ class Checkin(Base):
             "id": self.id,
             "user_id": self.user_id,
             "study_plan_id": self.study_plan_id,
-            "checkin_date": self.checkin_date.isoformat() if self.checkin_date else None,
+            "checkin_date": (
+                self.checkin_date.isoformat() if self.checkin_date else None
+            ),
             "hours_studied": self.hours_studied,
             "completed_topics": self.completed_topics,
             "notes": self.notes,

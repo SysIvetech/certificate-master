@@ -2,8 +2,10 @@
 
 Tests progress analytics, learning patterns, and risk detection.
 """
-import pytest
+
 from datetime import date, timedelta
+
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -47,30 +49,26 @@ def test_study_plan(client, auth_headers, test_certificate_id):
                 "title": "Week 1: 기초 학습",
                 "description": "기본 개념 이해",
                 "hours": 21.0,
-                "completed": True
+                "completed": True,
             },
             {
                 "week": 2,
                 "title": "Week 2: 심화 학습",
                 "description": "심화 개념 학습",
                 "hours": 21.0,
-                "completed": False
+                "completed": False,
             },
             {
                 "week": 3,
                 "title": "Week 3: 문제 풀이",
                 "description": "실전 문제 풀이",
                 "hours": 21.0,
-                "completed": False
-            }
-        ]
+                "completed": False,
+            },
+        ],
     }
 
-    response = client.post(
-        "/api/v1/study-plans/",
-        json=payload,
-        headers=auth_headers
-    )
+    response = client.post("/api/v1/study-plans/", json=payload, headers=auth_headers)
 
     if response.status_code != 201:
         pytest.skip(f"Failed to create test study plan: {response.json()}")
@@ -90,20 +88,16 @@ def test_checkins(client, auth_headers, test_study_plan):
 
     # Create 5 consecutive checkins
     for i in range(5):
-        checkin_date = (date.today() - timedelta(days=4-i)).isoformat()
+        checkin_date = (date.today() - timedelta(days=4 - i)).isoformat()
         payload = {
             "study_plan_id": plan_id,
             "checkin_date": checkin_date,
             "hours_studied": 2.5,
             "notes": f"Day {i+1} study session",
-            "mood": "good"
+            "mood": "good",
         }
 
-        response = client.post(
-            "/api/v1/checkins/",
-            json=payload,
-            headers=auth_headers
-        )
+        response = client.post("/api/v1/checkins/", json=payload, headers=auth_headers)
 
         if response.status_code == 201:
             checkins.append(response.json())
@@ -115,7 +109,9 @@ class TestProgressAnalyticsAPI:
     """Test suite for Progress Analytics API endpoints."""
 
     @pytest.mark.skip(reason="Requires real database with study plan and checkins")
-    def test_get_progress_analytics_success(self, client, auth_headers, test_study_plan, test_checkins):
+    def test_get_progress_analytics_success(
+        self, client, auth_headers, test_study_plan, test_checkins
+    ):
         """Test getting progress analytics for a study plan with checkins.
 
         Given: A study plan with completed milestones and checkins
@@ -127,8 +123,7 @@ class TestProgressAnalyticsAPI:
 
         # When
         response = client.get(
-            f"/api/v1/analytics/progress/{plan_id}",
-            headers=auth_headers
+            f"/api/v1/analytics/progress/{plan_id}", headers=auth_headers
         )
 
         # Then
@@ -170,7 +165,9 @@ class TestProgressAnalyticsAPI:
         assert "risk_signals" in data
         assert isinstance(data["risk_signals"], list)
 
-    def test_get_progress_analytics_without_checkins(self, client, auth_headers, test_study_plan):
+    def test_get_progress_analytics_without_checkins(
+        self, client, auth_headers, test_study_plan
+    ):
         """Test getting progress analytics for a study plan without checkins.
 
         Given: A study plan without any checkins
@@ -182,8 +179,7 @@ class TestProgressAnalyticsAPI:
 
         # When
         response = client.get(
-            f"/api/v1/analytics/progress/{plan_id}",
-            headers=auth_headers
+            f"/api/v1/analytics/progress/{plan_id}", headers=auth_headers
         )
 
         # Then
@@ -202,8 +198,6 @@ class TestProgressAnalyticsAPI:
         Then: It should return 401 Unauthorized
         """
         # Given - use a client without auth override
-        from fastapi.testclient import TestClient
-        from app.main import app
 
         unauthenticated_client = TestClient(app)
         plan_id = "test-plan-id"
@@ -225,15 +219,15 @@ class TestProgressAnalyticsAPI:
         non_existent_id = "00000000-0000-0000-0000-000000000000"
 
         # When
-        response = client.get(
-            f"/api/v1/analytics/progress/{non_existent_id}"
-        )
+        response = client.get(f"/api/v1/analytics/progress/{non_existent_id}")
 
         # Then
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
 
-    def test_get_progress_analytics_other_user_plan(self, client, auth_headers, test_study_plan):
+    def test_get_progress_analytics_other_user_plan(
+        self, client, auth_headers, test_study_plan
+    ):
         """Test accessing another user's study plan analytics.
 
         Given: A study plan owned by another user
@@ -242,20 +236,19 @@ class TestProgressAnalyticsAPI:
         """
         # Given
         plan_id = test_study_plan["id"]
-        other_user_headers = {
-            "Authorization": "Bearer other_user_token"
-        }
+        other_user_headers = {"Authorization": "Bearer other_user_token"}
 
         # When
         response = client.get(
-            f"/api/v1/analytics/progress/{plan_id}",
-            headers=other_user_headers
+            f"/api/v1/analytics/progress/{plan_id}", headers=other_user_headers
         )
 
         # Then
         assert response.status_code in [401, 404]
 
-    def test_progress_analytics_completion_rate_calculation(self, client, auth_headers, test_study_plan):
+    def test_progress_analytics_completion_rate_calculation(
+        self, client, auth_headers, test_study_plan
+    ):
         """Test that completion rate is calculated correctly.
 
         Given: A study plan with 1 out of 3 milestones completed
@@ -267,8 +260,7 @@ class TestProgressAnalyticsAPI:
 
         # When
         response = client.get(
-            f"/api/v1/analytics/progress/{plan_id}",
-            headers=auth_headers
+            f"/api/v1/analytics/progress/{plan_id}", headers=auth_headers
         )
 
         # Then
@@ -278,7 +270,9 @@ class TestProgressAnalyticsAPI:
         # 1 out of 3 milestones completed = 33.33%
         assert 30.0 <= data["completion_rate"] <= 35.0
 
-    def test_progress_analytics_risk_signals_streak_broken(self, client, auth_headers, test_study_plan):
+    def test_progress_analytics_risk_signals_streak_broken(
+        self, client, auth_headers, test_study_plan
+    ):
         """Test risk signal detection for broken streak.
 
         Given: A study plan with last checkin more than 7 days ago
@@ -295,19 +289,14 @@ class TestProgressAnalyticsAPI:
             "checkin_date": old_checkin_date,
             "hours_studied": 2.0,
             "notes": "Old study session",
-            "mood": "good"
+            "mood": "good",
         }
 
-        client.post(
-            "/api/v1/checkins/",
-            json=checkin_payload,
-            headers=auth_headers
-        )
+        client.post("/api/v1/checkins/", json=checkin_payload, headers=auth_headers)
 
         # When
         response = client.get(
-            f"/api/v1/analytics/progress/{plan_id}",
-            headers=auth_headers
+            f"/api/v1/analytics/progress/{plan_id}", headers=auth_headers
         )
 
         # Then
@@ -317,15 +306,16 @@ class TestProgressAnalyticsAPI:
         # Check for streak_broken risk signal
         risk_signals = data["risk_signals"]
         streak_broken_signals = [
-            signal for signal in risk_signals
-            if signal["type"] == "streak_broken"
+            signal for signal in risk_signals if signal["type"] == "streak_broken"
         ]
 
         # Should have at least one streak_broken signal
         assert len(streak_broken_signals) >= 1
         assert streak_broken_signals[0]["severity"] == "high"
 
-    def test_progress_analytics_learner_status(self, client, auth_headers, test_study_plan, test_checkins):
+    def test_progress_analytics_learner_status(
+        self, client, auth_headers, test_study_plan, test_checkins
+    ):
         """Test learner status classification.
 
         Given: A study plan with regular checkins
@@ -337,8 +327,7 @@ class TestProgressAnalyticsAPI:
 
         # When
         response = client.get(
-            f"/api/v1/analytics/progress/{plan_id}",
-            headers=auth_headers
+            f"/api/v1/analytics/progress/{plan_id}", headers=auth_headers
         )
 
         # Then
@@ -349,7 +338,9 @@ class TestProgressAnalyticsAPI:
         valid_statuses = ["exceeding", "on_track", "needs_attention", "at_risk"]
         assert data["status"] in valid_statuses
 
-    def test_progress_analytics_recommendations(self, client, auth_headers, test_study_plan, test_checkins):
+    def test_progress_analytics_recommendations(
+        self, client, auth_headers, test_study_plan, test_checkins
+    ):
         """Test that recommendations are provided.
 
         Given: A study plan with analytics data
@@ -361,8 +352,7 @@ class TestProgressAnalyticsAPI:
 
         # When
         response = client.get(
-            f"/api/v1/analytics/progress/{plan_id}",
-            headers=auth_headers
+            f"/api/v1/analytics/progress/{plan_id}", headers=auth_headers
         )
 
         # Then
@@ -385,7 +375,9 @@ class TestLearningPatternAPI:
     """
 
     @pytest.mark.skip(reason="LearningPattern API not yet implemented")
-    def test_get_learning_pattern_success(self, client, auth_headers, test_study_plan, test_checkins):
+    def test_get_learning_pattern_success(
+        self, client, auth_headers, test_study_plan, test_checkins
+    ):
         """Test getting learning pattern analysis for a study plan.
 
         Given: A study plan with multiple checkins
@@ -397,8 +389,7 @@ class TestLearningPatternAPI:
 
         # When
         response = client.get(
-            f"/api/v1/analytics/learning-pattern/{plan_id}",
-            headers=auth_headers
+            f"/api/v1/analytics/learning-pattern/{plan_id}", headers=auth_headers
         )
 
         # Then
@@ -461,7 +452,7 @@ class TestLearningPatternAPI:
         # When
         response = client.get(
             f"/api/v1/analytics/learning-pattern/{non_existent_id}",
-            headers=auth_headers
+            headers=auth_headers,
         )
 
         # Then
@@ -469,7 +460,9 @@ class TestLearningPatternAPI:
         assert "not found" in response.json()["detail"].lower()
 
     @pytest.mark.skip(reason="LearningPattern API not yet implemented")
-    def test_get_learning_pattern_insufficient_data(self, client, auth_headers, test_study_plan):
+    def test_get_learning_pattern_insufficient_data(
+        self, client, auth_headers, test_study_plan
+    ):
         """Test getting learning pattern with insufficient checkins.
 
         Given: A study plan with fewer than 3 checkins
@@ -481,25 +474,20 @@ class TestLearningPatternAPI:
 
         # Create only 2 checkins
         for i in range(2):
-            checkin_date = (date.today() - timedelta(days=1-i)).isoformat()
+            checkin_date = (date.today() - timedelta(days=1 - i)).isoformat()
             payload = {
                 "study_plan_id": plan_id,
                 "checkin_date": checkin_date,
                 "hours_studied": 2.0,
                 "notes": f"Study session {i+1}",
-                "mood": "good"
+                "mood": "good",
             }
 
-            client.post(
-                "/api/v1/checkins/",
-                json=payload,
-                headers=auth_headers
-            )
+            client.post("/api/v1/checkins/", json=payload, headers=auth_headers)
 
         # When
         response = client.get(
-            f"/api/v1/analytics/learning-pattern/{plan_id}",
-            headers=auth_headers
+            f"/api/v1/analytics/learning-pattern/{plan_id}", headers=auth_headers
         )
 
         # Then

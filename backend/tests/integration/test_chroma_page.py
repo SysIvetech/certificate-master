@@ -1,8 +1,9 @@
 """Integration test for the Chroma inspection page."""
+
 from fastapi.testclient import TestClient
 
-from app.main import app
 from app.api.chroma import get_vector_store_service
+from app.main import app
 
 
 class FakeVectorStoreService:
@@ -20,7 +21,13 @@ class FakeVectorStoreService:
             "total_vectors": 2,
         }
 
-    def list_vectors(self, limit: int, offset: int, include_embeddings: bool = False, where: dict = None):
+    def list_vectors(
+        self,
+        limit: int,
+        offset: int,
+        include_embeddings: bool = False,
+        where: dict = None,
+    ):
         self.list_kwargs = {
             "limit": limit,
             "offset": offset,
@@ -28,8 +35,14 @@ class FakeVectorStoreService:
             "where": where,
         }
         return [
-            {"id": "vec-1", "metadata": {"title": "정보처리기사", "categories": "국가기술자격"}},
-            {"id": "vec-2", "metadata": {"title": "네트워크보안", "categories": "민간자격"}},
+            {
+                "id": "vec-1",
+                "metadata": {"title": "정보처리기사", "categories": "국가기술자격"},
+            },
+            {
+                "id": "vec-2",
+                "metadata": {"title": "네트워크보안", "categories": "민간자격"},
+            },
         ]
 
     def get_by_id(self, vector_id: str):
@@ -111,15 +124,14 @@ def test_chroma_delete_batch_vectors(client: TestClient):
         fake_service.deleted_with_reset_ids.extend(cert_ids)
         return fake_service.batch_reset_result
 
-    fake_service.delete_certificates_batch_with_reset = delete_certificates_batch_with_reset
+    fake_service.delete_certificates_batch_with_reset = (
+        delete_certificates_batch_with_reset
+    )
 
     app.dependency_overrides[get_vector_store_service] = lambda: fake_service
 
     try:
-        response = client.post(
-            "/chroma/delete",
-            json={"ids": ["vec-1", "vec-2"]}
-        )
+        response = client.post("/chroma/delete", json={"ids": ["vec-1", "vec-2"]})
     finally:
         app.dependency_overrides.pop(get_vector_store_service, None)
 

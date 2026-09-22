@@ -3,10 +3,11 @@
 이 모듈은 Playwright 브라우저 인스턴스를 효율적으로 관리합니다.
 동시 페이지 수를 제한하여 메모리 사용을 최적화합니다.
 """
+
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from typing import Optional, AsyncGenerator
+from typing import AsyncGenerator, Optional
 
 logger = logging.getLogger(__name__)
 

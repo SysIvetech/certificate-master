@@ -5,10 +5,11 @@
 """
 
 import pytest
-from app.services.search.context_parser import EnhancedContextParser
-from app.services.search.tokenizer import tokenize
+
 from app.services.search.bm25_service import BM25SearchService
+from app.services.search.context_parser import EnhancedContextParser
 from app.services.search.reason_template import ReasonTemplateEngine
+from app.services.search.tokenizer import tokenize
 
 
 @pytest.fixture
@@ -97,7 +98,9 @@ class TestE2EPipeline:
 
         bm25 = BM25SearchService()
         bm25.build_index(sample_certs)
-        results = bm25.search("IT 소프트웨어 자격증", domains=["IT/소프트웨어"], top_k=5)
+        results = bm25.search(
+            "IT 소프트웨어 자격증", domains=["IT/소프트웨어"], top_k=5
+        )
         assert len(results) > 0
         assert results[0]["id"] == "cert-001"
 
@@ -108,7 +111,7 @@ class TestE2EPipeline:
 
         bm25 = BM25SearchService()
         bm25.build_index(sample_certs)
-        results = bm25.search("IT 자격증", top_k=5)
+        bm25.search("IT 자격증", top_k=5)
 
         engine = ReasonTemplateEngine()
         cert = sample_certs[0]
@@ -119,7 +122,9 @@ class TestE2EPipeline:
     def test_full_pipeline_no_llm(self, sample_certs):
         """전체 파이프라인이 LLM 없이 동작한다."""
         parser = EnhancedContextParser()
-        ctx = parser.parse("3개월 안에 딸 수 있는 쉬운 IT 자격증", domains=["IT/소프트웨어"])
+        ctx = parser.parse(
+            "3개월 안에 딸 수 있는 쉬운 IT 자격증", domains=["IT/소프트웨어"]
+        )
 
         bm25 = BM25SearchService()
         bm25.build_index(sample_certs)

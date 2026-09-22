@@ -1,5 +1,5 @@
 """Unit tests for enrichment quality validation."""
-import pytest
+
 from app.schemas.certificate import CertificateUpdate
 
 
@@ -12,7 +12,11 @@ class TestEnrichmentQuality:
             overview="짧은 개요."  # 1 sentence, should be flagged
         )
         # Count sentences (simple heuristic)
-        sentence_count = update.overview.count(".") + update.overview.count("!") + update.overview.count("?")
+        sentence_count = (
+            update.overview.count(".")
+            + update.overview.count("!")
+            + update.overview.count("?")
+        )
         assert sentence_count >= 1, "Overview should have at least 1 sentence"
 
     def test_difficulty_range(self):
@@ -213,8 +217,19 @@ class TestEnrichmentCompleteness:
             overview="완전한 개요입니다. 매우 상세합니다. 유용한 정보입니다.",
             difficulty=3,
             study_period_days=60,
-            exam_info={"subjects": ["과목1"], "exam_type": "필기", "passing_criteria": "60점"},
-            recommended_lectures=[{"platform": "A", "title": "B", "url": "http://c.com", "relevance_score": 0.9}],
+            exam_info={
+                "subjects": ["과목1"],
+                "exam_type": "필기",
+                "passing_criteria": "60점",
+            },
+            recommended_lectures=[
+                {
+                    "platform": "A",
+                    "title": "B",
+                    "url": "http://c.com",
+                    "relevance_score": 0.9,
+                }
+            ],
             career_info={"use_cases": ["취업"]},
             user_reviews={"summary": "좋음"},
             official_sources={"official_site": "http://example.com"},
@@ -226,4 +241,3 @@ class TestEnrichmentCompleteness:
         assert update.career_info is not None
         assert update.user_reviews is not None
         assert update.official_sources is not None
-

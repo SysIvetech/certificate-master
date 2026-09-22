@@ -6,8 +6,8 @@
 - get_enrichment_service: Enrichment 서비스 팩토리
 """
 
-from .service import LLMService, get_llm_service
 from .enrichment_service import CertificateEnrichmentService, get_enrichment_service
+from .service import LLMService, get_llm_service
 
 __all__ = [
     "LLMService",

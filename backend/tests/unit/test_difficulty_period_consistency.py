@@ -9,10 +9,10 @@ from app.services.llm.service import (
 
 # 난이도별 허용 study_period_days 범위 (프롬프트 난이도 기준과 일치)
 DIFFICULTY_PERIOD_RANGES = {
-    1: (1, 21),      # 1~3주
-    2: (14, 90),     # 2주~3개월
-    3: (60, 210),    # 2~7개월
-    4: (150, 540),   # 5개월~1.5년
+    1: (1, 21),  # 1~3주
+    2: (14, 90),  # 2주~3개월
+    3: (60, 210),  # 2~7개월
+    4: (150, 540),  # 5개월~1.5년
     5: (300, 1095),  # 10개월~3년
 }
 
@@ -76,11 +76,11 @@ class TestDifficultyPeriodConsistency:
     @pytest.mark.parametrize(
         "difficulty, study_days",
         [
-            (1, 7),    # 난이도1, 1주 -> OK
-            (1, 14),   # 난이도1, 2주 -> OK
-            (2, 30),   # 난이도2, 1개월 -> OK
-            (2, 60),   # 난이도2, 2개월 -> OK
-            (3, 90),   # 난이도3, 3개월 -> OK
+            (1, 7),  # 난이도1, 1주 -> OK
+            (1, 14),  # 난이도1, 2주 -> OK
+            (2, 30),  # 난이도2, 1개월 -> OK
+            (2, 60),  # 난이도2, 2개월 -> OK
+            (3, 90),  # 난이도3, 3개월 -> OK
             (3, 180),  # 난이도3, 6개월 -> OK
             (4, 200),  # 난이도4, ~7개월 -> OK
             (4, 365),  # 난이도4, 1년 -> OK
@@ -88,13 +88,9 @@ class TestDifficultyPeriodConsistency:
             (5, 730),  # 난이도5, 2년 -> OK
         ],
     )
-    def test_consistent_values_pass_through_unchanged(
-        self, difficulty, study_days
-    ):
+    def test_consistent_values_pass_through_unchanged(self, difficulty, study_days):
         """정합성이 맞는 값은 그대로 유지된다."""
-        data = _make_phase1_data(
-            difficulty=difficulty, study_period_days=study_days
-        )
+        data = _make_phase1_data(difficulty=difficulty, study_period_days=study_days)
         result = Phase1Extraction(**data)
         assert result.difficulty == difficulty
         assert result.study_period_days == study_days
@@ -118,9 +114,7 @@ class TestDifficultyPeriodConsistency:
         self, difficulty, study_days, expected_min, expected_max
     ):
         """비일관 값은 난이도 기준 범위로 클램핑된다."""
-        data = _make_phase1_data(
-            difficulty=difficulty, study_period_days=study_days
-        )
+        data = _make_phase1_data(difficulty=difficulty, study_period_days=study_days)
         result = Phase1Extraction(**data)
         assert result.difficulty == difficulty
         assert expected_min <= result.study_period_days <= expected_max

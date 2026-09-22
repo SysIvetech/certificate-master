@@ -3,14 +3,15 @@
 Supabase에서 MariaDB로 마이그레이션됨 (2026-01-21).
 검색 서비스: SearXNG 사용 (2026-01-28).
 """
-from typing import Dict, Any, Optional
+
+from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
 from app.models.certificate import Certificate
+from app.services.llm.service import LLMService
 from app.services.search.factory import get_search_service
 from app.services.search.protocol import SearchServiceProtocol
-from app.services.llm.service import LLMService
 
 
 class CertificateEnrichmentService:
@@ -43,7 +44,9 @@ class CertificateEnrichmentService:
 
         try:
             # Step 1: 종합 검색 (7개 쿼리)
-            print(f"\n[1/2] 종합 검색 시작: {certificate_title} (provider: {self.search.provider_name})")
+            print(
+                f"\n[1/2] 종합 검색 시작: {certificate_title} (provider: {self.search.provider_name})"
+            )
             search_results = await self.search.search_certificate_comprehensive(
                 certificate_title
             )
@@ -56,7 +59,7 @@ class CertificateEnrichmentService:
             search_context = self.search.format_search_results_for_llm(search_results)
 
             # Step 2: Process with LLM (2-phase)
-            print(f"[2/2] LLM 2단계 처리 중...")
+            print("[2/2] LLM 2단계 처리 중...")
             enrichment = await self.llm.enrich_certificate(
                 certificate_title, search_context
             )
@@ -72,19 +75,33 @@ class CertificateEnrichmentService:
             print(
                 f"    - 시험 정보: {len(enrichment.exam_info.get('subjects', []))}개 과목"
             )
-            print(f"    - 커리어 정보: {len(enrichment.career_info.get('use_cases', []))}개 활용 사례")
-            print(f"    - 후기 요약 여부: {bool(enrichment.user_reviews.get('summary'))}")
-            print(f"    - 학습 가이드: 방법 {len(enrichment.study_guide.get('study_methods', []))}개, 핵심 토픽 {len(enrichment.study_guide.get('key_exam_topics', []))}개")
-            print(f"    - 공식 출처 여부: {bool(enrichment.official_sources.get('official_site'))}")
+            print(
+                f"    - 커리어 정보: {len(enrichment.career_info.get('use_cases', []))}개 활용 사례"
+            )
+            print(
+                f"    - 후기 요약 여부: {bool(enrichment.user_reviews.get('summary'))}"
+            )
+            print(
+                f"    - 학습 가이드: 방법 {len(enrichment.study_guide.get('study_methods', []))}개, 핵심 토픽 {len(enrichment.study_guide.get('key_exam_topics', []))}개"
+            )
+            print(
+                f"    - 공식 출처 여부: {bool(enrichment.official_sources.get('official_site'))}"
+            )
             print(f"    - 추천 강의: {len(enrichment.recommended_lectures)}개")
             # 취업준비생 관점 로깅 (NEW)
-            print(f"    - 채용 시장 정보: 빈도={enrichment.job_market_info.get('job_posting_frequency', 'N/A')}")
-            print(f"    - 비용 정보: 총비용={enrichment.cost_breakdown.get('total_estimated_cost', 'N/A')}")
-            print(f"    - 합격 가능성: 독학={enrichment.feasibility_info.get('self_study_possible', 'N/A')}")
+            print(
+                f"    - 채용 시장 정보: 빈도={enrichment.job_market_info.get('job_posting_frequency', 'N/A')}"
+            )
+            print(
+                f"    - 비용 정보: 총비용={enrichment.cost_breakdown.get('total_estimated_cost', 'N/A')}"
+            )
+            print(
+                f"    - 합격 가능성: 독학={enrichment.feasibility_info.get('self_study_possible', 'N/A')}"
+            )
             print(f"    - 유사 자격증: {len(enrichment.similar_certificates)}개")
 
             # Step 3: Update database (SQLAlchemy)
-            print(f"[DB] 결과 저장 중...")
+            print("[DB] 결과 저장 중...")
 
             # 자격증 조회
             cert = (
@@ -118,7 +135,7 @@ class CertificateEnrichmentService:
 
             result["status"] = "success"
             result["enrichment"] = enrichment.model_dump()
-            print(f"  [완료] 보강 데이터 저장 성공")
+            print("  [완료] 보강 데이터 저장 성공")
 
         except Exception as e:
             self.session.rollback()
@@ -127,7 +144,7 @@ class CertificateEnrichmentService:
             print(f"  [ERROR] {str(e)}")
 
         return result
-    
+
     def _add_newlines(self, enrichment):
         """긴 텍스트 필드에 줄바꿈을 추가해 가독성을 높입니다.
 
@@ -141,44 +158,44 @@ class CertificateEnrichmentService:
         if enrichment.overview:
             overview = enrichment.overview
             # Split by sentence endings and rejoin with newlines
-            for char in ['. ', '! ', '? ']:
-                overview = overview.replace(char, char.strip() + '.\n')
-            enrichment.overview = overview.replace('.\n', '.\n').rstrip('\n')
-        
+            for char in [". ", "! ", "? "]:
+                overview = overview.replace(char, char.strip() + ".\n")
+            enrichment.overview = overview.replace(".\n", ".\n").rstrip("\n")
+
         # Add newlines to job_prospects
-        if enrichment.career_info.get('job_prospects'):
-            prospects = enrichment.career_info['job_prospects']
-            for char in ['. ', '! ', '? ']:
-                prospects = prospects.replace(char, char.strip() + '.\n')
-            enrichment.career_info['job_prospects'] = prospects.rstrip('\n')
-        
+        if enrichment.career_info.get("job_prospects"):
+            prospects = enrichment.career_info["job_prospects"]
+            for char in [". ", "! ", "? "]:
+                prospects = prospects.replace(char, char.strip() + ".\n")
+            enrichment.career_info["job_prospects"] = prospects.rstrip("\n")
+
         # Add newlines to user_reviews.summary (paragraph breaks)
-        if enrichment.user_reviews.get('summary'):
-            summary = enrichment.user_reviews['summary']
+        if enrichment.user_reviews.get("summary"):
+            summary = enrichment.user_reviews["summary"]
             sentences = []
             temp = ""
             for char in summary:
                 temp += char
-                if char in '.!?' and len(temp) > 50:
+                if char in ".!?" and len(temp) > 50:
                     sentences.append(temp.strip())
                     temp = ""
             if temp:
                 sentences.append(temp.strip())
-            
+
             # Join with newlines (2 sentences per paragraph)
             paragraphs = []
             for i in range(0, len(sentences), 2):
-                para = ' '.join(sentences[i:i+2])
+                para = " ".join(sentences[i : i + 2])
                 paragraphs.append(para)
-            enrichment.user_reviews['summary'] = '\n\n'.join(paragraphs)
-        
+            enrichment.user_reviews["summary"] = "\n\n".join(paragraphs)
+
         # Add newlines to difficulty_feedback
-        if enrichment.user_reviews.get('difficulty_feedback'):
-            feedback = enrichment.user_reviews['difficulty_feedback']
-            for char in ['. ', '! ', '? ']:
-                feedback = feedback.replace(char, char.strip() + '.\n')
-            enrichment.user_reviews['difficulty_feedback'] = feedback.rstrip('\n')
-        
+        if enrichment.user_reviews.get("difficulty_feedback"):
+            feedback = enrichment.user_reviews["difficulty_feedback"]
+            for char in [". ", "! ", "? "]:
+                feedback = feedback.replace(char, char.strip() + ".\n")
+            enrichment.user_reviews["difficulty_feedback"] = feedback.rstrip("\n")
+
         return enrichment
 
 
@@ -200,6 +217,4 @@ def get_enrichment_service(
         CertificateEnrichmentService 인스턴스.
     """
     # Note: Not using singleton pattern since service needs session
-    return CertificateEnrichmentService(
-        session, search_service=search_service
-    )
+    return CertificateEnrichmentService(session, search_service=search_service)

@@ -103,7 +103,6 @@ class ReasonTemplateEngine:
         if context.goal in ("취업", "이직"):
             score *= 2.0
 
-        title = cert.get("title", "이 자격증")
         if context.goal in ("취업", "이직"):
             if companies:
                 company_list = companies.split(",")[0].strip()
@@ -117,9 +116,7 @@ class ReasonTemplateEngine:
                     f"취업에 유리합니다."
                 )
             else:
-                sentence = (
-                    f"채용 공고가 {freq} 편이라 취업 경쟁력을 높일 수 있습니다."
-                )
+                sentence = f"채용 공고가 {freq} 편이라 취업 경쟁력을 높일 수 있습니다."
         else:
             if companies:
                 sentence = (
@@ -160,9 +157,7 @@ class ReasonTemplateEngine:
                 f"취업 후 경쟁력 있는 보상을 기대할 수 있습니다."
             )
         else:
-            sentence = (
-                f"취득 시 연봉 {salary_premium} 효과가 보고되고 있습니다."
-            )
+            sentence = f"취득 시 연봉 {salary_premium} 효과가 보고되고 있습니다."
 
         return StrengthResult(name="salary", score=score, sentence=sentence)
 
@@ -220,9 +215,7 @@ class ReasonTemplateEngine:
             f"재직 중에도 무리 없이 취득할 수 있습니다."
         )
 
-        return StrengthResult(
-            name="worker_friendly", score=score, sentence=sentence
-        )
+        return StrengthResult(name="worker_friendly", score=score, sentence=sentence)
 
     def _cost_efficiency_strength(
         self, cert: dict, context: StructuredUserContext
@@ -238,9 +231,7 @@ class ReasonTemplateEngine:
 
         sentence = f"응시료가 {exam_fee}으로 부담 없이 도전할 수 있습니다."
 
-        return StrengthResult(
-            name="cost_efficiency", score=score, sentence=sentence
-        )
+        return StrengthResult(name="cost_efficiency", score=score, sentence=sentence)
 
     def _public_sector_strength(
         self, cert: dict, context: StructuredUserContext
@@ -262,9 +253,7 @@ class ReasonTemplateEngine:
             f"취업 기회를 넓힐 수 있습니다."
         )
 
-        return StrengthResult(
-            name="public_sector", score=score, sentence=sentence
-        )
+        return StrengthResult(name="public_sector", score=score, sentence=sentence)
 
     def _feasibility_strength(
         self, cert: dict, context: StructuredUserContext
@@ -297,13 +286,9 @@ class ReasonTemplateEngine:
             months = max(1, study_days // 30)
             sentence = f"약 {months}개월의 준비 기간으로 취득이 가능합니다."
 
-        return StrengthResult(
-            name="feasibility", score=score, sentence=sentence
-        )
+        return StrengthResult(name="feasibility", score=score, sentence=sentence)
 
-    def _fallback_reason(
-        self, cert: dict, context: StructuredUserContext
-    ) -> str:
+    def _fallback_reason(self, cert: dict, context: StructuredUserContext) -> str:
         """최소한의 데이터로 기본 추천 이유를 생성한다."""
         title = cert.get("title", "이 자격증")
         study_days = cert.get("study_period_days")
@@ -316,7 +301,13 @@ class ReasonTemplateEngine:
             parts.append(f"약 {months}개월 준비로 취득 가능하며")
 
         if difficulty is not None:
-            diff_map = {1: "낮은", 2: "비교적 낮은", 3: "보통", 4: "높은", 5: "매우 높은"}
+            diff_map = {
+                1: "낮은",
+                2: "비교적 낮은",
+                3: "보통",
+                4: "높은",
+                5: "매우 높은",
+            }
             diff_text = diff_map.get(difficulty, "보통")
             parts.append(f"{diff_text} 난이도의 자격증입니다.")
         else:

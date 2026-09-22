@@ -1,6 +1,9 @@
 """리디자인된 추천 서비스 테스트."""
-from app.services.study.natural_recommendation_service import NaturalRecommendationService
+
 from app.schemas.recommendation import StructuredUserContext
+from app.services.study.natural_recommendation_service import (
+    NaturalRecommendationService,
+)
 
 
 def _make_context(**overrides) -> StructuredUserContext:

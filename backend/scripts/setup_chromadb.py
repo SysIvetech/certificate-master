@@ -12,6 +12,7 @@
     # 컬렉션 상태 확인
     uv run python -m scripts.setup_chromadb --status
 """
+
 import argparse
 import sys
 from pathlib import Path
@@ -28,10 +29,7 @@ from app.core.config import get_settings
 def get_client() -> chromadb.HttpClient:
     """ChromaDB HttpClient를 생성합니다."""
     settings = get_settings()
-    return chromadb.HttpClient(
-        host=settings.CHROMA_HOST,
-        port=settings.CHROMA_PORT
-    )
+    return chromadb.HttpClient(host=settings.CHROMA_HOST, port=settings.CHROMA_PORT)
 
 
 def setup_collection(reset: bool = False):
@@ -66,8 +64,7 @@ def setup_collection(reset: bool = False):
         # 컬렉션 생성
         print("[3/3] 컬렉션 생성 중...")
         collection = client.get_or_create_collection(
-            name=collection_name,
-            metadata={"hnsw:space": "cosine"}
+            name=collection_name, metadata={"hnsw:space": "cosine"}
         )
 
         # 컬렉션 정보 출력
@@ -84,7 +81,9 @@ def setup_collection(reset: bool = False):
         print(f"[ERROR] ChromaDB 연결 실패: {e}")
         print()
         print("다음 사항을 확인하세요:")
-        print(f"  1. ChromaDB 서버가 {settings.CHROMA_HOST}:{settings.CHROMA_PORT}에서 실행 중인지")
+        print(
+            f"  1. ChromaDB 서버가 {settings.CHROMA_HOST}:{settings.CHROMA_PORT}에서 실행 중인지"
+        )
         print("  2. 네트워크 연결이 정상인지")
         print("  3. 방화벽 설정이 올바른지")
         sys.exit(1)
@@ -123,7 +122,7 @@ def show_status():
         try:
             collection = client.get_collection(name=collection_name)
             count = collection.count()
-            print(f"  [OK] 컬렉션 존재함")
+            print("  [OK] 컬렉션 존재함")
             print(f"  벡터 수: {count}")
 
             # 샘플 데이터 확인
@@ -131,7 +130,7 @@ def show_status():
                 sample = collection.peek(limit=3)
                 print(f"  샘플 ID: {sample['ids'][:3]}")
         except Exception:
-            print(f"  [INFO] 컬렉션이 존재하지 않음")
+            print("  [INFO] 컬렉션이 존재하지 않음")
 
     except Exception as e:
         print(f"[ERROR] ChromaDB 연결 실패: {e}")
@@ -140,19 +139,11 @@ def show_status():
 
 def main():
     """메인 진입점."""
-    parser = argparse.ArgumentParser(
-        description="ChromaDB 컬렉션 초기화 및 관리"
-    )
+    parser = argparse.ArgumentParser(description="ChromaDB 컬렉션 초기화 및 관리")
     parser.add_argument(
-        "--reset",
-        action="store_true",
-        help="기존 컬렉션 삭제 후 재생성"
+        "--reset", action="store_true", help="기존 컬렉션 삭제 후 재생성"
     )
-    parser.add_argument(
-        "--status",
-        action="store_true",
-        help="컬렉션 상태 확인"
-    )
+    parser.add_argument("--status", action="store_true", help="컬렉션 상태 확인")
 
     args = parser.parse_args()
 

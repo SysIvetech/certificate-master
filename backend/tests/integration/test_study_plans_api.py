@@ -3,13 +3,12 @@
 Tests all CRUD operations for study plans with authentication.
 MariaDB (SQLAlchemy) 기반으로 마이그레이션됨.
 """
+
 from datetime import date, timedelta
 from uuid import uuid4
 
 import pytest
-from fastapi.testclient import TestClient
 
-from app.main import app
 from app.models.certificate import Certificate as CertificateModel
 
 
@@ -168,7 +167,9 @@ class TestStudyPlanAPI:
             ],
         }
 
-        create_response = authenticated_client.post("/api/v1/study-plans/", json=payload)
+        create_response = authenticated_client.post(
+            "/api/v1/study-plans/", json=payload
+        )
         assert create_response.status_code == 201
         plan_id = create_response.json()["id"]
 
@@ -210,7 +211,9 @@ class TestStudyPlanAPI:
             ],
         }
 
-        create_response = authenticated_client.post("/api/v1/study-plans/", json=payload)
+        create_response = authenticated_client.post(
+            "/api/v1/study-plans/", json=payload
+        )
         assert create_response.status_code == 201
         plan_id = create_response.json()["id"]
 
@@ -226,7 +229,9 @@ class TestStudyPlanAPI:
         assert data["title"] == "업데이트 후"
         assert data["daily_study_hours"] == 4.0
 
-    def test_update_study_plan_no_fields(self, authenticated_client, test_certificate_id):
+    def test_update_study_plan_no_fields(
+        self, authenticated_client, test_certificate_id
+    ):
         """Test updating a study plan with no fields should fail."""
         # Create a study plan first
         target_date = (date.today() + timedelta(days=90)).isoformat()
@@ -246,7 +251,9 @@ class TestStudyPlanAPI:
             ],
         }
 
-        create_response = authenticated_client.post("/api/v1/study-plans/", json=payload)
+        create_response = authenticated_client.post(
+            "/api/v1/study-plans/", json=payload
+        )
         assert create_response.status_code == 201
         plan_id = create_response.json()["id"]
 
@@ -287,7 +294,9 @@ class TestStudyPlanAPI:
             ],
         }
 
-        create_response = authenticated_client.post("/api/v1/study-plans/", json=payload)
+        create_response = authenticated_client.post(
+            "/api/v1/study-plans/", json=payload
+        )
         assert create_response.status_code == 201
         plan_id = create_response.json()["id"]
 
@@ -326,7 +335,9 @@ class TestStudyPlanAPI:
             "milestones": [],
         }
 
-        create_response = authenticated_client.post("/api/v1/study-plans/", json=payload)
+        create_response = authenticated_client.post(
+            "/api/v1/study-plans/", json=payload
+        )
         assert create_response.status_code == 201
 
         # Get all plans
@@ -392,7 +403,9 @@ class TestStudyPlanAPI:
             ],
         }
 
-        create_response = authenticated_client.post("/api/v1/study-plans/", json=payload)
+        create_response = authenticated_client.post(
+            "/api/v1/study-plans/", json=payload
+        )
         assert create_response.status_code == 201
         plan_id = create_response.json()["id"]
 

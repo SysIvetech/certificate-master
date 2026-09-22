@@ -1,5 +1,5 @@
 """EmbeddingServiceProtocol 및 팩토리 테스트."""
-import pytest
+
 from unittest.mock import MagicMock, patch
 
 
@@ -46,6 +46,7 @@ class TestEmbeddingFactory:
         service = get_embedding_service()
         assert isinstance(service, EmbeddingService)
 
+
 class TestVectorStoreServiceDI:
     """VectorStoreService 의존성 주입 테스트."""
 
@@ -62,8 +63,8 @@ class TestVectorStoreServiceDI:
                 mock_collection = MagicMock()
                 mock_client.get_or_create_collection.return_value = mock_collection
 
-                from app.services.vector_store import VectorStoreService
                 from app.services.embedding_service import EmbeddingService
+                from app.services.vector_store import VectorStoreService
 
                 # embedding_service 미지정 시 기본 EmbeddingService 생성
                 service = VectorStoreService()
@@ -88,7 +89,9 @@ class TestVectorStoreServiceDI:
                 mock_embedding_service = MagicMock()
                 mock_embedding_service.dimensions = 1024
                 mock_embedding_service.create_embedding.return_value = [0.1] * 1024
-                mock_embedding_service.create_embeddings_batch.return_value = [[0.1] * 1024]
+                mock_embedding_service.create_embeddings_batch.return_value = [
+                    [0.1] * 1024
+                ]
 
                 service = VectorStoreService(embedding_service=mock_embedding_service)
 
@@ -111,7 +114,7 @@ class TestVectorStoreServiceDI:
                 mock_collection.query.return_value = {
                     "ids": [[]],
                     "distances": [[]],
-                    "metadatas": [[]]
+                    "metadatas": [[]],
                 }
 
                 from app.services.vector_store import VectorStoreService
@@ -124,4 +127,6 @@ class TestVectorStoreServiceDI:
                 service.search_records("certificates", "테스트 쿼리", top_k=5)
 
                 # 주입된 서비스의 create_embedding이 호출되어야 함
-                mock_embedding_service.create_embedding.assert_called_once_with("테스트 쿼리")
+                mock_embedding_service.create_embedding.assert_called_once_with(
+                    "테스트 쿼리"
+                )

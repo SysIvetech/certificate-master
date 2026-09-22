@@ -59,6 +59,7 @@ search:
 
 ============================================================
 """
+
 import argparse
 import asyncio
 import json
@@ -289,9 +290,7 @@ class DataPipeline:
             # 자격증 조회
             if cert_ids:
                 # 특정 ID만 조회 (재시도)
-                query = session.query(Certificate).filter(
-                    Certificate.id.in_(cert_ids)
-                )
+                query = session.query(Certificate).filter(Certificate.id.in_(cert_ids))
                 logger.info(f"재시도 대상: {len(cert_ids)}개 자격증")
             else:
                 # 미보강 자격증 조회
@@ -323,10 +322,10 @@ class DataPipeline:
             logger.info(f"  검색 서비스: {search_service.provider_name}")
 
             # 보강 실행
-            service = get_enrichment_service(
-                session, search_service=search_service
+            service = get_enrichment_service(session, search_service=search_service)
+            logger.info(
+                f"  LLM 서비스: {service.llm.provider_name} ({service.llm.model})"
             )
-            logger.info(f"  LLM 서비스: {service.llm.provider_name} ({service.llm.model})")
             success = 0
             failed = 0
 
@@ -336,9 +335,7 @@ class DataPipeline:
             for cert in pbar:
                 pbar.set_postfix_str(cert["title"][:20])
                 try:
-                    result = await service.enrich_certificate(
-                        cert["id"], cert["title"]
-                    )
+                    result = await service.enrich_certificate(cert["id"], cert["title"])
                     if result.get("status") == "success":
                         success += 1
                         logger.debug(f"[성공] {cert['title']}")
@@ -442,7 +439,9 @@ class DataPipeline:
                 f"  ChromaDB에 이미 존재 (동기화만 필요): {len(certs_to_sync_only)}개"
             )
         if certs_truly_missing:
-            logger.info(f"  ChromaDB에 없음 (새로 생성 필요): {len(certs_truly_missing)}개")
+            logger.info(
+                f"  ChromaDB에 없음 (새로 생성 필요): {len(certs_truly_missing)}개"
+            )
 
         return certs_to_sync_only, certs_truly_missing
 
@@ -642,21 +641,21 @@ class DataPipeline:
                 collection_name=self._collection_name,
             )
             if self.test_mode:
-                logger.info(f"  ⚠️  테스트 모드: '{self.TEST_COLLECTION_NAME}' 컬렉션 사용")
+                logger.info(
+                    f"  ⚠️  테스트 모드: '{self.TEST_COLLECTION_NAME}' 컬렉션 사용"
+                )
 
             # 1단계: 자격증 조회
             if cert_ids:
                 # 재시도: 특정 ID만 처리
-                query = session.query(Certificate).filter(
-                    Certificate.id.in_(cert_ids)
-                )
+                query = session.query(Certificate).filter(Certificate.id.in_(cert_ids))
                 results = query.all()
                 certs_without_vector_id = [cert.to_dict() for cert in results]
                 certs_with_vector_id = []
                 logger.info(f"재시도 대상: {len(certs_without_vector_id)}개 자격증")
             else:
-                certs_without_vector_id, certs_with_vector_id = self._query_certificates(
-                    session, limit
+                certs_without_vector_id, certs_with_vector_id = (
+                    self._query_certificates(session, limit)
                 )
 
             all_certificates = certs_without_vector_id + certs_with_vector_id
@@ -770,9 +769,7 @@ class DataPipeline:
 
         try:
             # 1단계: 자격증 조회
-            cert = session.query(Certificate).filter(
-                Certificate.id == cert_id
-            ).first()
+            cert = session.query(Certificate).filter(Certificate.id == cert_id).first()
 
             if not cert:
                 logger.error(f"자격증을 찾을 수 없습니다: {cert_id}")
@@ -832,7 +829,9 @@ class DataPipeline:
             logger.info("[RECREATE] 재생성 완료")
             logger.info("=" * 70)
             logger.info(f"  보강: {'성공' if enrich_result['success'] > 0 else '실패'}")
-            logger.info(f"  임베딩: {'성공' if embedding_result['uploaded'] > 0 else '실패'}")
+            logger.info(
+                f"  임베딩: {'성공' if embedding_result['uploaded'] > 0 else '실패'}"
+            )
 
             return {
                 "status": "success",
@@ -869,9 +868,11 @@ class DataPipeline:
 
         try:
             # 이름으로 검색 (LIKE)
-            cert = session.query(Certificate).filter(
-                Certificate.title.like(f"%{name}%")
-            ).first()
+            cert = (
+                session.query(Certificate)
+                .filter(Certificate.title.like(f"%{name}%"))
+                .first()
+            )
 
             if not cert:
                 logger.error(f"자격증을 찾을 수 없습니다: {name}")
@@ -942,7 +943,9 @@ class DataPipeline:
 
             embedding_failed = load_latest_failed_records("embedding")
             if embedding_failed:
-                retry_embedding_ids = [c["id"] for c in embedding_failed["certificates"]]
+                retry_embedding_ids = [
+                    c["id"] for c in embedding_failed["certificates"]
+                ]
                 logger.info(f"임베딩 재시도 대상: {len(retry_embedding_ids)}개")
 
             if not retry_enrich_ids and not retry_embedding_ids:
@@ -990,7 +993,9 @@ class DataPipeline:
             logger.info("[SKIP] 보강 단계 건너뛰기")
         else:
             # cert_ids가 주어지면 해당 ID만 처리
-            enrich_ids = cert_ids if cert_ids else (retry_enrich_ids if retry_mode else None)
+            enrich_ids = (
+                cert_ids if cert_ids else (retry_enrich_ids if retry_mode else None)
+            )
             enrich_limit = None if (retry_mode or cert_ids) else limit
             result["enrich"] = await self.enrich_step(
                 limit=enrich_limit, cert_ids=enrich_ids
@@ -1001,7 +1006,9 @@ class DataPipeline:
             logger.info("[SKIP] 임베딩 단계 건너뛰기")
         else:
             # cert_ids가 주어지면 해당 ID만 처리
-            embedding_ids = cert_ids if cert_ids else (retry_embedding_ids if retry_mode else None)
+            embedding_ids = (
+                cert_ids if cert_ids else (retry_embedding_ids if retry_mode else None)
+            )
             embedding_limit = None if (retry_mode or cert_ids) else limit
             result["embedding"] = await self.embedding_step(
                 limit=embedding_limit,
@@ -1056,26 +1063,29 @@ async def main():
     )
     parser.add_argument("--limit", type=int, help="처리할 자격증 최대 개수")
     parser.add_argument("--all", action="store_true", help="모든 미보강 자격증 처리")
+    parser.add_argument("--retry", action="store_true", help="실패한 자격증 재시도")
     parser.add_argument(
-        "--retry", action="store_true", help="실패한 자격증 재시도"
+        "--id",
+        type=str,
+        nargs="+",
+        metavar="CERT_ID",
+        help="특정 자격증 ID(들)에 대해 보강+임베딩 실행 (공백으로 구분)",
     )
     parser.add_argument(
-        "--id", type=str, nargs="+", metavar="CERT_ID",
-        help="특정 자격증 ID(들)에 대해 보강+임베딩 실행 (공백으로 구분)"
+        "--recreate",
+        type=str,
+        metavar="CERT_ID",
+        help="특정 자격증 ID의 보강 데이터를 완전히 새로 생성",
     )
     parser.add_argument(
-        "--recreate", type=str, metavar="CERT_ID",
-        help="특정 자격증 ID의 보강 데이터를 완전히 새로 생성"
-    )
-    parser.add_argument(
-        "--recreate-by-name", type=str, metavar="NAME",
-        help="자격증 이름으로 검색하여 보강 데이터를 완전히 새로 생성"
+        "--recreate-by-name",
+        type=str,
+        metavar="NAME",
+        help="자격증 이름으로 검색하여 보강 데이터를 완전히 새로 생성",
     )
 
     # 단계 건너뛰기 옵션
-    parser.add_argument(
-        "--skip-enrich", action="store_true", help="보강 단계 건너뛰기"
-    )
+    parser.add_argument("--skip-enrich", action="store_true", help="보강 단계 건너뛰기")
     parser.add_argument(
         "--skip-embedding", action="store_true", help="임베딩 단계 건너뛰기"
     )
@@ -1084,9 +1094,7 @@ async def main():
     )
 
     # 기타 옵션
-    parser.add_argument(
-        "--verbose", "-v", action="store_true", help="상세 로그 출력"
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="상세 로그 출력")
 
     args = parser.parse_args()
 
@@ -1094,9 +1102,19 @@ async def main():
     setup_logging(verbose=args.verbose)
 
     # 인자 검증
-    if not (args.test or args.limit or args.all or args.retry or args.recreate or args.recreate_by_name or args.id):
+    if not (
+        args.test
+        or args.limit
+        or args.all
+        or args.retry
+        or args.recreate
+        or args.recreate_by_name
+        or args.id
+    ):
         parser.print_help()
-        logger.error("\n--test, --limit N, --all, --retry, --id, --recreate 또는 --recreate-by-name 옵션을 지정하세요.")
+        logger.error(
+            "\n--test, --limit N, --all, --retry, --id, --recreate 또는 --recreate-by-name 옵션을 지정하세요."
+        )
         return
 
     pipeline = DataPipeline(

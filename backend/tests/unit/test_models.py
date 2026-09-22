@@ -2,9 +2,6 @@
 
 TDD Step 2: SQLAlchemy 모델 테스트
 """
-import uuid
-
-import pytest
 
 
 class TestCertificateModel:
@@ -49,7 +46,10 @@ class TestCertificateModel:
 
         # id가 자동 생성되어야 함 (None이 아니거나, default가 설정되어 있어야 함)
         # 인스턴스 생성 시 default 함수가 호출됨
-        assert cert.id is not None or Certificate.__table__.columns["id"].default is not None
+        assert (
+            cert.id is not None
+            or Certificate.__table__.columns["id"].default is not None
+        )
 
 
 class TestStudyPlanModel:

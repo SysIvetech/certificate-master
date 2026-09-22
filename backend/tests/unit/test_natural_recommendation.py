@@ -6,6 +6,7 @@ TDD 방식으로 구현된 테스트 모듈입니다.
 import pytest
 from pydantic import ValidationError
 
+
 # Step 1: 스키마 테스트
 class TestStructuredUserContextSchema:
     """StructuredUserContext 스키마 테스트."""
@@ -335,7 +336,9 @@ class TestContextExtractionPrompt:
         )
 
         user_input = "비전공자인데 IT 취업 준비 중입니다"
-        formatted = CONTEXT_EXTRACTION_USER_PROMPT_TEMPLATE.format(user_input=user_input)
+        formatted = CONTEXT_EXTRACTION_USER_PROMPT_TEMPLATE.format(
+            user_input=user_input
+        )
 
         assert user_input in formatted
 
@@ -424,9 +427,7 @@ class TestContextExtractorService:
 
         service = ContextExtractorService()
 
-        with patch.object(
-            service, "_call_llm", new_callable=AsyncMock
-        ) as mock_llm:
+        with patch.object(service, "_call_llm", new_callable=AsyncMock) as mock_llm:
             mock_llm.return_value = mock_response
 
             result = await service.extract_context(
@@ -480,9 +481,7 @@ class TestReasonGeneratorService:
 
         service = ReasonGeneratorService()
 
-        with patch.object(
-            service, "_call_llm", new_callable=AsyncMock
-        ) as mock_llm:
+        with patch.object(service, "_call_llm", new_callable=AsyncMock) as mock_llm:
             mock_llm.return_value = "IT 취업에 유리한 자격증입니다."
 
             result = await service.generate_reason(context, cert_info)

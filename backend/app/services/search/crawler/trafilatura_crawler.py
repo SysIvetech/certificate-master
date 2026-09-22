@@ -3,17 +3,17 @@
 이 모듈은 정적 HTML 페이지에서 본문을 추출하는 크롤러를 구현합니다.
 기존 ContentCrawlerService 로직을 리팩토링하여 CrawlerProtocol을 따르도록 합니다.
 """
+
 import asyncio
 import logging
 import re
-import sys
 from typing import Optional
 from urllib.parse import urlparse
 
-from trafilatura import fetch_url, extract
+from trafilatura import extract, fetch_url
 from trafilatura.metadata import extract_metadata
 
-from app.services.search.crawler.protocol import CrawlResult, CrawlerProtocol
+from app.services.search.crawler.protocol import CrawlResult
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +38,30 @@ _DOWNLOAD_URL_PATTERNS = [
 
 # 크롤링 불가능한 파일 확장자
 _NON_HTML_EXTENSIONS = {
-    ".pdf", ".hwp", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
-    ".zip", ".rar", ".7z", ".tar", ".gz",
-    ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp",
-    ".mp3", ".mp4", ".avi", ".mov", ".wmv",
+    ".pdf",
+    ".hwp",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".ppt",
+    ".pptx",
+    ".zip",
+    ".rar",
+    ".7z",
+    ".tar",
+    ".gz",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".bmp",
+    ".webp",
+    ".mp3",
+    ".mp4",
+    ".avi",
+    ".mov",
+    ".wmv",
 }
 
 # 컴파일된 정규식 패턴
@@ -203,10 +223,7 @@ class TrafilaturaCrawler:
             loop = asyncio.get_event_loop()
 
             # fetch_url 실행
-            downloaded = await loop.run_in_executor(
-                None,
-                lambda: fetch_url(url)
-            )
+            downloaded = await loop.run_in_executor(None, lambda: fetch_url(url))
 
             if not downloaded:
                 error_msg = "Connection failed or empty response"
@@ -232,7 +249,7 @@ class TrafilaturaCrawler:
                     deduplicate=True,
                     target_language="ko",
                     no_fallback=False,
-                )
+                ),
             )
 
             if not content:
@@ -249,8 +266,7 @@ class TrafilaturaCrawler:
 
             # 메타데이터 추출
             metadata = await loop.run_in_executor(
-                None,
-                lambda: extract_metadata(downloaded)
+                None, lambda: extract_metadata(downloaded)
             )
             title = metadata.title if metadata and metadata.title else ""
 

@@ -2,15 +2,14 @@
 
 TDD: Supabase → SQLAlchemy 마이그레이션 테스트.
 """
-import asyncio
+
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
-
 from sqlalchemy.orm import Session
 
-from scripts.seed_certificates import get_mariadb_session
 from app.models.certificate import Certificate
+from scripts.seed_certificates import get_mariadb_session
 
 
 # anyio 백엔드 설정 (pytest-asyncio 대신 anyio 사용)
@@ -32,7 +31,7 @@ class TestEnrichmentServiceMariaDB:
             service = get_enrichment_service(session)
             assert service is not None
             # session이 저장되어 있어야 함
-            assert hasattr(service, 'session')
+            assert hasattr(service, "session")
             assert service.session is session
         finally:
             session.close()
@@ -45,8 +44,8 @@ class TestEnrichmentServiceMariaDB:
         try:
             service = get_enrichment_service(session)
             # 필수 서비스들
-            assert hasattr(service, 'search')  # brave → search (추상화)
-            assert hasattr(service, 'llm')
+            assert hasattr(service, "search")  # brave → search (추상화)
+            assert hasattr(service, "llm")
         finally:
             session.close()
 
@@ -58,19 +57,35 @@ class TestEnrichmentServiceMariaDB:
         # Mock session
         mock_session = MagicMock(spec=Session)
         mock_cert = MagicMock(spec=Certificate)
-        mock_session.query.return_value.filter.return_value.first.return_value = mock_cert
+        mock_session.query.return_value.filter.return_value.first.return_value = (
+            mock_cert
+        )
 
         # Mock search and llm services
-        with patch('app.services.enrichment_service.get_search_service') as MockGetSearch, \
-             patch('app.services.enrichment_service.LLMService') as MockLLM:
+        with (
+            patch(
+                "app.services.enrichment_service.get_search_service"
+            ) as MockGetSearch,
+            patch("app.services.enrichment_service.LLMService") as MockLLM,
+        ):
 
             mock_search_instance = MagicMock()
             mock_search_instance.provider_name = "searxng"
-            mock_search_instance.search_certificate_comprehensive = AsyncMock(return_value={
-                'general': [], 'statistics': [], 'career': [], 'reviews': [],
-                'study_methods': [], 'books': [], 'lectures': [], 'official': []
-            })
-            mock_search_instance.format_search_results_for_llm.return_value = "test context"
+            mock_search_instance.search_certificate_comprehensive = AsyncMock(
+                return_value={
+                    "general": [],
+                    "statistics": [],
+                    "career": [],
+                    "reviews": [],
+                    "study_methods": [],
+                    "books": [],
+                    "lectures": [],
+                    "official": [],
+                }
+            )
+            mock_search_instance.format_search_results_for_llm.return_value = (
+                "test context"
+            )
             MockGetSearch.return_value = mock_search_instance
 
             mock_llm_instance = MockLLM.return_value
@@ -78,14 +93,19 @@ class TestEnrichmentServiceMariaDB:
             mock_enrichment.overview = "Test overview"
             mock_enrichment.difficulty = 3
             mock_enrichment.study_period_days = 90
-            mock_enrichment.exam_info = {'subjects': ['과목1']}
-            mock_enrichment.career_info = {'use_cases': ['용도1']}
-            mock_enrichment.user_reviews = {'summary': 'Test'}
-            mock_enrichment.study_guide = {'study_methods': ['방법1'], 'learning_sequence': ['단계1']}
-            mock_enrichment.official_sources = {'official_site': 'https://test.com'}
+            mock_enrichment.exam_info = {"subjects": ["과목1"]}
+            mock_enrichment.career_info = {"use_cases": ["용도1"]}
+            mock_enrichment.user_reviews = {"summary": "Test"}
+            mock_enrichment.study_guide = {
+                "study_methods": ["방법1"],
+                "learning_sequence": ["단계1"],
+            }
+            mock_enrichment.official_sources = {"official_site": "https://test.com"}
             mock_enrichment.recommended_lectures = []
             mock_enrichment.model_dump.return_value = {}
-            mock_llm_instance.enrich_certificate = AsyncMock(return_value=mock_enrichment)
+            mock_llm_instance.enrich_certificate = AsyncMock(
+                return_value=mock_enrichment
+            )
 
             service = CertificateEnrichmentService(mock_session)
             result = await service.enrich_certificate("test-id", "테스트 자격증")
@@ -136,17 +156,31 @@ class TestEnrichmentServiceErrorHandling:
         mock_session = MagicMock(spec=Session)
         mock_session.query.return_value.filter.return_value.first.return_value = None
 
-        with patch('app.services.enrichment_service.get_search_service') as MockGetSearch, \
-             patch('app.services.enrichment_service.LLMService') as MockLLM:
+        with (
+            patch(
+                "app.services.enrichment_service.get_search_service"
+            ) as MockGetSearch,
+            patch("app.services.enrichment_service.LLMService") as MockLLM,
+        ):
 
             # Mock search service
             mock_search_instance = MagicMock()
             mock_search_instance.provider_name = "searxng"
-            mock_search_instance.search_certificate_comprehensive = AsyncMock(return_value={
-                'general': [], 'statistics': [], 'career': [], 'reviews': [],
-                'study_methods': [], 'books': [], 'lectures': [], 'official': []
-            })
-            mock_search_instance.format_search_results_for_llm.return_value = "test context"
+            mock_search_instance.search_certificate_comprehensive = AsyncMock(
+                return_value={
+                    "general": [],
+                    "statistics": [],
+                    "career": [],
+                    "reviews": [],
+                    "study_methods": [],
+                    "books": [],
+                    "lectures": [],
+                    "official": [],
+                }
+            )
+            mock_search_instance.format_search_results_for_llm.return_value = (
+                "test context"
+            )
             MockGetSearch.return_value = mock_search_instance
 
             # Mock LLM
@@ -155,13 +189,15 @@ class TestEnrichmentServiceErrorHandling:
             mock_enrichment.overview = "Test"
             mock_enrichment.difficulty = 3
             mock_enrichment.study_period_days = 90
-            mock_enrichment.exam_info = {'subjects': []}
-            mock_enrichment.career_info = {'use_cases': []}
-            mock_enrichment.user_reviews = {'summary': ''}
-            mock_enrichment.study_guide = {'study_methods': [], 'learning_sequence': []}
-            mock_enrichment.official_sources = {'official_site': ''}
+            mock_enrichment.exam_info = {"subjects": []}
+            mock_enrichment.career_info = {"use_cases": []}
+            mock_enrichment.user_reviews = {"summary": ""}
+            mock_enrichment.study_guide = {"study_methods": [], "learning_sequence": []}
+            mock_enrichment.official_sources = {"official_site": ""}
             mock_enrichment.recommended_lectures = []
-            mock_llm_instance.enrich_certificate = AsyncMock(return_value=mock_enrichment)
+            mock_llm_instance.enrich_certificate = AsyncMock(
+                return_value=mock_enrichment
+            )
 
             service = CertificateEnrichmentService(mock_session)
             result = await service.enrich_certificate("non-existent", "없는 자격증")

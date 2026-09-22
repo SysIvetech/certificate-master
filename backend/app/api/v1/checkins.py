@@ -3,6 +3,7 @@
 학습 체크인 CRUD 및 통계 기능을 제공합니다.
 MariaDB (SQLAlchemy)로 마이그레이션됨.
 """
+
 import logging
 import uuid
 from datetime import date, timedelta

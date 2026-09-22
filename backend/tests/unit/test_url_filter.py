@@ -8,8 +8,10 @@
 3. Snippet 품질 검증 (is_valid_snippet)
 4. 도메인별 실패 캐싱 (DomainFailureCache)
 """
+
 import pytest
-from app.services.search.content_crawler import is_crawlable_url, ContentCrawlerService
+
+from app.services.search.content_crawler import ContentCrawlerService, is_crawlable_url
 
 
 class TestIsCrawlableUrl:
@@ -17,20 +19,38 @@ class TestIsCrawlableUrl:
 
     def test_normal_html_url_is_crawlable(self):
         """일반 HTML 페이지 URL은 크롤링 가능."""
-        assert is_crawlable_url("https://www.q-net.or.kr/crf005.do?id=crf00503&gSite=Q&gId=") is True
+        assert (
+            is_crawlable_url(
+                "https://www.q-net.or.kr/crf005.do?id=crf00503&gSite=Q&gId="
+            )
+            is True
+        )
         assert is_crawlable_url("https://blog.naver.com/example/12345") is True
         assert is_crawlable_url("https://www.saramin.co.kr/job/123456") is True
 
     def test_download_url_patterns_not_crawlable(self):
         """파일 다운로드 URL 패턴은 크롤링 불가."""
         # downloadFile.do 패턴
-        assert is_crawlable_url("https://www.moel.go.kr/common/downloadFile.do?file_seq=20200") is False
+        assert (
+            is_crawlable_url(
+                "https://www.moel.go.kr/common/downloadFile.do?file_seq=20200"
+            )
+            is False
+        )
 
         # flDownload.do 패턴
-        assert is_crawlable_url("https://www.law.go.kr/flDownload.do?flSeq=150751385") is False
+        assert (
+            is_crawlable_url("https://www.law.go.kr/flDownload.do?flSeq=150751385")
+            is False
+        )
 
         # BOARD_ATTACH 패턴
-        assert is_crawlable_url("https://www.msu.ac.kr/download/BOARD_ATTACH?storageNo=18620") is False
+        assert (
+            is_crawlable_url(
+                "https://www.msu.ac.kr/download/BOARD_ATTACH?storageNo=18620"
+            )
+            is False
+        )
 
         # /download/ 경로 패턴
         assert is_crawlable_url("https://example.com/download/file123") is False
@@ -55,7 +75,9 @@ class TestIsCrawlableUrl:
         assert is_crawlable_url("https://example.com/view?file=doc.pdf") is True
 
         # 경로 자체가 .pdf인 경우 - 크롤링 불가
-        assert is_crawlable_url("https://example.com/files/doc.pdf?download=true") is False
+        assert (
+            is_crawlable_url("https://example.com/files/doc.pdf?download=true") is False
+        )
 
 
 class TestExtractContentFiltering:
@@ -118,20 +140,29 @@ class TestJsRenderedDomain:
         """m.jobkorea.co.kr은 JS 렌더링 사이트로 감지되어야 한다."""
         from app.services.search.url_filter import is_js_rendered_domain
 
-        assert is_js_rendered_domain("https://m.jobkorea.co.kr/Recruit/GI_Read/47127058") is True
+        assert (
+            is_js_rendered_domain("https://m.jobkorea.co.kr/Recruit/GI_Read/47127058")
+            is True
+        )
 
     def test_detects_kakao_story_as_js_rendered(self):
         """story.kakao.com은 JS 렌더링 사이트로 감지되어야 한다."""
         from app.services.search.url_filter import is_js_rendered_domain
 
-        assert is_js_rendered_domain("https://story.kakao.com/ch/miraclesetup/fVJXBaNJHIA") is True
+        assert (
+            is_js_rendered_domain("https://story.kakao.com/ch/miraclesetup/fVJXBaNJHIA")
+            is True
+        )
 
     def test_allows_official_qnet(self):
         """q-net.or.kr (공식 사이트)은 블랙리스트에 포함하지 않는다."""
         from app.services.search.url_filter import is_js_rendered_domain
 
         # 공식 사이트는 일부 페이지가 성공할 수 있으므로 블랙리스트 제외
-        assert is_js_rendered_domain("https://www.q-net.or.kr/crf005.do?id=crf00503") is False
+        assert (
+            is_js_rendered_domain("https://www.q-net.or.kr/crf005.do?id=crf00503")
+            is False
+        )
 
     def test_allows_static_blog(self):
         """tistory.com은 JS 렌더링 사이트가 아니어야 한다."""
@@ -149,7 +180,10 @@ class TestJsRenderedDomain:
         """eduwill.net은 JS 렌더링 사이트가 아니어야 한다."""
         from app.services.search.url_filter import is_js_rendered_domain
 
-        assert is_js_rendered_domain("https://book.eduwill.net/goods/select.action") is False
+        assert (
+            is_js_rendered_domain("https://book.eduwill.net/goods/select.action")
+            is False
+        )
 
 
 class TestValidSnippet:
@@ -186,13 +220,23 @@ class TestValidSnippet:
         """JavaScript 필요 메시지는 유효하지 않아야 한다."""
         from app.services.search.url_filter import is_valid_snippet
 
-        assert is_valid_snippet("JavaScript를 활성화해주세요. 이 페이지는 JavaScript가 필요합니다." * 2) is False
+        assert (
+            is_valid_snippet(
+                "JavaScript를 활성화해주세요. 이 페이지는 JavaScript가 필요합니다." * 2
+            )
+            is False
+        )
 
     def test_rejects_page_not_found_message(self):
         """페이지를 찾을 수 없음 메시지는 유효하지 않아야 한다."""
         from app.services.search.url_filter import is_valid_snippet
 
-        assert is_valid_snippet("페이지를 찾을 수 없습니다. 요청하신 페이지가 존재하지 않습니다." * 2) is False
+        assert (
+            is_valid_snippet(
+                "페이지를 찾을 수 없습니다. 요청하신 페이지가 존재하지 않습니다." * 2
+            )
+            is False
+        )
 
     def test_custom_min_length(self):
         """사용자 정의 최소 길이를 지원해야 한다."""

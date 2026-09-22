@@ -2,8 +2,10 @@
 
 TDD 방식으로 콘텐츠 크롤러 서비스의 동작을 검증합니다.
 """
+
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 
 from app.services.content_crawler import (
     ContentCrawlerService,
@@ -75,12 +77,18 @@ class TestContentCrawlerService:
         service = ContentCrawlerService()
 
         # trafilatura 모킹
-        with patch("app.services.search.content_crawler.fetch_url") as mock_fetch, \
-             patch("app.services.search.content_crawler.extract") as mock_extract, \
-             patch("app.services.search.content_crawler.extract_metadata") as mock_metadata:
+        with (
+            patch("app.services.search.content_crawler.fetch_url") as mock_fetch,
+            patch("app.services.search.content_crawler.extract") as mock_extract,
+            patch(
+                "app.services.search.content_crawler.extract_metadata"
+            ) as mock_metadata,
+        ):
 
             mock_fetch.return_value = "<html><body>테스트 콘텐츠</body></html>"
-            mock_extract.return_value = "정보처리기사는 한국산업인력공단에서 시행하는 국가기술자격입니다."
+            mock_extract.return_value = (
+                "정보처리기사는 한국산업인력공단에서 시행하는 국가기술자격입니다."
+            )
             mock_metadata.return_value = MagicMock(title="정보처리기사 시험 안내")
 
             result = await service.extract_content("https://example.com/test")
@@ -109,8 +117,10 @@ class TestContentCrawlerService:
         """텍스트 추출 실패 시 적절히 처리한다."""
         service = ContentCrawlerService()
 
-        with patch("app.services.search.content_crawler.fetch_url") as mock_fetch, \
-             patch("app.services.search.content_crawler.extract") as mock_extract:
+        with (
+            patch("app.services.search.content_crawler.fetch_url") as mock_fetch,
+            patch("app.services.search.content_crawler.extract") as mock_extract,
+        ):
 
             mock_fetch.return_value = "<html><body></body></html>"
             mock_extract.return_value = None  # 추출 실패
@@ -127,9 +137,13 @@ class TestContentCrawlerService:
 
         long_content = "가" * 500  # 500자
 
-        with patch("app.services.search.content_crawler.fetch_url") as mock_fetch, \
-             patch("app.services.search.content_crawler.extract") as mock_extract, \
-             patch("app.services.search.content_crawler.extract_metadata") as mock_metadata:
+        with (
+            patch("app.services.search.content_crawler.fetch_url") as mock_fetch,
+            patch("app.services.search.content_crawler.extract") as mock_extract,
+            patch(
+                "app.services.search.content_crawler.extract_metadata"
+            ) as mock_metadata,
+        ):
 
             mock_fetch.return_value = "<html><body>test</body></html>"
             mock_extract.return_value = long_content
@@ -164,9 +178,13 @@ class TestContentCrawlerService:
             "https://example.com/page3",
         ]
 
-        with patch("app.services.search.content_crawler.fetch_url") as mock_fetch, \
-             patch("app.services.search.content_crawler.extract") as mock_extract, \
-             patch("app.services.search.content_crawler.extract_metadata") as mock_metadata:
+        with (
+            patch("app.services.search.content_crawler.fetch_url") as mock_fetch,
+            patch("app.services.search.content_crawler.extract") as mock_extract,
+            patch(
+                "app.services.search.content_crawler.extract_metadata"
+            ) as mock_metadata,
+        ):
 
             mock_fetch.return_value = "<html><body>test</body></html>"
             mock_extract.side_effect = ["콘텐츠 1", "콘텐츠 2", "콘텐츠 3"]
@@ -187,9 +205,13 @@ class TestContentCrawlerService:
             "https://example.com/fail",
         ]
 
-        with patch("app.services.search.content_crawler.fetch_url") as mock_fetch, \
-             patch("app.services.search.content_crawler.extract") as mock_extract, \
-             patch("app.services.search.content_crawler.extract_metadata") as mock_metadata:
+        with (
+            patch("app.services.search.content_crawler.fetch_url") as mock_fetch,
+            patch("app.services.search.content_crawler.extract") as mock_extract,
+            patch(
+                "app.services.search.content_crawler.extract_metadata"
+            ) as mock_metadata,
+        ):
 
             # 첫 번째는 성공, 두 번째는 실패
             mock_fetch.side_effect = ["<html>test</html>", None]
@@ -228,9 +250,13 @@ class TestContentCrawlerExtractionOptions:
         """favor_precision=True 옵션을 사용한다."""
         service = ContentCrawlerService()
 
-        with patch("app.services.search.content_crawler.fetch_url") as mock_fetch, \
-             patch("app.services.search.content_crawler.extract") as mock_extract, \
-             patch("app.services.search.content_crawler.extract_metadata") as mock_metadata:
+        with (
+            patch("app.services.search.content_crawler.fetch_url") as mock_fetch,
+            patch("app.services.search.content_crawler.extract") as mock_extract,
+            patch(
+                "app.services.search.content_crawler.extract_metadata"
+            ) as mock_metadata,
+        ):
 
             mock_fetch.return_value = "<html><body>테스트</body></html>"
             mock_extract.return_value = "테스트 콘텐츠"
@@ -248,9 +274,13 @@ class TestContentCrawlerExtractionOptions:
         """include_formatting=True 옵션을 사용한다."""
         service = ContentCrawlerService()
 
-        with patch("app.services.search.content_crawler.fetch_url") as mock_fetch, \
-             patch("app.services.search.content_crawler.extract") as mock_extract, \
-             patch("app.services.search.content_crawler.extract_metadata") as mock_metadata:
+        with (
+            patch("app.services.search.content_crawler.fetch_url") as mock_fetch,
+            patch("app.services.search.content_crawler.extract") as mock_extract,
+            patch(
+                "app.services.search.content_crawler.extract_metadata"
+            ) as mock_metadata,
+        ):
 
             mock_fetch.return_value = "<html><body>테스트</body></html>"
             mock_extract.return_value = "테스트 콘텐츠"
@@ -266,9 +296,13 @@ class TestContentCrawlerExtractionOptions:
         """deduplicate=True 옵션을 사용한다."""
         service = ContentCrawlerService()
 
-        with patch("app.services.search.content_crawler.fetch_url") as mock_fetch, \
-             patch("app.services.search.content_crawler.extract") as mock_extract, \
-             patch("app.services.search.content_crawler.extract_metadata") as mock_metadata:
+        with (
+            patch("app.services.search.content_crawler.fetch_url") as mock_fetch,
+            patch("app.services.search.content_crawler.extract") as mock_extract,
+            patch(
+                "app.services.search.content_crawler.extract_metadata"
+            ) as mock_metadata,
+        ):
 
             mock_fetch.return_value = "<html><body>테스트</body></html>"
             mock_extract.return_value = "테스트 콘텐츠"
@@ -284,9 +318,13 @@ class TestContentCrawlerExtractionOptions:
         """include_tables=True 옵션을 사용한다."""
         service = ContentCrawlerService()
 
-        with patch("app.services.search.content_crawler.fetch_url") as mock_fetch, \
-             patch("app.services.search.content_crawler.extract") as mock_extract, \
-             patch("app.services.search.content_crawler.extract_metadata") as mock_metadata:
+        with (
+            patch("app.services.search.content_crawler.fetch_url") as mock_fetch,
+            patch("app.services.search.content_crawler.extract") as mock_extract,
+            patch(
+                "app.services.search.content_crawler.extract_metadata"
+            ) as mock_metadata,
+        ):
 
             mock_fetch.return_value = "<html><body>테스트</body></html>"
             mock_extract.return_value = "테스트 콘텐츠"
@@ -302,9 +340,13 @@ class TestContentCrawlerExtractionOptions:
         """target_language='ko' 옵션을 사용한다."""
         service = ContentCrawlerService()
 
-        with patch("app.services.search.content_crawler.fetch_url") as mock_fetch, \
-             patch("app.services.search.content_crawler.extract") as mock_extract, \
-             patch("app.services.search.content_crawler.extract_metadata") as mock_metadata:
+        with (
+            patch("app.services.search.content_crawler.fetch_url") as mock_fetch,
+            patch("app.services.search.content_crawler.extract") as mock_extract,
+            patch(
+                "app.services.search.content_crawler.extract_metadata"
+            ) as mock_metadata,
+        ):
 
             mock_fetch.return_value = "<html><body>테스트</body></html>"
             mock_extract.return_value = "테스트 콘텐츠"

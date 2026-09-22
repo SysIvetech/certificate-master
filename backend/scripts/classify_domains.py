@@ -8,6 +8,7 @@
     uv run python -m scripts.classify_domains --dry-run  # 미리보기
     uv run python -m scripts.classify_domains             # 실행
 """
+
 import argparse
 import sys
 
@@ -15,8 +16,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_engine
 from app.core.domains import (
-    TITLE_KEYWORD_TO_DOMAIN,
     INDUSTRY_KEYWORD_TO_DOMAIN,
+    TITLE_KEYWORD_TO_DOMAIN,
 )
 from app.models.certificate import Certificate
 

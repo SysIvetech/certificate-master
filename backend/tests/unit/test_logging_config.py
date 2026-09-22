@@ -2,8 +2,8 @@
 
 라이브러리 로그 억제 및 에러 메시지 명확화를 테스트합니다.
 """
+
 import logging
-import pytest
 
 
 class TestLoggingConfig:

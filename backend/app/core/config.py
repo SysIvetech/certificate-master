@@ -3,6 +3,7 @@
 This module provides centralized configuration management
 using environment variables with type validation.
 """
+
 from functools import lru_cache
 from typing import Optional
 
@@ -44,10 +45,10 @@ class Settings(BaseSettings):
 
     # MariaDB Configuration (환경변수에서 로드)
     MARIADB_HOST: str  # 필수: .env에서 설정
-    MARIADB_PORT: int # 필수 .env에서 설정
+    MARIADB_PORT: int  # 필수 .env에서 설정
     MARIADB_USER: str  # 필수: .env에서 설정
     MARIADB_PASSWORD: str  # 필수: .env에서 설정
-    MARIADB_DATABASE: str # 필수 .env에서 설정
+    MARIADB_DATABASE: str  # 필수 .env에서 설정
 
     # Redis (Optional for MVP)
     REDIS_URL: str = "redis://localhost:6379"
@@ -58,14 +59,14 @@ class Settings(BaseSettings):
 
     # OpenAI API Configuration
     OPENAI_API_KEY: Optional[str] = None
-    OPENAI_MODEL_NAME: str # 필수 .env에서 설정
-    OPENAI_EMBEDDING_MODEL: str # 필수 .env에서 설정
-    OPENAI_EMBEDDING_DIMENSIONS: int # 필수 .env에서 설정
+    OPENAI_MODEL_NAME: str  # 필수 .env에서 설정
+    OPENAI_EMBEDDING_MODEL: str  # 필수 .env에서 설정
+    OPENAI_EMBEDDING_DIMENSIONS: int  # 필수 .env에서 설정
 
     # ChromaDB Configuration (환경변수에서 로드)
     CHROMA_HOST: str  # 필수: .env에서 설정
-    CHROMA_PORT: int # 필수 .env에서 설정
-    CHROMA_COLLECTION_NAME: str # 필수 .env에서 설정
+    CHROMA_PORT: int  # 필수 .env에서 설정
+    CHROMA_COLLECTION_NAME: str  # 필수 .env에서 설정
 
     # Recommendation Service Configuration (B7: 하드코딩 제거)
     # OpenAI text-embedding-3-small 기준 0.3으로 조정 (코사인 유사도 범위 0.2-0.5)

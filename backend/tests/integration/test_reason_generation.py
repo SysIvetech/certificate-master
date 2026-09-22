@@ -2,6 +2,7 @@
 
 개선된 프롬프트로 생성된 추천 이유의 품질을 확인합니다.
 """
+
 import asyncio
 import sys
 from pathlib import Path
@@ -47,19 +48,23 @@ async def test_reason_generation():
 
     try:
         reason1 = await service.generate_reason(context1, cert1)
-        print(f"User: 비전공자, IT 취업, 3개월")
-        print(f"Cert: 정보처리기능사")
+        print("User: 비전공자, IT 취업, 3개월")
+        print("Cert: 정보처리기능사")
         print(f"\nReason ({len(reason1)} chars):")
         print(f'"{reason1}"')
         print()
 
         # 품질 검증
         checks = {
-            "산업 분야 언급": any(kw in reason1 for kw in ["IT", "소프트웨어", "정보처리"]),
+            "산업 분야 언급": any(
+                kw in reason1 for kw in ["IT", "소프트웨어", "정보처리"]
+            ),
             "목표 언급": any(kw in reason1 for kw in ["취업", "채용"]),
             "비전공자 언급": any(kw in reason1 for kw in ["비전공", "독학"]),
             "적절한 길이": 80 <= len(reason1) <= 200,
-            "제외 키워드 없음": not any(kw in reason1 for kw in ["제조", "건설", "용접"]),
+            "제외 키워드 없음": not any(
+                kw in reason1 for kw in ["제조", "건설", "용접"]
+            ),
         }
 
         print("Quality Checks:")
@@ -97,8 +102,8 @@ async def test_reason_generation():
 
     try:
         reason2 = await service.generate_reason(context2, cert2)
-        print(f"User: 재직자, 금융 전문성, 6개월")
-        print(f"Cert: 재무관리사")
+        print("User: 재직자, 금융 전문성, 6개월")
+        print("Cert: 재무관리사")
         print(f"\nReason ({len(reason2)} chars):")
         print(f'"{reason2}"')
         print()

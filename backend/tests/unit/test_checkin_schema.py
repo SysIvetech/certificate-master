@@ -2,7 +2,9 @@
 
 This module tests the consistency between database schema and Pydantic models.
 """
+
 import pytest
+
 from app.schemas.checkin import Checkin, CheckinCreate, CheckinUpdate
 
 
@@ -18,7 +20,7 @@ def test_checkin_create_has_hours_studied_field():
         "study_plan_id": "123e4567-e89b-12d3-a456-426614174000",
         "hours_studied": 2.5,
         "notes": "테스트 학습",
-        "mood": "good"
+        "mood": "good",
     }
 
     # When: CheckinCreate 객체 생성
@@ -57,7 +59,7 @@ def test_checkin_response_has_hours_studied_field():
         "hours_studied": 2.5,
         "notes": "테스트",
         "mood": "good",
-        "created_at": datetime(2026, 1, 8, 10, 0, 0)
+        "created_at": datetime(2026, 1, 8, 10, 0, 0),
     }
 
     # When: Checkin 객체 생성

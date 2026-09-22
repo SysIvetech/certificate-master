@@ -15,6 +15,7 @@ Supabase에서 MariaDB로 마이그레이션됨 (2026-01-21).
     - course_evaluation: 과정평가형자격
     - work_study: 일학습병행자격
 """
+
 import argparse
 import json
 import sys
@@ -27,9 +28,8 @@ from sqlalchemy.orm import Session
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from app.core.database import get_db, get_engine
+from app.core.database import get_engine
 from app.models.certificate import Certificate
-
 
 # 카테고리별 파일 매핑 (한글 카테고리명 -> 영문 파일명)
 CATEGORY_FILES: dict[str, str] = {
@@ -142,7 +142,7 @@ def clear_certificates_mariadb(
             func.json_contains(
                 Certificate.categories,
                 func.json_quote(category_name),
-                text("'$[*].name'")
+                text("'$[*].name'"),
             )
         )
 
@@ -246,7 +246,9 @@ def seed_certificates_mariadb(
             inserted += batch_inserted
             category_added += batch_category_added
             skipped += batch_skipped
-            print(f"  배치 {batch_num}/{total_batches}: 삽입 {batch_inserted}건, 카테고리 추가 {batch_category_added}건, 건너뜀 {batch_skipped}건")
+            print(
+                f"  배치 {batch_num}/{total_batches}: 삽입 {batch_inserted}건, 카테고리 추가 {batch_category_added}건, 건너뜀 {batch_skipped}건"
+            )
 
         except Exception as e:
             session.rollback()
@@ -259,7 +261,9 @@ def seed_certificates_mariadb(
 # ===== Legacy Supabase 함수들 (하위 호환성) =====
 def get_supabase_client():
     """[Deprecated] Supabase 대신 MariaDB 사용."""
-    raise NotImplementedError("Supabase는 더 이상 사용하지 않습니다. get_mariadb_session()을 사용하세요.")
+    raise NotImplementedError(
+        "Supabase는 더 이상 사용하지 않습니다. get_mariadb_session()을 사용하세요."
+    )
 
 
 def clear_certificates(client, category: str | None = None) -> int:
@@ -379,6 +383,7 @@ def main():
                 print("\n벡터 DB(ChromaDB)도 비웁니다...")
                 try:
                     from app.services.vector_store import VectorStoreService
+
                     vector_store = VectorStoreService()
                     vector_deleted = vector_store.clear_all()
                     print(f"  ChromaDB: {vector_deleted}건 삭제 완료")
@@ -386,10 +391,12 @@ def main():
                     print(f"  ChromaDB 삭제 실패 (무시됨): {e}")
 
         print(f"\n{len(certificates)}건을 적재합니다...")
-        inserted, category_added, skipped, failed = seed_certificates_mariadb(session, certificates)
+        inserted, category_added, skipped, failed = seed_certificates_mariadb(
+            session, certificates
+        )
 
         print(f"\n{'='*50}")
-        print(f"적재 완료!")
+        print("적재 완료!")
         if category_name:
             print(f"  카테고리: {category_name}")
         if args.file_name:

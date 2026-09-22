@@ -1,15 +1,15 @@
 """Unit tests for Certificate schema validation."""
+
 import pytest
 from pydantic import ValidationError
 
 from app.schemas.certificate import (
+    CareerInfo,
     Certificate,
     CertificateUpdate,
-    ExamInfo,
-    CareerInfo,
-    UserReviews,
     OfficialSources,
     RecommendedLecture,
+    UserReviews,
 )
 
 
@@ -287,4 +287,3 @@ class TestCertificateSchema:
         data = cert.model_dump()
         assert "domain" in data
         assert data["domain"] == "전기/전자"
-

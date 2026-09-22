@@ -2,6 +2,7 @@
 
 체크인 데이터를 기반으로 학습자의 패턴을 분석합니다.
 """
+
 from collections import Counter
 from datetime import datetime
 from statistics import mean, stdev
@@ -113,7 +114,15 @@ class LearningPatternService:
             try:
                 # ISO 형식 날짜 파싱
                 dt = datetime.fromisoformat(checkin_date)
-                weekday_names = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"]
+                weekday_names = [
+                    "월요일",
+                    "화요일",
+                    "수요일",
+                    "목요일",
+                    "금요일",
+                    "토요일",
+                    "일요일",
+                ]
                 weekday = weekday_names[dt.weekday()]
 
                 weekday_hours[weekday].append(hours_studied)

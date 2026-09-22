@@ -12,9 +12,6 @@
 9. 학습 순서 → 핵심 출제 토픽 (learning_sequence → key_exam_topics)
 """
 
-import pytest
-from pydantic import ValidationError
-
 
 class TestExtractedModelsFieldRemoval:
     """제거해야 할 필드들이 모델에서 제거되었는지 검증."""

@@ -3,6 +3,7 @@
 이 모듈은 모든 크롤러 구현체가 따라야 하는 공통 인터페이스를 정의합니다.
 Protocol 패턴을 사용하여 의존성 역전을 구현합니다.
 """
+
 from dataclasses import dataclass
 from typing import Optional, Protocol, runtime_checkable
 

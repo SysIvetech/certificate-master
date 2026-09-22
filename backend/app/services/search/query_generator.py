@@ -3,10 +3,10 @@
 이 모듈은 자격증 유형별로 최적화된 검색 쿼리를 생성합니다.
 공식 출처(Q-Net 등)를 필수로 포함하고, 카테고리별 맞춤 쿼리를 제공합니다.
 """
+
 from dataclasses import dataclass, field
 from typing import Optional
 from urllib.parse import urlparse
-
 
 # 공식 자격증 정보 도메인
 OFFICIAL_DOMAINS: set[str] = {

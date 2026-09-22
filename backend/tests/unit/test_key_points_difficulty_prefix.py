@@ -1,7 +1,9 @@
 """Test key_points difficulty prefix."""
-import pytest
-from unittest.mock import MagicMock
+
 from datetime import datetime
+from unittest.mock import MagicMock
+
+import pytest
 
 from app.schemas.certificate import Certificate
 from app.schemas.recommendation import RecommendationRequest
@@ -62,9 +64,7 @@ class TestKeyPointsDifficultyPrefix:
             f"실제 값: '{difficulty_point}'"
         )
 
-    def test_key_points_difficulty_prefix_for_all_levels(
-        self, service, sample_request
-    ):
+    def test_key_points_difficulty_prefix_for_all_levels(self, service, sample_request):
         """모든 난이도 레벨(1-5)에서 '난이도: ' 접두사가 붙어야 한다."""
         for difficulty_level in [1, 2, 3, 4, 5]:
             cert = Certificate(

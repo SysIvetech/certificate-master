@@ -3,8 +3,10 @@
 이 모듈은 지능적 크롤러 선택 로직을 테스트합니다.
 Trafilatura를 우선 사용하고, JS 사이트는 Playwright로 fallback합니다.
 """
-import pytest
+
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 class TestSmartCrawlerBasic:
@@ -72,8 +74,8 @@ class TestSmartCrawlerExtract:
     @pytest.mark.asyncio
     async def test_extract_content_uses_trafilatura_first(self):
         """extract_content가 Trafilatura를 우선 사용해야 합니다."""
-        from app.services.search.crawler.smart_crawler import SmartCrawler
         from app.services.search.crawler.protocol import CrawlResult
+        from app.services.search.crawler.smart_crawler import SmartCrawler
 
         crawler = SmartCrawler()
 
@@ -99,8 +101,8 @@ class TestSmartCrawlerExtract:
     @pytest.mark.asyncio
     async def test_extract_content_falls_back_to_playwright(self):
         """Trafilatura 실패 시 Playwright로 fallback해야 합니다."""
-        from app.services.search.crawler.smart_crawler import SmartCrawler
         from app.services.search.crawler.protocol import CrawlResult
+        from app.services.search.crawler.smart_crawler import SmartCrawler
 
         crawler = SmartCrawler(playwright_enabled=True)
 
@@ -155,8 +157,8 @@ class TestSmartCrawlerMetrics:
     @pytest.mark.asyncio
     async def test_metrics_increment_on_success(self):
         """성공 시 메트릭이 증가해야 합니다."""
-        from app.services.search.crawler.smart_crawler import SmartCrawler
         from app.services.search.crawler.protocol import CrawlResult
+        from app.services.search.crawler.smart_crawler import SmartCrawler
 
         crawler = SmartCrawler()
         initial_total = crawler.metrics.total_requests
@@ -184,8 +186,8 @@ class TestSmartCrawlerGracefulDegradation:
     @pytest.mark.asyncio
     async def test_handles_playwright_import_error(self):
         """Playwright import 에러를 graceful하게 처리해야 합니다."""
-        from app.services.search.crawler.smart_crawler import SmartCrawler
         from app.services.search.crawler.protocol import CrawlResult
+        from app.services.search.crawler.smart_crawler import SmartCrawler
 
         crawler = SmartCrawler(playwright_enabled=True)
 
@@ -214,7 +216,10 @@ class TestSmartCrawlerGracefulDegradation:
                 # 에러가 발생해도 CrawlResult를 반환해야 함
                 assert isinstance(result, CrawlResult)
                 assert result.success is False
-                assert "Playwright" in result.error or "not installed" in result.error.lower()
+                assert (
+                    "Playwright" in result.error
+                    or "not installed" in result.error.lower()
+                )
 
 
 class TestGetSmartCrawler:

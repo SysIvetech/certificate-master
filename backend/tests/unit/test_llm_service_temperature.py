@@ -3,8 +3,10 @@
 gpt-5-nano 모델은 temperature 파라미터를 지원하지 않으므로
 해당 모델 사용 시 temperature 파라미터를 제외해야 합니다.
 """
+
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 
 from app.services.llm.service import LLMService
 
@@ -73,7 +75,9 @@ class TestLLMServicePhaseIntegration:
         # Mock the client
         mock_response = MagicMock()
         mock_response.choices = [MagicMock()]
-        mock_response.choices[0].message.content = """{
+        mock_response.choices[
+            0
+        ].message.content = """{
             "overview_draft": "테스트 개요",
             "difficulty": 3,
             "study_period_days": 30,
@@ -103,7 +107,9 @@ class TestLLMServicePhaseIntegration:
         # Mock the client
         mock_response = MagicMock()
         mock_response.choices = [MagicMock()]
-        mock_response.choices[0].message.content = """{
+        mock_response.choices[
+            0
+        ].message.content = """{
             "overview_draft": "테스트 개요",
             "difficulty": 3,
             "study_period_days": 30,

@@ -2,9 +2,8 @@
 
 학습 패턴 분석 로직을 테스트합니다.
 """
-from datetime import datetime, timedelta
 
-import pytest
+from datetime import datetime, timedelta
 
 from app.services.learning_pattern_service import LearningPatternService
 

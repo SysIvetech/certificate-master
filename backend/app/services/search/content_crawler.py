@@ -10,14 +10,15 @@ LLM에 더 풍부한 컨텍스트를 제공합니다.
 - 파일 다운로드 URL 필터링
 - JS 렌더링 사이트 사전 감지 (크롤링 스킵)
 """
+
 import asyncio
+import logging
 import re
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import List, Optional
 from urllib.parse import urlparse
-import logging
 
-from trafilatura import fetch_url, extract
+from trafilatura import extract, fetch_url
 from trafilatura.metadata import extract_metadata
 
 logger = logging.getLogger(__name__)
@@ -25,27 +26,44 @@ logger = logging.getLogger(__name__)
 
 # 크롤링 불가능한 URL 패턴 (파일 다운로드)
 _DOWNLOAD_URL_PATTERNS = [
-    r'downloadFile\.do',      # moel.go.kr 등
-    r'flDownload\.do',        # law.go.kr
-    r'BOARD_ATTACH',          # 대학교 게시판 첨부파일
-    r'/download/',            # 일반적인 다운로드 경로
-    r'/attach/',              # 첨부파일 경로
-    r'/files?/',              # 파일 경로
+    r"downloadFile\.do",  # moel.go.kr 등
+    r"flDownload\.do",  # law.go.kr
+    r"BOARD_ATTACH",  # 대학교 게시판 첨부파일
+    r"/download/",  # 일반적인 다운로드 경로
+    r"/attach/",  # 첨부파일 경로
+    r"/files?/",  # 파일 경로
 ]
 
 # 크롤링 불가능한 파일 확장자
 _NON_HTML_EXTENSIONS = {
-    '.pdf', '.hwp', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
-    '.zip', '.rar', '.7z', '.tar', '.gz',
-    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp',
-    '.mp3', '.mp4', '.avi', '.mov', '.wmv',
+    ".pdf",
+    ".hwp",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".ppt",
+    ".pptx",
+    ".zip",
+    ".rar",
+    ".7z",
+    ".tar",
+    ".gz",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".bmp",
+    ".webp",
+    ".mp3",
+    ".mp4",
+    ".avi",
+    ".mov",
+    ".wmv",
 }
 
 # 컴파일된 정규식 패턴
-_DOWNLOAD_PATTERN = re.compile(
-    '|'.join(_DOWNLOAD_URL_PATTERNS),
-    re.IGNORECASE
-)
+_DOWNLOAD_PATTERN = re.compile("|".join(_DOWNLOAD_URL_PATTERNS), re.IGNORECASE)
 
 
 def is_crawlable_url(url: str) -> bool:
@@ -90,6 +108,7 @@ class CrawlResult:
         method: 사용된 추출 방법 (trafilatura).
         error: 실패 시 에러 메시지.
     """
+
     content: str
     title: str
     success: bool
@@ -143,6 +162,7 @@ class ContentCrawlerService:
             CrawlResult: 추출된 콘텐츠와 메타데이터.
         """
         import sys
+
         from app.services.search.url_filter import is_js_rendered_domain
 
         # 파일 다운로드 URL 필터링 (크롤링 시도 전에 스킵)
@@ -181,13 +201,12 @@ class ContentCrawlerService:
             loop = asyncio.get_event_loop()
 
             # fetch_url 실행 (동기 함수를 executor에서 실행)
-            downloaded = await loop.run_in_executor(
-                None,
-                lambda: fetch_url(url)
-            )
+            downloaded = await loop.run_in_executor(None, lambda: fetch_url(url))
 
             if not downloaded:
-                error_msg = "Connection failed or empty response (possible SSL/timeout/404)"
+                error_msg = (
+                    "Connection failed or empty response (possible SSL/timeout/404)"
+                )
                 print(f"    ❌ [ERROR] {error_msg}")
                 sys.stdout.flush()
                 return CrawlResult(
@@ -215,7 +234,7 @@ class ContentCrawlerService:
                     deduplicate=True,
                     target_language="ko",
                     no_fallback=False,
-                )
+                ),
             )
 
             if not content:
@@ -232,8 +251,7 @@ class ContentCrawlerService:
 
             # 메타데이터 추출 (제목)
             metadata = await loop.run_in_executor(
-                None,
-                lambda: extract_metadata(downloaded)
+                None, lambda: extract_metadata(downloaded)
             )
             title = metadata.title if metadata and metadata.title else ""
 
@@ -243,11 +261,11 @@ class ContentCrawlerService:
             # 콘텐츠 길이 제한
             if len(content) > self.max_content_length:
                 # 문장 단위로 자르기 시도
-                truncated = content[:self.max_content_length - 3]  # "..." 공간 확보
+                truncated = content[: self.max_content_length - 3]  # "..." 공간 확보
                 # 마지막 완전한 문장까지만 포함
-                last_period = truncated.rfind('.')
+                last_period = truncated.rfind(".")
                 if last_period > (self.max_content_length - 3) * 0.7:
-                    content = truncated[:last_period + 1]
+                    content = truncated[: last_period + 1]
                 else:
                     content = truncated + "..."
 
@@ -296,13 +314,15 @@ class ContentCrawlerService:
         processed_results = []
         for i, result in enumerate(results):
             if isinstance(result, Exception):
-                processed_results.append(CrawlResult(
-                    content="",
-                    title="",
-                    success=False,
-                    method="trafilatura",
-                    error=str(result),
-                ))
+                processed_results.append(
+                    CrawlResult(
+                        content="",
+                        title="",
+                        success=False,
+                        method="trafilatura",
+                        error=str(result),
+                    )
+                )
             else:
                 processed_results.append(result)
 

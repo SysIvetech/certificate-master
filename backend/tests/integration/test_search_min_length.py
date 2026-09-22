@@ -5,7 +5,7 @@ to prevent excessive API calls and meaningless results.
 
 TDD: RED phase - these tests should FAIL before implementation.
 """
-import pytest
+
 from fastapi.testclient import TestClient
 
 

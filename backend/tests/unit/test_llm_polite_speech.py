@@ -7,9 +7,8 @@
 4. 공식 기출문제가 있으면 학습 자료에 포함되어야 함
 """
 
-import pytest
-import re
 import inspect
+import re
 
 from app.services.llm.service import LLMService
 
@@ -180,8 +179,7 @@ class TestPoliteLanguageRequirements:
 
         for sentence in impolite_sentences:
             has_impolite = any(
-                re.search(pattern, sentence)
-                for pattern in impolite_endings
+                re.search(pattern, sentence) for pattern in impolite_endings
             )
             assert has_impolite, f"반말 감지 실패: {sentence}"
 
@@ -195,7 +193,9 @@ class TestPoliteLanguageRequirements:
             "꾸준히 학습하면 합격할 수 있습니다.",
         ]
 
-        polite_pattern = r"(입니다|합니다|됩니다|있습니다|없습니다|습니다|세요|주세요)\.?$"
+        polite_pattern = (
+            r"(입니다|합니다|됩니다|있습니다|없습니다|습니다|세요|주세요)\.?$"
+        )
 
         for sentence in polite_sentences:
             assert re.search(polite_pattern, sentence), f"존댓말 검증 실패: {sentence}"
@@ -270,7 +270,6 @@ class TestOfficialResourcesInStudyGuide:
 
         # 공식 자료 존재 확인
         official_resources = [
-            r for r in cost_breakdown["free_resources"]
-            if r.get("type") == "official"
+            r for r in cost_breakdown["free_resources"] if r.get("type") == "official"
         ]
         assert len(official_resources) > 0, "공식 자료가 없습니다"

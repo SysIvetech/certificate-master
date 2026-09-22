@@ -110,7 +110,11 @@ class BM25SearchService:
             categories_str,
             cert.get("series", ""),
             " ".join(industry) if isinstance(industry, list) else str(industry or ""),
-            " ".join(related_jobs) if isinstance(related_jobs, list) else str(related_jobs or ""),
+            (
+                " ".join(related_jobs)
+                if isinstance(related_jobs, list)
+                else str(related_jobs or "")
+            ),
             # BM25 키워드 검색에는 overview가 유용 (Dense와 달리 의미 희석 없음)
             (cert.get("overview", "") or "")[:200],
         ]

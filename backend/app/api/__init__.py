@@ -2,4 +2,3 @@
 
 This module contains all API endpoints organized by version.
 """
-
