@@ -1,0 +1,12 @@
+[Unit]
+Description=Local Chroma cold backup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+EnvironmentFile=/etc/chroma-local-backup.env
+ExecStart=/usr/bin/python3 /opt/certificate-ops/chroma_local_backup.py backup --container ${CHROMA_CONTAINER} --backup-dir ${CHROMA_BACKUP_DIR} --keep ${CHROMA_BACKUP_KEEP}
+TimeoutStartSec=infinity

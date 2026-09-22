@@ -1,0 +1,18 @@
+services:
+  chroma:
+    # Set an immutable image digest in .env; never silently pull latest.
+    image: ${CHROMA_IMAGE:?Set CHROMA_IMAGE to a tested image digest}
+    restart: unless-stopped
+    ports:
+      - "${CHROMA_BIND_IP:-127.0.0.1}:${CHROMA_PORT:-38000}:8000"
+    volumes:
+      - type: bind
+        source: ${CHROMA_DATA_DIR:?Set CHROMA_DATA_DIR to an existing absolute directory}
+        target: /data
+        bind:
+          create_host_path: false
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
