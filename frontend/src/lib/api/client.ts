@@ -1,10 +1,13 @@
 /**
  * API Client
  * 
- * Centralized HTTP client for backend API communication with Supabase authentication.
+ * Centralized HTTP client for backend API communication.
+ * 인증: ivetech 통합 인증 서비스(auth-service) access token (lib/auth).
  */
 
-import { createClient } from '@/lib/supabase/client'
+import { AUTH_ENABLED } from '@/lib/auth/config'
+import { getAccessToken, refreshAccessToken } from '@/lib/auth/auth-api'
+import { tokenManager } from '@/lib/auth/token-manager'
 
 // 항상 상대 경로 사용 (Next.js rewrites로 프록시)
 // 이렇게 하면 로컬 네트워크 접근 권한이 필요 없음
@@ -23,37 +26,16 @@ export class APIError extends Error {
 }
 
 /**
- * Get authentication headers with Supabase JWT token
- * Returns empty object if no session (optional auth)
+ * ivetech auth-service access token으로 인증 헤더를 만듭니다.
+ * 로그인하지 않았거나 인증이 비활성화된 경우 인증 헤더 없이 요청합니다.
  */
 async function getAuthHeaders(): Promise<Record<string, string>> {
-  console.log('🔐 [API Client] Getting auth headers...')
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (!AUTH_ENABLED) return headers
 
-  const supabase = createClient()
-  const { data: { session }, error } = await supabase.auth.getSession()
-
-  console.log('🔐 [API Client] Session check:', {
-    hasSession: !!session,
-    hasAccessToken: !!session?.access_token,
-    tokenPreview: session?.access_token ?
-      `${session.access_token.substring(0, 20)}...` : 'N/A',
-    error: error?.message || 'none'
-  })
-
-  // If no session, return empty headers (optional auth)
-  if (error || !session?.access_token) {
-    console.log('ℹ️ [API Client] No session - continuing without auth')
-    return {
-      'Content-Type': 'application/json',
-    }
-  }
-
-  console.log('✅ [API Client] Auth headers prepared')
-
-  return {
-    'Authorization': `Bearer ${session.access_token}`,
-    'Content-Type': 'application/json',
-  }
+  const token = await getAccessToken()
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  return headers
 }
 
 async function fetchAPI<T>(
@@ -80,8 +62,7 @@ async function fetchAPI<T>(
   // Log request details
   const headers = config.headers as Record<string, string> | undefined
   console.log('📤 [API Client] Request headers:', {
-    Authorization: headers?.['Authorization'] ?
-      `Bearer ${headers['Authorization'].substring(7, 27)}...` : 'N/A',
+    Authorization: headers?.['Authorization'] ? 'Bearer (present)' : 'N/A',
     'Content-Type': headers?.['Content-Type'] || 'N/A',
   })
   
@@ -98,7 +79,18 @@ async function fetchAPI<T>(
 
   try {
     console.log('⏳ [API Client] Sending request...')
-    const response = await fetch(url, config)
+    let response = await fetch(url, config)
+
+    // access token 만료 등으로 401이면 refresh 후 한 번만 재시도
+    if (response.status === 401 && AUTH_ENABLED && tokenManager.getRefreshToken()) {
+      const newToken = await refreshAccessToken()
+      if (newToken) {
+        response = await fetch(url, {
+          ...config,
+          headers: { ...(config.headers as Record<string, string>), Authorization: `Bearer ${newToken}` },
+        })
+      }
+    }
 
     console.log('📥 [API Client] Response received:', {
       status: response.status,

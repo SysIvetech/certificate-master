@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -18,16 +19,34 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { createClient } from '@/lib/supabase/client'
+import { AuthError, login, signup } from '@/lib/auth/auth-api'
+import { useAuthStore } from '@/stores/auth-store'
+
+// ivetech auth-service SignupRequest 규칙과 동일:
+// 8~64자, 영문 대문자/소문자/숫자/특수문자 중 3종류 이상, 허용 문자만 사용
+const SPECIAL_CHARS = '!@#$%^&*()_+-=[]{}|;\':",./<>?`~'
+const ALLOWED_PASSWORD = /^[A-Za-z0-9!@#$%^&*()_+\-=[\]{}|;':",./<>?`~]+$/
+const passwordClasses = (value: string) => [
+  /[a-z]/.test(value),
+  /[A-Z]/.test(value),
+  /[0-9]/.test(value),
+  value.split('').some((c) => SPECIAL_CHARS.includes(c)),
+]
 
 const signupSchema = z.object({
-  fullName: z.string().min(2, '이름은 최소 2자 이상이어야 합니다'),
+  fullName: z
+    .string()
+    .min(2, '이름은 최소 2자 이상이어야 합니다')
+    .max(50, '이름은 50자 이하여야 합니다'),
   email: z.string().email('유효한 이메일을 입력해주세요'),
   password: z
     .string()
     .min(8, '비밀번호는 최소 8자 이상이어야 합니다')
-    .regex(/[A-Za-z]/, '비밀번호에 영문자가 포함되어야 합니다')
-    .regex(/[0-9]/, '비밀번호에 숫자가 포함되어야 합니다'),
+    .max(64, '비밀번호는 64자 이하여야 합니다')
+    .regex(ALLOWED_PASSWORD, '영문, 숫자, 특수문자만 사용할 수 있습니다')
+    .refine((value) => passwordClasses(value).filter(Boolean).length >= 3, {
+      message: '영문 대문자, 소문자, 숫자, 특수문자 중 3종류 이상 조합해주세요',
+    }),
   confirmPassword: z.string(),
   agreeToTerms: z.boolean().refine((val) => val === true, {
     message: '이용약관에 동의해주세요',
@@ -45,7 +64,8 @@ export function SignupForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSuccess, setIsSuccess] = useState(false)
-  const supabase = createClient()
+  const router = useRouter()
+  const { setUser } = useAuthStore()
 
   const form = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -60,10 +80,14 @@ export function SignupForm() {
 
   const password = form.watch('password')
 
+  const [hasLower, hasUpper, hasDigit, hasSpecial] = passwordClasses(password)
   const passwordRequirements = [
     { label: '8자 이상', met: password.length >= 8 },
-    { label: '영문자 포함', met: /[A-Za-z]/.test(password) },
-    { label: '숫자 포함', met: /[0-9]/.test(password) },
+    { label: '3종류 이상 조합', met: passwordClasses(password).filter(Boolean).length >= 3 },
+    { label: '소문자', met: hasLower },
+    { label: '대문자', met: hasUpper },
+    { label: '숫자', met: hasDigit },
+    { label: '특수문자', met: hasSpecial },
   ]
 
   const onSubmit = async (data: SignupFormData) => {
@@ -71,30 +95,26 @@ export function SignupForm() {
     setError(null)
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            full_name: data.fullName,
-          },
-        },
-      })
+      await signup(data.email, data.password, data.fullName)
+    } catch (err) {
+      setError(err instanceof AuthError ? err.message : '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.')
+      setIsLoading(false)
+      return
+    }
 
-      if (authError) {
-        if (authError.message.includes('already registered')) {
-          setError('이미 가입된 이메일입니다.')
-        } else {
-          setError(authError.message)
-        }
+    // 가입 직후 자동 로그인 (실패하면 완료 화면에서 로그인 페이지로 안내)
+    try {
+      const user = await login(data.email, data.password)
+      if (user) {
+        setUser(user)
+        router.push('/')
+        router.refresh()
         return
       }
-
-      if (authData.user) {
-        setIsSuccess(true)
-      }
+      setIsSuccess(true)
     } catch {
-      setError('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.')
+      // 가입은 성공했으므로 완료 화면에서 로그인하도록 안내
+      setIsSuccess(true)
     } finally {
       setIsLoading(false)
     }
@@ -118,7 +138,7 @@ export function SignupForm() {
               가입이 완료되었습니다!
             </h2>
             <p className="text-muted-foreground mb-6">
-              이메일 인증을 완료하시면 모든 기능을 이용하실 수 있습니다.
+              로그인하시면 모든 기능을 이용하실 수 있습니다.
             </p>
             <Button
               asChild

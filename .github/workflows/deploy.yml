@@ -116,7 +116,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: determine-env
     timeout-minutes: 30
-    environment: ${{ needs.determine-env.outputs.target_env }} # 환경별 NEXT_PUBLIC_* 시크릿 사용
+    # 환경별 NEXT_PUBLIC_* 값 사용. 인증은 Environment variable 로 제어:
+    #   NEXT_PUBLIC_AUTH_ENABLED (기본 false), NEXT_PUBLIC_AUTH_API_URL (기본 dev/prod auth 주소)
+    environment: ${{ needs.determine-env.outputs.target_env }}
     permissions:
       contents: read
       packages: write
@@ -151,8 +153,8 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           build-args: |
-            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_AUTH_ENABLED=${{ vars.NEXT_PUBLIC_AUTH_ENABLED || 'false' }}
+            NEXT_PUBLIC_AUTH_API_URL=${{ vars.NEXT_PUBLIC_AUTH_API_URL || (needs.determine-env.outputs.target_env == 'prod' && 'https://auth.ivetech.co.kr' || 'https://dev-auth.ivetech.co.kr') }}
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }}
             NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=${{ secrets.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }}

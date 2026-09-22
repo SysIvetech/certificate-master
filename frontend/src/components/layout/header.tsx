@@ -10,6 +10,7 @@ import {
 import dynamic from 'next/dynamic'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { AuthMenu } from './auth-menu'
 
 // 모바일 메뉴를 lazy-load하여 @radix-ui/react-dialog를 초기 번들에서 제거 (~20+ KiB 절감)
 const MobileNav = dynamic(
@@ -60,8 +61,9 @@ export function Header() {
           })}
         </nav>
 
-        {/* Theme Toggle & Mobile Menu */}
+        {/* Auth Menu, Theme Toggle & Mobile Menu */}
         <div className="flex items-center gap-2 ml-auto md:ml-0">
+          <AuthMenu />
           <ThemeToggle />
           <MobileNav navItems={navItems} />
         </div>

@@ -8,7 +8,7 @@
 - **Styling**: Tailwind CSS + shadcn/ui
 - **State Management**: Zustand
 - **Data Fetching**: TanStack Query (React Query)
-- **Authentication**: Supabase Auth (@supabase/ssr)
+- **Authentication**: ivetech 통합 인증 서비스(auth-service, JWT) — `NEXT_PUBLIC_AUTH_ENABLED`로 on/off
 - **Forms**: React Hook Form + Zod validation
 
 ---
@@ -19,9 +19,9 @@
 frontend/
 ├── src/
 │   ├── app/                        # App Router pages
-│   │   ├── auth/callback/          # Google OAuth 콜백 ⭐NEW
-│   │   ├── login/                  # 로그인 페이지 (Google OAuth)
-│   │   ├── signup/                 # → /login 리다이렉션
+│   │   ├── oauth/callback/         # auth-service OAuth2(Google) 콜백 (#access_token)
+│   │   ├── login/                  # 로그인 (이메일 + Google, 인증 꺼짐 시 안내 화면)
+│   │   ├── signup/                 # 회원가입 (인증 꺼짐 시 안내 화면)
 │   │   ├── search/                 # 자격증 검색 페이지 (통합 검색 + AI 추천) ⭐UPDATED (2026-01-14)
 │   │   ├── certificates/[id]/      # 자격증 상세 페이지
 │   │   ├── dashboard/              # 학습 대시보드 (실시간 데이터) ⭐UPDATED (2026-01-07)
@@ -34,9 +34,9 @@ frontend/
 │   ├── components/
 │   │   ├── ui/                     # shadcn/ui 컴포넌트
 │   │   ├── auth/                   # 인증 관련 컴포넌트
-│   │   │   ├── google-login-form.tsx  # Google OAuth 로그인 ⭐NEW
-│   │   │   ├── login-form.tsx        # (Deprecated)
-│   │   │   ├── signup-form.tsx       # (Deprecated)
+│   │   │   ├── login-form.tsx        # 이메일/비밀번호 + Google 로그인
+│   │   │   ├── signup-form.tsx       # 회원가입 (auth-service 비밀번호 규칙)
+│   │   │   ├── require-auth.tsx      # 보호 페이지 가드 (dashboard/study-plans/analytics layout)
 │   │   │   └── index.ts
 │   │   ├── providers/              # React Context Providers ⭐NEW
 │   │   │   ├── session-provider.tsx # 세션 초기화
@@ -81,9 +81,10 @@ frontend/
 │   │   │   ├── study-plans.ts      # 학습 계획 API
 │   │   │   ├── checkins.ts         # 체크인 API
 │   │   │   └── index.ts            # 통합 export
-│   │   ├── supabase/
-│   │   │   ├── client.ts           # Browser client
-│   │   │   └── server.ts           # Server client
+│   │   ├── auth/                   # ivetech auth-service 연동
+│   │   │   ├── config.ts           # AUTH_ENABLED, AUTH_API_URL
+│   │   │   ├── token-manager.ts    # access(메모리) / refresh(localStorage) 토큰
+│   │   │   └── auth-api.ts         # login/signup/refresh/logout/Google URL
 │   │   ├── providers.tsx           # TanStack Query Provider
 │   │   └── utils.ts                # 유틸리티 함수
 │   ├── hooks/                      # 커스텀 훅 ⭐UPDATED (2026-01-14)
@@ -99,9 +100,8 @@ frontend/
 │   │   ├── search-store.ts         # 검색 상태 관리
 │   │   └── recommend-store.ts      # 추천 위자드 상태 관리 ⭐NEW (2026-01-14)
 │   ├── types/
-│   │   ├── database.types.ts       # Supabase 타입
+│   │   ├── database.types.ts       # DB 스키마 타입 (과거 Supabase CLI로 생성)
 │   │   └── index.ts                # 공통 타입
-│   └── middleware.ts               # Next.js 인증 미들웨어
 ├── tests/                          # E2E 테스트 ⭐UPDATED (2026-01-14)
 │   └── e2e/
 │       ├── landing.spec.ts         # 랜딩 페이지 테스트
@@ -638,11 +638,12 @@ test.describe('Search Page', () => {
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-### Optional (Direct Supabase Access)
+### Authentication (ivetech auth-service)
 ```bash
-# Only if using Supabase directly (not through backend)
-NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+# 백엔드 AUTH_ENABLED 와 함께 켜고 끔 (기본 false)
+NEXT_PUBLIC_AUTH_ENABLED=false
+# dev: https://dev-auth.ivetech.co.kr / prod: https://auth.ivetech.co.kr
+NEXT_PUBLIC_AUTH_API_URL=https://dev-auth.ivetech.co.kr
 ```
 
 ### Setup
@@ -858,106 +859,37 @@ const debouncedSeries = useDebounce(filters.series, 300)
 
 ---
 
-## 🔐 Authentication (Google OAuth)
+## 🔐 Authentication (ivetech 통합 인증 서비스)
 
-### Overview ⭐ NEW (2026-01-06)
-Certificate Master uses **Google OAuth** as the single authentication method for simplicity and security.
+> 2026-09: Supabase Auth → ivetech `auth-service`(ivetech-backend-service)로 전환.
+> 아래 이전 기록(Supabase 기반 설명)은 더 이상 유효하지 않습니다.
 
-### Authentication Flow
+### 동작 방식
+- `NEXT_PUBLIC_AUTH_ENABLED=false`(기본): 로그인/회원가입 페이지는 "비활성화" 안내, 헤더 로그인 메뉴 없음, API 요청에 토큰 없음
+- `true`: 아래 흐름 활성화 (백엔드도 `AUTH_ENABLED=true` + `JWT_SECRET` 필요)
+
+### 흐름
 ```
-1. User clicks "Google로 로그인" button
-2. Redirect to Google OAuth consent screen
-3. User approves permissions
-4. Google redirects to /auth/callback with authorization code
-5. Exchange code for Supabase session
-6. Set session cookies
-7. Redirect to /dashboard
-```
-
-### Key Components
-
-#### 1. `google-login-form.tsx`
-```typescript
-const handleGoogleLogin = async () => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-      queryParams: {
-        access_type: 'offline',
-        prompt: 'consent',
-      },
-    },
-  })
-}
+이메일 로그인:  POST {AUTH_API_URL}/api/auth/login → { accessToken, refreshToken }
+회원가입:       POST /api/auth/signup → 자동으로 login
+Google:        {AUTH_API_URL}/oauth2/authorization/google?redirect_uri={origin}/oauth/callback
+               → /oauth/callback#access_token=..&refresh_token=.. → 토큰 저장 후 주소창에서 제거
+토큰 갱신:      POST /api/auth/refresh (refresh token rotation, 탭 간 Web Locks로 직렬화)
+로그아웃:       POST /api/auth/logout (Bearer) → auth-service가 refresh token 폐기 + access token 블랙리스트
 ```
 
-#### 2. `/auth/callback/route.ts`
-```typescript
-export async function GET(request: NextRequest) {
-  const code = requestUrl.searchParams.get('code')
-  const { error } = await supabase.auth.exchangeCodeForSession(code)
+### 토큰 저장 (rasang 프론트엔드와 동일)
+- access token: 메모리 (`lib/auth/token-manager.ts`)
+- refresh token: localStorage `cm_refresh_token` (XSS 취약점 인지, httpOnly 쿠키 지원 시 교체)
+- API 클라이언트(`lib/api/client.ts`)는 401 응답 시 refresh 후 1회 재시도
 
-  if (!error) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
+### 보호 페이지
+- middleware 에서는 토큰을 볼 수 없어 `RequireAuth`(클라이언트 가드)를 `dashboard`/`study-plans`/`analytics` layout 에서 사용
+- 실제 데이터 보호는 백엔드 JWT 검증이 담당
 
-  return NextResponse.redirect(new URL('/login?error=auth_failed', request.url))
-}
-```
-
-#### 3. Middleware (Session Management)
-```typescript
-// Automatic session refresh
-const { data: { user } } = await supabase.auth.getUser()
-
-// Protect routes
-if (!user && isProtectedPath) {
-  return NextResponse.redirect(new URL('/login', request.url))
-}
-```
-
-### Setup Required
-
-1. **Google Cloud Console**
-   - Create OAuth 2.0 client
-   - Add authorized redirect URIs
-   - See: `GOOGLE_OAUTH_SETUP.md`
-
-2. **Supabase**
-   - Enable Google provider
-   - Add Google client ID and secret
-   - Copy callback URL
-
-3. **Environment Variables**
-   ```bash
-   NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=<from supabase status>
-   ```
-
-### Removed Features
-- ❌ Email/Password login
-- ❌ Signup page (redirects to /login)
-- ❌ Password reset/forgot password
-- ❌ Email verification
-
-### Security Benefits
-- ✅ No password management
-- ✅ Google 2FA support
-- ✅ OAuth 2.0 standard
-- ✅ Automatic session handling
-- ✅ Secure token exchange
-
-### Testing
-All Google OAuth flows are covered by E2E tests:
-- ✅ Login button display
-- ✅ Google icon presence
-- ✅ Email/password form removal
-- ✅ Signup redirect
-- ✅ Protected routes
-- ✅ Responsive design
-
-**Test Results**: 14/14 passed ✅
+### auth-service 측 요구 설정
+- CORS 허용: `https://dev-cert.i-ve.ai`, `https://cert.i-ve.ai`
+- `oauth2.authorized-redirect-uris`: `https://{dev-}cert.i-ve.ai/oauth/callback`
 
 ---
 

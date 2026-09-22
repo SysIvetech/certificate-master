@@ -9,7 +9,8 @@
 
 | Layer | Stack |
 |-------|-------|
-| Backend | FastAPI, MariaDB, Supabase Auth, ChromaDB, GPT-5-nano |
+| Backend | FastAPI, MariaDB, ChromaDB, GPT-5-nano |
+| Auth | ivetech 통합 인증 서비스 (auth-service, JWT) |
 | Frontend | Next.js 14, TypeScript, Tailwind, shadcn/ui, Zustand, TanStack Query |
 | Deploy | Docker Compose (backend:8000, frontend:5100) |
 
@@ -18,7 +19,7 @@
 ```
 backend/app/
 ├── api/v1/          # certificates, study_plans, checkins, analytics, recommendations
-├── core/            # config, database, security, supabase
+├── core/            # config, database, security(auth-service JWT 검증)
 ├── models/          # SQLAlchemy models
 ├── schemas/         # Pydantic schemas
 └── services/        # Business logic (analytics, llm, vector_store, embedding)
@@ -65,13 +66,13 @@ cd deploy && docker-compose up -d
 
 ```env
 # Backend (.env)
-SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+AUTH_ENABLED, JWT_SECRET   # ivetech auth-service JWT 검증
 MARIADB_HOST, MARIADB_PORT, MARIADB_USER, MARIADB_PASSWORD, MARIADB_DATABASE
 CHROMA_HOST, CHROMA_PORT, CHROMA_COLLECTION_NAME
 OPENAI_API_KEY
 
 # Frontend (.env.local)
-NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_API_URL
+NEXT_PUBLIC_AUTH_ENABLED, NEXT_PUBLIC_AUTH_API_URL, NEXT_PUBLIC_API_URL
 ```
 
 ## Skills

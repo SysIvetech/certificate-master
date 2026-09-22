@@ -4,8 +4,17 @@ import Link from 'next/link'
 import { AlertCircle, Search } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { SignupForm } from '@/components/auth/signup-form'
+import { AUTH_ENABLED } from '@/lib/auth/config'
 
 export default function SignupPage() {
+  // NEXT_PUBLIC_AUTH_ENABLED=true 일 때만 ivetech 통합 인증 폼 노출
+  if (AUTH_ENABLED) {
+    return (
+      <SignupForm />
+    )
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <Card className="max-w-lg w-full border-amber-500/20 bg-amber-500/5">

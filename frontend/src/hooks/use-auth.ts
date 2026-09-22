@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/auth-store'
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
+import { AUTH_ENABLED } from '@/lib/auth/config'
+import { getAccessToken, logout as logoutRequest, userFromAccessToken } from '@/lib/auth/auth-api'
 import type { AuthUser } from '@/types'
 
 interface UseAuthReturn {
@@ -15,90 +15,46 @@ interface UseAuthReturn {
   checkSession: () => Promise<void>
 }
 
+/**
+ * ivetech 통합 인증 서비스 기반 인증 상태 훅
+ *
+ * access token은 메모리에만 있으므로 새로고침 후에는 refresh token으로
+ * 재발급받아 로그인 상태를 복원합니다 (checkSession).
+ */
 export function useAuth(): UseAuthReturn {
-  const { user: storeUser, setUser, logout } = useAuthStore()
-  const [isChecking, setIsChecking] = useState(true)
+  const { user, isLoading, setUser, logout } = useAuthStore()
   const router = useRouter()
-  const supabase = createClient()
 
   const checkSession = useCallback(async () => {
+    if (!AUTH_ENABLED) {
+      logout()
+      return
+    }
     try {
-      setIsChecking(true)
-      const { data: { session }, error } = await supabase.auth.getSession()
-
-      if (error) {
-        console.error('Session check error:', error)
-        logout()
-        return
-      }
-
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email!,
-          fullName: session.user.user_metadata?.full_name || session.user.user_metadata?.name,
-          avatarUrl: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
-        })
+      const token = await getAccessToken()
+      const restored = userFromAccessToken(token)
+      if (restored) {
+        setUser(restored)
       } else {
         logout()
       }
     } catch (error) {
-      console.error('Unexpected session check error:', error)
+      console.error('Session check error:', error)
       logout()
-    } finally {
-      setIsChecking(false)
     }
-  }, [logout, setUser, supabase])
+  }, [logout, setUser])
 
-  // Check session on mount
-  useEffect(() => {
-    checkSession()
-  }, [checkSession])
-
-  // Listen to auth state changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event: AuthChangeEvent, session: Session | null) => {
-        console.log('Auth state changed:', session?.user?.email)
-
-        if (session?.user) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email!,
-            fullName: session.user.user_metadata?.full_name || session.user.user_metadata?.name,
-            avatarUrl: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
-          })
-        } else {
-          logout()
-        }
-
-        setIsChecking(false)
-      }
-    )
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [logout, setUser, supabase])
-
-  const signOut = async () => {
-    try {
-      await supabase.auth.signOut()
-      logout()
-      router.push('/')
-      router.refresh()
-    } catch (error) {
-      console.error('Sign out error:', error)
-      // Force logout even if API call fails
-      logout()
-      router.push('/')
-    }
-  }
+  const signOut = useCallback(async () => {
+    await logoutRequest()
+    logout()
+    router.push('/')
+    router.refresh()
+  }, [logout, router])
 
   return {
-    user: storeUser,
-    isLoading: isChecking,
-    isAuthenticated: !!storeUser,
+    user,
+    isLoading,
+    isAuthenticated: !!user,
     signOut,
     checkSession,
   }

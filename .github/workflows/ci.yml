@@ -45,7 +45,7 @@ jobs:
         run: uv run black --check .
 
       - name: Run tests
-        # NOTE: 일부 테스트가 MariaDB/Supabase/ChromaDB 등 외부 인프라를 필요로 할 수 있어
+        # NOTE: 일부 테스트가 MariaDB/ChromaDB/SearXNG 등 외부 인프라를 필요로 할 수 있어
         # GitHub Actions 러너에서 100% 통과가 보장되지 않습니다. 안정화 후 continue-on-error 제거 권장.
         run: uv run pytest
         continue-on-error: true
@@ -84,7 +84,7 @@ jobs:
       - name: Build (CI 검증용 더미 환경 변수)
         run: pnpm build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key
+          NEXT_PUBLIC_AUTH_ENABLED: 'true' # 인증 UI 코드 경로까지 빌드 검증
+          NEXT_PUBLIC_AUTH_API_URL: https://dev-auth.ivetech.co.kr
           NEXT_PUBLIC_API_URL: http://localhost:8000
           NEXT_PUBLIC_SITE_URL: http://localhost:5100

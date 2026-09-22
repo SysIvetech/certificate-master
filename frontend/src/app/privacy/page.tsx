@@ -65,10 +65,6 @@ export default function PrivacyPage() {
             <strong>Google Analytics 4</strong> — 방문자 통계 분석.{' '}
             <a href="https://policies.google.com/technologies/partner-sites" className="text-primary underline" target="_blank" rel="noopener noreferrer">Google의 데이터 이용방침</a>
           </li>
-          <li>
-            <strong>Supabase</strong> — 사용자 인증 및 데이터 저장.{' '}
-            <a href="https://supabase.com/privacy" className="text-primary underline" target="_blank" rel="noopener noreferrer">Supabase 개인정보처리방침</a>
-          </li>
         </ul>
       </section>
 
